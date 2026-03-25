@@ -152,7 +152,7 @@
 //		reflects the exact state or reference of the
 //		source index without modifying the original data.
 //
-//		MOV [SOURCE;INDEX],[TARGET;INDEX]
+//		MOV [SOURCE;INDEX],[DESTINATION;INDEX]
 //
 //	MOVIN
 //

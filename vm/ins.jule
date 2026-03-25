@@ -30,6 +30,7 @@ let insmap: [...]insfunc = [
 	_NOP,
 	_AIN,
 	_AFL,
+	_MOV,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -59,6 +60,17 @@ fn _AFL(mut &vm: *VM): (err: str) {
 		typ: typFL,
 		data: fl,
 	})
+
+	ret _NoError
+}
+
+fn _MOV(mut &vm: *VM): (err: str) {
+	vm.pc++                // MOV
+	src := decodeIndex(vm) // SOURCE
+	dst := decodeIndex(vm) // DESTINATION
+
+	// MOV src,dst
+	copyval(vm.stack[dst], vm.stack[src])
 
 	ret _NoError
 }
@@ -94,4 +106,25 @@ fn decodeFloat(mut &vm: *VM): isa::Float {
 	b |= u64(vm.bin[vm.pc])
 	vm.pc++
 	ret math::F64frombits(b)
+}
+
+// Decodes index.
+fn decodeIndex(mut &vm: *VM): (idx: isa::Index) {
+	idx |= isa::Index(vm.bin[vm.pc]) << 56
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 48
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 40
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 32
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 24
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 16
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc]) << 8
+	vm.pc++
+	idx |= isa::Index(vm.bin[vm.pc])
+	vm.pc++
+	ret
 }

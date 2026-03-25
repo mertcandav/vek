@@ -20,11 +20,35 @@ const (
 let mut valuePC = new(value)
 
 enum data: type {
-	&isa::Int, // Integer.
-	f64,       // Floating-point.
+	&isa::Int,  // Integer.
+	isa::Float, // Floating-point.
 }
 
 struct value {
 	typ:  int
 	data: data
+}
+
+// Copies src's value to dst.
+fn copyval(mut dst: &value, mut src: &value) {
+	dst.typ = src.typ
+	match type src.data {
+	| &isa::Int:
+		srcin := src.data.(&isa::Int)
+		// Optimization:
+		// If dst's value is integer, use the existing buffer.
+		// Otherwise, allocate a new integer.
+		mut dstin, ok := dst.data.(&isa::Int)
+		if !ok {
+			dstin = new(isa::Int)
+		}
+		dstin.Set(&*srcin)
+		dst.data = dstin
+	| isa::Float:
+		// Make sure dst will have a different heap allocation.
+		// Because in-place computations will mutate the
+		// internal allocation of the [data].
+		fl := src.data.(isa::Float)
+		dst.data = fl
+	}
 }
