@@ -1,0 +1,12 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/vm/isa"
+
+// A virtual machine error.
+struct Error {
+	Opcode: isa::Opcode // The opcode.
+	PC:     isa::PC     // The PC of the opcode.
+	Error:  str         // The problem.
+}

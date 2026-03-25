@@ -24,14 +24,9 @@ const (
 	MOVFL               // x = 1234 (floating-point)                    ; MOVFL RV,1234 (bits of the floating-point)
 )
 
-// Reserved stack variables.
-const (
-	RV = iota // Return Value.
-	PC        // Program Counter.
-)
-
 // Stack constants.
 const (
+	// Reserved stack variables (regsiters).
 	STCK_RV = iota // The index of the return value on the stack.
 	STCK_PC        // The program counter.
 
