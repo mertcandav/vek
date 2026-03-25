@@ -34,6 +34,11 @@ impl VM {
 		}
 	}
 
+	// Returns value from stack by index.
+	fn stackRead(mut *self, idx: isa::Index): &value {
+		ret self.stack[idx]
+	}
+
 	// Runs the binary's next instruction by PC.
 	// The next iteration must be exist, otherwise the behavior is undefined.
 	fn Next(mut *self): &Error {

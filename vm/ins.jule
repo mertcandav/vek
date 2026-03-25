@@ -71,7 +71,13 @@ fn _MOV(mut &vm: *VM): (err: str) {
 	dst := decodeIndex(vm) // DESTINATION
 
 	// MOV src,dst
-	copyval(vm.stack[dst], vm.stack[src])
+	if src == isa::STCK_PC {
+		// Source index is PC.
+		// Set value directly by integer value of PC.
+		setval_int(vm.stackRead(dst), vm.pc)
+	} else {
+		copyval(vm.stackRead(dst), vm.stackRead(src))
+	}
 
 	ret _NoError
 }
@@ -82,7 +88,7 @@ fn _MOVIN(mut &vm: *VM): (err: str) {
 	mut _in := decodeInt(vm) // Integer.
 
 	// MOVIN idx,in
-	mut v := vm.stack[idx]
+	mut v := vm.stackRead(idx)
 	v.typ = typIN
 	v.data = _in
 
@@ -95,7 +101,7 @@ fn _MOVFL(mut &vm: *VM): (err: str) {
 	fl := decodeFloat(vm)  // Floating-point.
 
 	// MOVFL idx,fl
-	mut v := vm.stack[idx]
+	mut v := vm.stackRead(idx)
 	v.typ = typFL
 	v.data = fl
 

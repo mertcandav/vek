@@ -19,11 +19,13 @@ const (
 // for observational or diagnostic operations.
 let mut valuePC = new(value)
 
+// Data of a vek VM value.
 enum data: type {
 	&isa::Int,  // Integer.
 	isa::Float, // Floating-point.
 }
 
+// A vek VM value.
 struct value {
 	typ:  int
 	data: data
@@ -51,4 +53,17 @@ fn copyval(mut dst: &value, mut src: &value) {
 		fl := src.data.(isa::Float)
 		dst.data = fl
 	}
+}
+
+// Sets value of dst to z.
+fn setval_int(mut dst: &value, z: int) {
+	// Optimization:
+	// If dst's value is integer, use the existing buffer.
+	// Otherwise, allocate a new integer.
+	dst.typ = typIN
+	mut dstin, ok := dst.data.(&isa::Int)
+	if !ok {
+		dstin = new(isa::Int)
+	}
+	dstin.SetI64(i64(z))
 }

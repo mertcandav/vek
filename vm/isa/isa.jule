@@ -36,7 +36,7 @@ const (
 const (
 	// Reserved stack variables (regsiters).
 	STCK_RV = iota // The index of the return value on the stack.
-	STCK_PC        // The program counter.
+	STCK_PC        // The program counter index.
 
 	STCK_OFF = 2 // The offset of the stack pointer where zero-index should point to.
 )
