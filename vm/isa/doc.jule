@@ -1,0 +1,175 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+// Introduction
+//
+// This package provides the foundational infrastructure for the ISA architecture.
+// It requires a compatible execution environment (virtual machine) to be
+// implemented for proper instruction execution.
+//
+// This ISA is specifically designed for numerical computing tasks.
+// While it utilizes a register-based architecture, it deviates
+// significantly from the instruction set architectures of
+// conventional physical hardware.
+//
+//
+//
+// Binary Representation
+//
+// The binary representation is structured on a byte-by-byte basis, where
+// each byte functions as a standard octet consisting of 8 bits.
+// All instruction opcodes, data encodings, and related
+// structures must be sequentially encoded within the binary
+// in a byte-aligned format.
+//
+//
+//
+// Stack and Indexes
+//
+// The stack is a FIFO-managed (First-In, First-Out) memory region.
+// Access is performed using zero-based indexing, where
+// index 0 provides access to the first memory segment added.
+// Indices must be non-negative values; as the index value
+// increments, it points to the subsequently allocated
+// memory segments in sequential order.
+//
+// Any memory segment allocated on the stack is capable of storing
+// heterogeneous data types. These slots are designed to be
+// generic containers, allowing the transport of various
+// data structures or primitive values during the
+// execution lifecycle.
+//
+//
+//
+// Registers
+//
+// The ISA incorporates a set of reserved registers, each assigned to a
+// specific dedicated index. These registers are the primary elements
+// pushed onto the stack. By default, they are initialized and
+// established within the stack memory space prior to the
+// execution of any binary instructions.
+//
+// Unless otherwise specified, every register is ready for immediate use
+// but contains an uninitialized memory value. A value must be explicitly
+// assigned before any read operations; by default, they are initialized
+// to an undefined or indeterminate state.
+//
+//	RV:
+//		The Return Value is a multi-purpose register typically used to
+//		represent the final result of a computation or to store
+//		intermediate calculation values. It serves as the primary
+//		destination for return values and temporary
+//		data processing during instruction execution.
+//
+//	PC:
+//		The Program Counter acts as a specialized register that
+//		tracks the execution flow by holding the current memory index.
+//		In this ISA, it increments sequentially after each byte-by-byte decode
+//		cycle unless a branching or jump instruction explicitly modifies its
+//		value to redirect the control flow.
+//
+//		The outcome of any explicit write operation to this register
+//		is strictly undefined. It is not required to map or point to a valid data entry
+//		within the stack memory space. Read-Only.
+//
+//
+//
+// Data Types
+//
+// The ISA provides native support for handling specific data types.
+// It features instructions specifically optimized for numerical
+// types, including both integer and floating-point operations.
+// These specialized instruction sets are designed to ensure
+// high-performance execution of mathematical computations
+// within the virtual machine environment.
+//
+//	Integers:
+//		Integers are treated as arbitrary-precision values.
+//		While behavior may vary based on the specific instruction,
+//		most operations return results as integers by default.
+//		Certain specialized instructions, such as division, may
+//		automatically promote the result to a floating-point
+//		representation.
+//
+//		An integer is encoded within the binary on a byte-by-byte basis.
+//		To signal the completion of the encoding sequence,
+//		a NOP opcode is appended as a mandatory terminator.
+//
+//	Floating-Point:
+//		Floating-point types are represented as 64-bit double-precision values.
+//		These types are subject to overflow conditions.
+//		All arithmetic operations are performed in strict
+//		compliance with the IEEE 754 standard.
+//
+//		A floating-point value is encoded within the binary on a
+//		byte-by-byte basis derived from its constituent bits.
+//		Given the 64-bit precision, each value occupies a fixed
+//		footprint of 8 bytes in memory.
+//
+//
+//
+// Instructions
+//
+// Instructions are specialized commands optimized for performing
+// specific computational tasks. Within the ISA, each instruction
+// encapsulates a discrete operation, serving as the fundamental
+// building block for executing complex algorithmic logic
+// and data transformations.
+//
+// An instruction is represented by an opcode, followed by its
+// associated operand data where required. The opcode serves as the
+// unique identifier for the operation, while the trailing bytes
+// encapsulate the immediate values or metadata necessary to
+// complete the instruction's execution cycle.
+//
+//	NOP:
+//		Performs no functional computational task.
+//		It can also be utilized as a special-purpose marker to denote
+//		specific architectural states, such as serving as a mandatory
+//		terminator to signal the completion of an integer encoding sequence.
+//
+//		NOP
+//
+//	AIN
+//		Pushes an integer value onto the stack. This instruction handles
+//		the multi-byte encoding of arbitrary-precision integers.
+//
+//		AIN [BYTES...] [NOP]
+//
+//	AFL
+//		Pushes a 64-bit floating-point value onto the stack.
+//		The value is encoded byte-by-byte in accordance with its bitwise
+//		representation, occupying a fixed 8-byte block within
+//		the stack's memory space as per the IEEE 754 standard.
+//
+//		AFL [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	MOV
+//		Copies the value of a source index into a target index.
+//		This instruction performs a direct index-to-index
+//		data transfer, ensuring that the destination index
+//		reflects the exact state or reference of the
+//		source index without modifying the original data.
+//
+//		MOV [SOURCE;INDEX],[TARGET;INDEX]
+//
+//	MOVIN
+//
+//		Copies an integer value into the memory slot at a specified index.
+//		This operation handles the direct assignment of arbitrary-precision
+//		integer data to the target index, ensuring that the existing
+//		content is overwritten with the new encoded sequence
+//		including its mandatory NOP terminator.
+//
+//		MOVIN [BYTES...] [NOP]
+//
+//	MOVFL
+//
+//		Copies a 64-bit floating-point value into the memory slot at a
+//		specified index. This instruction performs a direct
+//		assignment of the 8-byte IEEE 754 encoded sequence to
+//		the target destination, overwriting any existing
+//		data at that location.
+//
+//		MOVFL [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]

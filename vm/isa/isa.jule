@@ -1,0 +1,39 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+// Single byte in the binary.
+type Byte = byte
+
+// Index type.
+type Index: u64
+
+// Opcode type.
+type Opcode = Byte
+
+// Program counter type.
+type PC = int
+
+// Opcodes.
+const (
+	NOP:  Opcode = iota // No operation.
+	AIN                 // Pushes an integer number to the stack.       ; AIN 12345 (bytes of the integer)
+	AFL                 // Pushes a floating-point number to the stack. ; AFL 12345 (bits of the floating-point)
+	MOV                 // x = y                                        ; MOV RV,RV
+	MOVIN               // x = 1234 (decimal)                           ; MOVIN RV,1234 (bytes of the integer)
+	MOVFL               // x = 1234 (floating-point)                    ; MOVFL RV,1234 (bits of the floating-point)
+)
+
+// Reserved stack variables.
+const (
+	RV = iota // Return Value.
+	PC        // Program Counter.
+)
+
+// Stack constants.
+const (
+	STCK_RV = iota // The index of the return value on the stack.
+	STCK_PC        // The program counter.
+
+	STCK_OFF = 2 // The offset of the stack pointer where zero-index should point to.
+)

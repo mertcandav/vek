@@ -1,0 +1,40 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "std/math"
+use "std/math/big"
+
+// Encodes integer and appends to buf.
+fn EncodeInt(mut buf: []byte, x: big::Int): []byte {
+	buf = x.AppendBytes(buf)
+	buf = append(buf, NOP)
+	ret buf
+}
+
+// Encodes floating-point and appends to buf.
+fn EncodeFloat(mut buf: []byte, z: f64): []byte {
+	b := math::F64bits(z)
+	ret append(buf,
+		byte(b>>56),
+		byte(b>>48),
+		byte(b>>40),
+		byte(b>>32),
+		byte(b>>24),
+		byte(b>>16),
+		byte(b>>8),
+		byte(b))
+}
+
+// Encodes index and appends to buf.
+fn EncodeIndex(mut buf: []byte, idx: Index): []byte {
+	ret append(buf,
+		byte(idx>>56),
+		byte(idx>>48),
+		byte(idx>>40),
+		byte(idx>>32),
+		byte(idx>>24),
+		byte(idx>>16),
+		byte(idx>>8),
+		byte(idx))
+}
