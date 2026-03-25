@@ -31,6 +31,7 @@ let insmap: [...]insfunc = [
 	_AIN,
 	_AFL,
 	_MOV,
+	_MOVIN,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -71,6 +72,19 @@ fn _MOV(mut &vm: *VM): (err: str) {
 
 	// MOV src,dst
 	copyval(vm.stack[dst], vm.stack[src])
+
+	ret _NoError
+}
+
+fn _MOVIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // MOVIN
+	idx := decodeIndex(vm)   // INDEX
+	mut _in := decodeInt(vm) // Integer.
+
+	// MOVIN idx,in
+	mut v := vm.stack[idx]
+	v.typ = typIN
+	v.data = _in
 
 	ret _NoError
 }
