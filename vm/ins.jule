@@ -89,6 +89,19 @@ fn _MOVIN(mut &vm: *VM): (err: str) {
 	ret _NoError
 }
 
+fn _MOVFL(mut &vm: *VM): (err: str) {
+	vm.pc++                // MOVFL
+	idx := decodeIndex(vm) // INDEX
+	fl := decodeFloat(vm)  // Floating-point.
+
+	// MOVFL idx,fl
+	mut v := vm.stack[idx]
+	v.typ = typFL
+	v.data = fl
+
+	ret _NoError
+}
+
 // Decodes integer.
 fn decodeInt(mut &vm: *VM): &isa::Int {
 	start := vm.pc
