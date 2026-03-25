@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
-use "std/fmt"
+use "vek/vm/isa"
 use "std/math"
 
 // Error message indicating success.
@@ -29,6 +29,7 @@ type insfunc: fn(mut &vm: *VM): (err: str)
 let insmap: [...]insfunc = [
 	_NOP,
 	_AIN,
+	_AFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -49,6 +50,19 @@ fn _AIN(mut &vm: *VM): (err: str) {
 	ret _NoError
 }
 
+fn _AFL(mut &vm: *VM): (err: str) {
+	vm.pc++               // AFL
+	fl := decodeFloat(vm) // Floating-point.
+
+	// AFL fl
+	vm.stack = append(vm.stack, &value{
+		typ: typFL,
+		data: fl,
+	})
+
+	ret _NoError
+}
+
 // Decodes integer.
 fn decodeInt(mut &vm: *VM): &isa::Int {
 	start := vm.pc
@@ -58,4 +72,26 @@ fn decodeInt(mut &vm: *VM): &isa::Int {
 	mut _in := new(isa::Int)
 	_in.SetBytes(enc)
 	ret _in
+}
+
+// Decodes floating-point.
+fn decodeFloat(mut &vm: *VM): isa::Float {
+	let mut b: u64
+	b |= u64(vm.bin[vm.pc]) << 56
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 48
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 40
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 32
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 24
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 16
+	vm.pc++
+	b |= u64(vm.bin[vm.pc]) << 8
+	vm.pc++
+	b |= u64(vm.bin[vm.pc])
+	vm.pc++
+	ret math::F64frombits(b)
 }
