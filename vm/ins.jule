@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
-use "vek/vm/isa"
+use "std/fmt"
 use "std/math"
 
 // Error message indicating success.
@@ -28,9 +28,34 @@ type insfunc: fn(mut &vm: *VM): (err: str)
 // functional logic required for that instruction.
 let insmap: [...]insfunc = [
 	_NOP,
+	_AIN,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
 	vm.pc++ // NOP
 	ret _NoError
+}
+
+fn _AIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // AIN
+	mut _in := decodeInt(vm) // Integer.
+
+	// AIN _in
+	vm.stack = append(vm.stack, &value{
+		typ: typIN,
+		data: _in,
+	})
+
+	ret _NoError
+}
+
+// Decodes integer.
+fn decodeInt(mut &vm: *VM): &isa::Int {
+	start := vm.pc
+	vm.scanUntil(isa::NOP)
+	enc := vm.bin[start:vm.pc]
+	vm.pc++ // NOP
+	mut _in := new(isa::Int)
+	_in.SetBytes(enc)
+	ret _in
 }
