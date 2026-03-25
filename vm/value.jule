@@ -1,0 +1,21 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "std/math/big"
+
+// Data types.
+const (
+	typIN = iota // Integer.
+	typFL        // Floating-point.
+)
+
+enum data: type {
+	&big::Int, // Integer.
+	f64,       // Floating-point.
+}
+
+struct value {
+	typ:  int
+	data: data
+}
