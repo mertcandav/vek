@@ -1,0 +1,84 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/vm/isa"
+
+// A vek virtual machine.
+//
+// Executes a vek binary in strict accordance with the vek ISA specification.
+// This process involves the sequential fetching of opcodes,
+// managing the stack-based memory model, and updating the PC to maintain
+// the precise execution flow defined by the bytecode.
+struct VM {
+	bin:   []isa::Byte // vek binary.
+	pc:    isa::PC     // Program counter.
+	stack: []&value
+}
+
+impl VM {
+	// Loads a vek binary
+	// This is an unsafe function because it will not check validity of the binary.
+	// If the program is corruped, the behavior is undefined.
+	fn LoadBinary(mut *self, bin: []isa::Byte) {
+		self.bin = unsafe { *&bin } // Read only.
+	}
+
+	// Returns PC.
+	fn PC(*self): int { ret self.pc }
+
+	// Scans until opcode, including current byte.
+	fn scanUntil(mut *self, opcode: isa::Opcode) {
+		for self.bin[self.pc] != opcode {
+			self.pc++
+		}
+	}
+
+	// Runs the binary's next instruction by PC.
+	// The next iteration must be exist, otherwise the behavior is undefined.
+	fn Next(mut *self): &Error {
+		pc := self.pc
+		opcode := self.bin[self.pc]
+		err := insmap[opcode](self)
+		if err != "" {
+			ret &Error{
+				Opcode: opcode,
+				PC: pc,
+				Error: err,
+			}
+		}
+		ret nil
+	}
+
+	// Runs the whole binary on the virtual machine.
+	fn Run(mut *self): &Error {
+		for self.pc < len(self.bin) {
+			mut err := self.Next()
+			if err != nil {
+				ret err
+			}
+		}
+		ret nil
+	}
+}
+
+// Returns new initialized VM.
+fn New(): (vm: VM) {
+	// Initialize the stack and reserved areas.
+	// Allocate a reasonable amounf of additional space for potential stack variables.
+	const Reserved = 2 // Count of the reserved stack variables (registers).
+	vm.stack = make([]&value, Reserved, Reserved+10)
+	for i in vm.stack {
+		// Initialize all stack with undefined values.
+		// This is allowed by the specification.
+		// No need for default values.
+		match i {
+		| isa::STCK_PC:
+			// See valuePC's documentation.
+			vm.stack[i] = valuePC
+		|:
+			vm.stack[i] = new(value)
+		}
+	}
+	ret
+}

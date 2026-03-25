@@ -1,0 +1,36 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/vm/isa"
+use "std/math"
+
+// Error message indicating success.
+const _NoError = ""
+
+// The function signature for processing an instruction.
+// It defines the standardized interface for all execution routines,
+// typically accepting the current execution context and
+// necessary operands to perform the required architectural
+// state transitions.
+//
+// Upon function return, the Program Counter (PC) must point to the
+// next opcode or signify that the end of the binary has been
+// reached. This ensures a consistent execution state, where
+// the fetch-decode-execute cycle can either proceed to the
+// subsequent instruction or terminate the process gracefully.
+type insfunc: fn(mut &vm: *VM): (err: str)
+
+// The instruction map serves as a dispatch table where each
+// opcode acts as a direct index. This mechanism maps the
+// opcode to its corresponding execution routine, enabling
+// the virtual machine to resolve and trigger the specific
+// functional logic required for that instruction.
+let insmap: [...]insfunc = [
+	_NOP,
+]
+
+fn _NOP(mut &vm: *VM): (err: str) {
+	vm.pc++ // NOP
+	ret _NoError
+}

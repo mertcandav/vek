@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
-use "std/math/big"
+use "vek/vm/isa"
 
 // Data types.
 const (
@@ -10,8 +10,17 @@ const (
 	typFL        // Floating-point.
 )
 
+// A placeholder value for the PC.
+// This approach is explicitly permitted by the specification.
+// The Program Counter (PC) is not required to function as a
+// actual Read/Write (R/W) register on the stack. Instead,
+// it acts as a read-only abstraction, with the sole purpose
+// of exposing the current instruction pointer's value
+// for observational or diagnostic operations.
+let mut valuePC = new(value)
+
 enum data: type {
-	&big::Int, // Integer.
+	&isa::Int, // Integer.
 	f64,       // Floating-point.
 }
 

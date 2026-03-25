@@ -3,38 +3,37 @@
 // license that can be found in the LICENSE file.
 
 use "std/math"
-use "std/math/big"
 
 // Encodes integer and appends to buf.
-fn EncodeInt(mut buf: []byte, x: big::Int): []byte {
+fn EncodeInt(mut buf: []Byte, x: Int): []Byte {
 	buf = x.AppendBytes(buf)
 	buf = append(buf, NOP)
 	ret buf
 }
 
 // Encodes floating-point and appends to buf.
-fn EncodeFloat(mut buf: []byte, z: f64): []byte {
+fn EncodeFloat(mut buf: []Byte, z: Float): []Byte {
 	b := math::F64bits(z)
 	ret append(buf,
-		byte(b>>56),
-		byte(b>>48),
-		byte(b>>40),
-		byte(b>>32),
-		byte(b>>24),
-		byte(b>>16),
-		byte(b>>8),
-		byte(b))
+		Byte(b>>56),
+		Byte(b>>48),
+		Byte(b>>40),
+		Byte(b>>32),
+		Byte(b>>24),
+		Byte(b>>16),
+		Byte(b>>8),
+		Byte(b))
 }
 
 // Encodes index and appends to buf.
-fn EncodeIndex(mut buf: []byte, idx: Index): []byte {
+fn EncodeIndex(mut buf: []Byte, idx: Index): []Byte {
 	ret append(buf,
-		byte(idx>>56),
-		byte(idx>>48),
-		byte(idx>>40),
-		byte(idx>>32),
-		byte(idx>>24),
-		byte(idx>>16),
-		byte(idx>>8),
-		byte(idx))
+		Byte(idx>>56),
+		Byte(idx>>48),
+		Byte(idx>>40),
+		Byte(idx>>32),
+		Byte(idx>>24),
+		Byte(idx>>16),
+		Byte(idx>>8),
+		Byte(idx))
 }

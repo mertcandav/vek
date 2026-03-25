@@ -2,6 +2,14 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "std/math/big"
+
+// Integer type.
+type Int = big::Int
+
+// Floating-point type.
+type Float = f64
+
 // Single byte in the binary.
 type Byte = byte
 
