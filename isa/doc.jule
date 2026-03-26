@@ -265,7 +265,7 @@
 //		content is overwritten with the new encoded sequence
 //		including its mandatory NOP terminator.
 //
-//		MOVIN [SIGN] [BYTES...] [NOP]
+//		MOVIN [INDEX],[SIGN] [BYTES...] [NOP]
 //
 //	MOVFL:
 //		Copies a 64-bit floating-point value into the memory slot at a
@@ -274,7 +274,7 @@
 //		the target destination, overwriting any existing
 //		data at that location.
 //
-//		MOVFL [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//		MOVFL [INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 //
 //	NEG:
 //		Inverts the sign of the value on the stack by index. This instruction
@@ -282,3 +282,51 @@
 //		into its negative equivalent and vice versa.
 //
 //		NEG [INDEX]
+//
+//	ADD:
+//		Adds the value from the source index to the destination
+//		index. This instruction supports mixed-mode arithmetic,
+//		automatically promoting types to ensure precision
+//		during the summation process.
+//
+//		- Integer and Integer:
+//			The result is an integer; values are summed directly.
+//		- Float and Float:
+//			The result is a float; values are summed directly.
+//		- Integer and Float:
+//			The integer is cast to a float before the addition.
+//			The resulting sum is stored as a float.
+//
+//		ADD [DESTINATION;INDEX],[VALUE;INDEX]
+//
+//	ADDIN:
+//		Adds an integer value to the destination index.
+//		This instruction facilitates direct arithmetic
+//		with constants, optimizing performance by bypassing
+//		additional register or memory lookups.
+//
+//		- Destination is Integer:
+//			The values are summed directly.
+//			The result remains an integer.
+//		- Destination is Float:
+//			The immediate integer is first promoted
+//			(cast) to a float value. The summation is then
+//			performed, and the final result is stored as a float.
+//
+//		ADDIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//
+//	ADDFL:
+//		Adds a literal floating-point value to the destination index.
+//		This instruction facilitates direct arithmetic
+//		with constants, optimizing performance by bypassing
+//		additional register or memory lookups.
+//
+//		- Destination is Float:
+//			The values are summed directly.
+//			The result remains a float.
+//		- Destination is Integer:
+//			The destination's integer is first promoted
+//			(cast) to a float value. The summation is then
+//			performed, and the final result is stored as a float.
+//
+//		ADDFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
