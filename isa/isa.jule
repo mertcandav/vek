@@ -35,6 +35,7 @@ const (
 	MOV
 	MOVIN
 	MOVFL
+	NEG
 )
 
 // Stack constants.

@@ -275,3 +275,10 @@
 //		data at that location.
 //
 //		MOVFL [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	NEG:
+//		Inverts the sign of the value on the stack by index. This instruction
+//		performs a numerical negation, transforming a positive integer
+//		into its negative equivalent and vice versa.
+//
+//		NEG [INDEX]
