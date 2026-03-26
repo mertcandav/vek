@@ -1,0 +1,20 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+struct Smartptr[T] {
+	Ptr: *T
+	Ref: *uint
+}
+
+struct DynamicTypeMeta {
+	Dealloc: *unsafe
+	Hash:    *unsafe
+	Eq:      *unsafe
+	ToStr:   *unsafe
+}
+
+struct DynamicType {
+	Data: Smartptr[uintptr]
+	Type: *DynamicTypeMeta
+}

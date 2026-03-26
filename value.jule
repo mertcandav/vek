@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek/internal/mem"
 use "vek/isa"
 
 // Data types.
@@ -17,7 +18,88 @@ enum Data: type {
 }
 
 // A vek value.
+//
+// A Value instance performs its computations in-place whenever
+// possible to minimize memory allocations. Consequently,
+// each Value instance must maintain a unique heap
+// allocation dedicated to its specific data, ensuring
+// that operations directly modify the underlying
+// memory without triggering redundant
+// fragmentation or reallocations.
 struct Value {
 	Type: int
 	Data: Data
+}
+
+impl Value {
+	// Reads data as floating-point.
+	// Returns 0 if cast failed.
+	fn AsFloat(*self): isa::Float {
+		match type self.Data {
+		| isa::Float:
+			ret self.Data.(isa::Float)
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			ret fl
+		|:
+			ret 0
+		}
+	}
+
+	// Sets value to float fl.
+	// Heap allocation must be exist already and Value must be TypeFL.
+	fn SetFloat(mut *self, fl: isa::Float) {
+		unsafe {
+			mut dt := (*mem::DynamicType)(&self.Data)
+			*(*isa::Float)(dt.Data.Ptr) = fl
+		}
+	}
+
+	// Negates value.
+	fn NEG(mut *self) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(-self.Data.(isa::Float))
+		| &isa::Int:
+			mut _in := self.Data.(&isa::Int)
+			_in.Neg(&*_in)
+		}
+	}
+
+	// Adds v's value to itself value.
+	// Reports whether operation is success.
+	fn ADD(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.ADDFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.ADDIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// Adds v's value to itself value.
+	// Reports whether operation is success.
+	fn ADDIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(self.Data.(isa::Float) + fl)
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Add(&*a, &*v)
+		}
+	}
+
+	// Adds x's value to itself value.
+	// Reports whether operation is success.
+	fn ADDFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(self.Data.(isa::Float) + v)
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = fl + v
+		}
+	}
 }
