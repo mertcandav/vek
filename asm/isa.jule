@@ -1,0 +1,70 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/isa"
+
+// Appends NOP instruction to buf.
+fn NOP(mut buf: []isa::Byte): []isa::Byte {
+	ret append(buf, isa::NOP)
+}
+
+// Appends JMP instruction to buf.
+fn JMP(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
+	buf = append(buf, isa::JMP)
+	ret isa::EncodeIndex(buf, idx)
+}
+
+// Appends ASF instruction to buf.
+fn ASF(mut buf: []isa::Byte, offset: isa::Index): []isa::Byte {
+	buf = append(buf, isa::ASF)
+	ret isa::EncodeIndex(buf, offset)
+}
+
+// Appends CALL instruction to buf.
+fn CALL(mut buf: []isa::Byte, pc: isa::Index): []isa::Byte {
+	buf = append(buf, isa::CALL)
+	ret isa::EncodeIndex(buf, pc)
+}
+
+// Appends ECALL instruction to buf.
+fn ECALL(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
+	buf = append(buf, isa::ECALL)
+	ret isa::EncodeIndex(buf, idx)
+}
+
+// Appends RET instruction to buf.
+fn RET(mut buf: []isa::Byte): []isa::Byte {
+	ret append(buf, isa::RET)
+}
+
+// Appends AIN instruction to buf.
+fn AIN(mut buf: []isa::Byte, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::AIN)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends AFL instruction to buf.
+fn AFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::AFL)
+	ret isa::EncodeFloat(buf, fl)
+}
+
+// Appends MOV instruction to buf.
+fn MOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
+	buf = append(buf, isa::MOV)
+	buf = isa::EncodeIndex(buf, src)
+	ret isa::EncodeIndex(buf, dst)
+}
+
+// Appends MOVIN instruction to buf.
+fn MOVIN(mut buf: []isa::Byte, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::MOVIN)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends MOVFL instruction to buf.
+fn MOVFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::MOVFL)
+	ret isa::EncodeFloat(buf, fl)
+}
