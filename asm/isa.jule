@@ -68,3 +68,9 @@ fn MOVFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::MOVFL)
 	ret isa::EncodeFloat(buf, fl)
 }
+
+// Appends NEG instruction to buf.
+fn NEG(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
+	buf = append(buf, isa::NEG)
+	ret isa::EncodeIndex(buf, idx)
+}
