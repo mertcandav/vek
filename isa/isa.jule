@@ -25,6 +25,7 @@ type PC = int
 // Opcodes.
 const (
 	NOP: Opcode = iota
+	JMP
 	ASF
 	CALL
 	ECALL

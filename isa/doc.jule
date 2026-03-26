@@ -27,8 +27,9 @@
 //
 // Entry Point
 //
-// The initial 8-byte sequence of a typical binary encodes the
-// starting value of the Program Counter (PC) for the entry point.
+// The initial 1-byte + 8-byte sequence of a typical binary encodes the
+// starting JMP instruction of the Program Counter (PC) for the entry point.
+// For example: JMP 1234
 // This sequence is decoded upon initialization, and the
 // execution cycle commences from the specific PC address
 // represented by these bytes.
@@ -170,6 +171,15 @@
 //
 //		NOP
 //
+//	JMP:
+//		Performs an immediate branch to the specified
+//		Program Counter (PC) address. This instruction replaces the
+//		current PC value with the target destination, effectively
+//		redirecting the execution flow to a new location within
+//		the binary without affecting the stack frame.
+//
+//		JMP [PC;AS-INDEX]
+//
 //	ASF:
 //		Allocates a new stack frame and shifts the
 //		execution scope to that frame. It accepts an offset parameter
@@ -189,9 +199,9 @@
 //		Must be executed immediately following a stack frame allocation
 //		via ASF. Once the ASF instruction has initialized the new
 //		frame and adjusted the stack offset, a CALL instruction
-//		performs the jump to the target Program Counter (PC).
+//		performs the JMP to the target Program Counter (PC).
 //
-//		Prior to the jump, the CALL instruction preserves the
+//		Prior to the JMP, the CALL instruction preserves the
 //		return address (PC) within the current stack frame's
 //		metadata. This stored value is subsequently utilized
 //		by the RET instruction to restore the execution flow.
@@ -216,7 +226,7 @@
 //		Terminates the current stack frame and restores the
 //		preceding execution context. This instruction utilizes the
 //		return address (PC) preserved within the active frame to
-//		execute a jump back to the caller's next instruction.
+//		execute a JMP back to the caller's next instruction.
 //		Every function must encounter this instruction to
 //		ensure a graceful return and stack consistency.
 //
