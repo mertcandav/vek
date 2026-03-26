@@ -1,0 +1,35 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+#build windows
+
+use "std/sys"
+
+// When writing with WriteFile or WriteConsole, characters are parsed for VT100
+// and similar control character sequences that control cursor movement,
+// color/font mode, and other operations that can also be performed via the
+// existing Console APIs. For more information, see Console Virtual
+// Terminal Sequences. Ensure ENABLE_PROCESSED_OUTPUT is set when using this flag.
+//
+// See: https://learn.microsoft.com/en-us/windows/console/setconsolemode
+const enableVirtualTerminalProcessing = 0x0004
+
+fn enableVTP() {
+	hOut := sys::GetStdHandle(uintptr(int(sys::STD_OUTPUT_HANDLE)))
+	if hOut == sys::InvalidHandle {
+		ret
+	}
+
+	mut dwMode := u32(0)
+	if unsafe { !sys::GetConsoleMode(hOut, &dwMode) } {
+		ret
+	}
+
+	dwMode |= enableVirtualTerminalProcessing
+	_ = unsafe { sys::SetConsoleMode(hOut, dwMode) }
+}
+
+fn init() {
+	enableVTP()
+}
