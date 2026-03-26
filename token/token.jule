@@ -1,0 +1,57 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+// Token identities.
+const (
+	ILLEGAL = iota // illegal token
+	EOF
+
+	NAME  // identifier
+	FLOAT // floating-point literal
+	INT   // integer literal
+
+	ADD // +
+	SUB // -
+	MUL // *
+	QUO // /
+	REM // %
+
+	LPAREN // (
+	RPAREN // )
+)
+
+// Token.
+struct Token {
+	ID:     int // Identity of token.
+	Column: int // Column position of token.
+	Kind:   str // Token kind as string.
+}
+
+// A set of constants for precedence-based expression parsing.
+// Non-operators have lowest precedence, followed by operators
+// starting with precedence 1 up to unary operators. The highest
+// precedence serves as "catch-all" precedence for selector,
+// indexing, and other operator and delimiter tokens.
+const (
+	LowestPrec  = 0 // non-operators
+	UnaryPrec   = 6
+	HighestPrec = 7
+)
+
+impl Token {
+	// Returns operator precedence of token.
+	// Returns 0 if token is not operator or
+	// invalid operator for operator precedence.
+	// It only reports for the binary operators, otherwise returns LowestPrec.
+	fn Precedence(*self): int {
+		match self.ID {
+		| MUL | REM | QUO:
+			ret 2
+		| ADD | SUB:
+			ret 1
+		|:
+			ret LowestPrec
+		}
+	}
+}

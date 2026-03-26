@@ -1,0 +1,395 @@
+// Copyright 2023 The Jule Project Contributors. All rights reserved.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/log"
+use "std/conv"
+use "std/unicode"
+use "std/unicode/utf8"
+use "std/unsafe"
+
+const (
+	bom = 0xFEFF // byte order mark, only permitted as very first character
+	eof = -1     // end of file
+)
+
+// Scanner scans tokens from FileSet data.
+// Any log will be appended to [Scanner.Logs].
+struct Scanner {
+	buf:      []byte // buffer to scan
+	offset:   int    // position of current rune
+	rdOffset: int    // read position
+	row:      int    // total count of rows
+	col:      int    // current column
+	r:        rune   // current rune
+
+	Logs: []log::Log
+}
+
+impl Scanner {
+	// Returns new Scanner for the FileSet f.
+	fn New(mut buf: []byte): &Scanner {
+		mut scan := new(Scanner)
+		scan.buf = buf
+		scan.row = 1
+		scan.col = 0
+		scan.r = ' '
+		ret scan
+	}
+
+	// Pushes new error log to logs.
+	fn pushErr(mut *self, col: int, text: str, args: ...any) {
+		self.Logs = append(self.Logs, log::Log{
+			Kind: log::Error,
+			Column: col,
+			Line: unsafe::StrFromBytes(self.buf),
+			Text: text,
+		})
+	}
+
+	// Adds new line.
+	fn addLine(mut *self) {
+		self.row++
+		self.col = 0
+	}
+
+	// Returns the next rune without advance scanning.
+	fn peek(mut *self): rune {
+		if self.rdOffset >= len(self.buf) {
+			ret eof
+		}
+		mut r := rune(self.buf[self.rdOffset])
+		// not ASCII
+		if r >= utf8::RuneSelf {
+			r, _ = utf8::DecodeRune(self.buf[self.rdOffset:])
+		}
+		ret r
+	}
+
+	// Read the next Unicode char into self.r.
+	// self.r < 0 means end-of-file.
+	//
+	// For optimization, there is some overlap between this method and self.scanName.
+	fn next(mut *self) {
+		if self.rdOffset >= len(self.buf) {
+			if self.r == '\n' {
+				self.addLine()
+			}
+			self.offset = len(self.buf)
+			self.r = eof
+			ret
+		}
+		if self.r == '\n' {
+			self.addLine()
+		}
+		self.offset = self.rdOffset
+		mut r, mut w := rune(self.buf[self.rdOffset]), 1
+		match {
+		| r == 0:
+			self.pushErr(self.col, "illegal character NUL")
+		| r >= utf8::RuneSelf:
+			// not ASCII
+			r, w = utf8::DecodeRune(self.buf[self.rdOffset:])
+			if r == utf8::RuneError && w == 1 {
+				self.pushErr(self.col, "illegal UTF-8 encoding")
+			} else if r == bom && self.offset > 0 {
+				self.pushErr(self.col, "illegal byte order mask")
+			}
+		}
+		self.rdOffset += w
+		self.col++
+		self.r = r
+	}
+
+	fn skipWhitespace(mut *self) {
+		for self.r == ' ' || self.r == '\t' || self.r == '\n' || self.r == '\r' {
+			self.next()
+		}
+	}
+
+	// Reads the string of valid identifier characters at self.offset.
+	// It must only be called when self.r is known to be a valid letter.
+	//
+	// Be careful when making changes to this function: it is optimized and affects
+	// scanning performance significantly.
+	fn scanName(mut *self, mut &token: *Token): bool {
+		offs := self.offset
+
+		// Optimize for the common case of an ASCII identifier.
+		//
+		// Ranging over self.buf.Slice1(self.rdOffset) lets us avoid some bounds checks, and
+		// avoids conversions to runes.
+		//
+		// In case we encounter a non-ASCII character, fall back on the slower path
+		// of calling into self.next().
+		for rdOffset, b in self.buf[self.rdOffset:] {
+			if 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || b == '_' || '0' <= b && b <= '9' {
+				// Avoid assigning a rune for the common case of an ascii character.
+				continue
+			}
+			self.rdOffset += rdOffset
+			self.col += rdOffset
+			if 0 < b && b < utf8::RuneSelf {
+				// Optimization: we've encountered an ASCII character that's not a letter
+				// or number. Avoid the call into self.next() and corresponding set up.
+				//
+				// Note that self.next() does some line accounting if self.r is '\n', so this
+				// shortcut is only possible because we know that the preceding character
+				// is not '\n'.
+				self.r = rune(b)
+				self.offset = self.rdOffset
+				self.rdOffset++
+				self.col++
+				goto exit
+			}
+			// We know that the preceding character is valid for an identifier because
+			// scanName is only called when self.r is a letter, so calling self.next()
+			// at self.rdOffset resets the scanner state.
+			self.next()
+			for isLetter(self.r) || isDigit(self.r) {
+				self.next()
+			}
+			goto exit
+		}
+		self.offset = len(self.buf)
+		self.rdOffset = len(self.buf)
+		self.r = eof
+
+	exit:
+		token.ID = NAME
+		token.Kind = unsafe::StrFromBytes(self.buf[offs:self.offset])
+		ret true
+	}
+
+	// digits accepts the sequence { digit | '_' }.
+	// If base <= 10, digits accepts any decimal digit but records
+	// the offset (relative to the source start) of a digit >= base
+	// in *invalid, if *invalid < 0.
+	// digits returns a bitset describing whether the sequence contained
+	// digits (bit 0 is set), or separators '_' (bit 1 is set).
+	fn digits(mut *self, base: int, mut &invalid: *int): (digsep: int) {
+		if base <= 10 {
+			max := rune('0' + base)
+			for isDecimal(self.r) || self.r == '_' {
+				mut ds := 1
+				if self.r == '_' {
+					ds = 2
+				} else if self.r >= max && *invalid < 0 {
+					*invalid = self.col // record invalid rune offset
+				}
+				digsep |= ds
+				self.next()
+			}
+		} else {
+			for isHex(self.r) || self.r == '_' {
+				mut ds := 1
+				if self.r == '_' {
+					ds = 2
+				}
+				digsep |= ds
+				self.next()
+			}
+		}
+		ret
+	}
+
+	fn scanNumber(mut *self, mut &token: *Token) {
+		offs := self.offset
+		mut base := 10        // number base
+		mut prefix := rune(0) // one of 0 (decimal), '0' (0-octal), 'x', 'o', or 'b'
+		mut digsep := 0       // bit 0: digit present, bit 1: '_' present
+		mut invalid := -1     // index of invalid digit in literal, or < 0
+		mut tok := INT
+
+		// integer part
+		if self.r != '.' {
+			if self.r == '0' {
+				self.next()
+				match lower(self.r) {
+				| 'x':
+					self.next()
+					base, prefix = 16, 'x'
+				| 'o':
+					self.next()
+					base, prefix = 8, 'o'
+				| 'b':
+					self.next()
+					base, prefix = 2, 'b'
+				|:
+					base, prefix = 8, '0'
+					digsep = 1 // leading 0
+				}
+			}
+			digsep |= self.digits(base, &invalid)
+		}
+
+		// fractional part
+		if self.r == '.' {
+			tok = FLOAT
+			if prefix == 'o' || prefix == 'b' {
+				self.pushErr(self.col, "invalid radix point in "+litname(prefix))
+			}
+			self.next()
+			digsep |= self.digits(base, &invalid)
+		}
+
+		if digsep&1 == 0 {
+			self.pushErr(self.col, litname(prefix)+" has no digits")
+		}
+
+		// exponent
+		e := lower(self.r)
+		if e == 'e' || e == 'p' {
+			match {
+			| e == 'e' && prefix != 0 && prefix != '0':
+				self.pushErr(self.col, "{} exponent requires decimal mantissa", self.r)
+			| e == 'p' && prefix != 'x':
+				self.pushErr(self.col, "{} exponent requires hexadecimal mantissa", self.r)
+			}
+			self.next()
+			tok = FLOAT
+			if self.r == '+' || self.r == '-' {
+				self.next()
+			}
+			mut _invalid := 0
+			ds := self.digits(10, &_invalid)
+			digsep |= ds
+			if ds&1 == 0 {
+				self.pushErr(self.col, "exponent has no digits")
+			}
+		} else if prefix == 'x' && tok == FLOAT {
+			self.pushErr(self.col, "hexadecimal mantissa requires a 'p' exponent")
+		}
+
+		lit := unsafe::StrFromBytes(self.buf[offs:self.offset])
+		if tok == INT && invalid >= 0 {
+			self.pushErr(invalid, "invalid digit {} in {}", lit[invalid-offs], litname(prefix))
+		}
+		if digsep&2 != 0 {
+			i := invalidSep(lit)
+			if i >= 0 {
+				self.pushErr(self.col+i, "'_' must separate successive digits")
+			}
+		}
+
+		token.ID = tok
+		token.Kind = lit
+	}
+
+	// Scans and returns next token.
+	fn Next(mut *self): (token: Token) {
+		self.skipWhitespace()
+		token.ID = ILLEGAL
+		token.Column = self.col
+		if self.r == eof {
+			token.ID = EOF
+			ret
+		}
+		match {
+		| isLetter(self.r) && self.scanName(&token):
+			// No-op.
+		| isDecimal(self.r) || self.r == '.' && isDecimal(self.peek()):
+			self.scanNumber(&token)
+		|:
+			// Save the current rune and advance.
+			r := self.r
+			col := self.col
+			self.next()
+			match r {
+			| '(':
+				token.ID = LPAREN
+				token.Kind = "("
+			| ')':
+				token.ID = RPAREN
+				token.Kind = ")"
+			| '+':
+				token.ID = ADD
+				token.Kind = "+"
+			| '-':
+				token.ID = SUB
+				token.Kind = "-"
+			| '*':
+				token.ID = MUL
+				token.Kind = "*"
+			| '/':
+				token.ID = QUO
+				token.Kind = "/"
+			| '%':
+				token.ID = REM
+				token.Kind = "%"
+			|:
+				self.pushErr(col, "invalid token "+conv::QuoteRune(r))
+				self.next()
+			}
+		}
+		if len(self.Logs) > 0 {
+			token.ID = ILLEGAL
+		}
+		ret
+	}
+}
+
+fn lower(ch: rune): rune { ret ('a' - 'A') | ch }
+fn isDecimal(ch: rune): bool { ret '0' <= ch && ch <= '9' }
+fn isHex(ch: rune): bool { ret '0' <= ch && ch <= '9' || 'a' <= lower(ch) && lower(ch) <= 'f' }
+
+fn isLetter(ch: rune): bool {
+	ret 'a' <= lower(ch) && lower(ch) <= 'z' || ch == '_' || ch >= utf8::RuneSelf && unicode::IsLetter(ch)
+}
+
+fn isDigit(ch: rune): bool {
+	ret isDecimal(ch) || ch >= utf8::RuneSelf && unicode::IsDigit(ch)
+}
+
+// Returns the index of the first invalid separator in x, or -1.
+fn invalidSep(x: str): int {
+	mut x1 := rune(' ') // prefix char, we only care if it's 'x'
+	mut d := rune('.')  // digit, one of '_', '0' (a digit), or '.' (anything else)
+	mut i := 0
+
+	// a prefix counts as a digit
+	if len(x) >= 2 && x[0] == '0' {
+		x1 = lower(rune(x[1]))
+		if x1 == 'x' || x1 == 'o' || x1 == 'b' {
+			d = '0'
+			i = 2
+		}
+	}
+
+	// mantissa and exponent
+	for i < len(x); i++ {
+		p := d // previous digit
+		d = rune(x[i])
+		match {
+		| d == '_':
+			if p != '0' {
+				ret i
+			}
+		| isDecimal(d) || x1 == 'x' && isHex(d):
+			d = '0'
+		|:
+			if p == '_' {
+				ret i - 1
+			}
+			d = '.'
+		}
+	}
+	if d == '_' {
+		ret len(x) - 1
+	}
+
+	ret -1
+}
+
+fn litname(prefix: rune): str {
+	match prefix {
+	| 'x':
+		ret "hexadecimal literal"
+	| 'o' | '0':
+		ret "octal literal"
+	| 'b':
+		ret "binary literal"
+	|:
+		ret "decimal literal"
+	}
+}
