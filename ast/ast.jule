@@ -1,0 +1,33 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek"
+use "vek/token"
+
+// Expression.
+enum Expr: type {
+	&vek::Value,
+	&NameExpr,
+	&UnaryExpr,
+	&BinaryExpr,
+}
+
+// Name expression.
+struct NameExpr {
+	Token: token::Token
+	Name:  str
+}
+
+// Unary expression.
+struct UnaryExpr {
+	Op: token::Token
+	X:  Expr
+}
+
+// Binary expression.
+struct BinaryExpr {
+	X:  Expr
+	Op: token::Token
+	Y:  Expr
+}
