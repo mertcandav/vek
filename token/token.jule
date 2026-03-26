@@ -21,11 +21,44 @@ const (
 	RPAREN // )
 )
 
+// Returns string kind of token.
+fn Str(id: int): str {
+	match id {
+	| ILLEGAL:
+		ret "illegal"
+	| EOF:
+		ret "EOF"
+	| NAME:
+		ret "name"
+	| FLOAT:
+		ret "float"
+	| INT:
+		ret "int"
+	| ADD:
+		ret "+"
+	| SUB:
+		ret "-"
+	| MUL:
+		ret "*"
+	| QUO:
+		ret "/"
+	| REM:
+		ret "%"
+	| LPAREN:
+		ret "("
+	| RPAREN:
+		ret ")"
+	|:
+		ret "illegal"
+	}
+}
+
 // Token.
 struct Token {
 	ID:     int // Identity of token.
 	Column: int // Column position of token.
 	Kind:   str // Token kind as string.
+	Line:   str // Line of code where token found.
 }
 
 // A set of constants for precedence-based expression parsing.

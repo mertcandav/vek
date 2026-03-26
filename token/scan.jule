@@ -1,4 +1,4 @@
-// Copyright 2023 The Jule Project Contributors. All rights reserved.
+// Copyright 2026 mertcandav.
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
@@ -27,14 +27,12 @@ struct Scanner {
 }
 
 impl Scanner {
-	// Returns new Scanner for the FileSet f.
-	fn New(mut buf: []byte): &Scanner {
-		mut scan := new(Scanner)
-		scan.buf = buf
-		scan.row = 1
-		scan.col = 0
-		scan.r = ' '
-		ret scan
+	// Resets scanner to scan buf.
+	fn Reset(mut *self, mut buf: []byte) {
+		self.buf = buf
+		self.row = 1
+		self.col = 0
+		self.r = ' '
 	}
 
 	// Pushes new error log to logs.
@@ -281,13 +279,14 @@ impl Scanner {
 		self.skipWhitespace()
 		token.ID = ILLEGAL
 		token.Column = self.col
+		token.Line = unsafe::StrFromBytes(self.buf)
 		if self.r == eof {
 			token.ID = EOF
 			ret
 		}
 		match {
-		| isLetter(self.r) && self.scanName(&token):
-			// No-op.
+		| isLetter(self.r):
+			self.scanName(&token)
 		| isDecimal(self.r) || self.r == '.' && isDecimal(self.peek()):
 			self.scanNumber(&token)
 		|:
