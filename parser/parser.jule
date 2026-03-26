@@ -100,6 +100,7 @@ impl parser {
 		match self.tok.ID {
 		| token::ADD | token::SUB:
 			tok := self.tok
+			self.next()
 			mut x := self.parseUnaryExpr()
 			if x == nil {
 				ret nil
