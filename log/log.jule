@@ -1,9 +1,6 @@
-// Copyright 2023 The Jule Project Contributors. All rights reserved.
+// Copyright 2026 mertcandav.
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
-
-use "std/conv"
-use "std/strings"
 
 // Log kinds.
 const (
@@ -13,8 +10,9 @@ const (
 
 // Compiler log.
 struct Log {
-	Kind:   int
-	Column: int
-	Text:   str
-	Line:   str
+	Kind:       int
+	Line:       str
+	Column:     int
+	Text:       str
+	Suggestion: str
 }

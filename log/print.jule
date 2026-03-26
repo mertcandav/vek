@@ -1,0 +1,94 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "std/conv"
+use "std/os"
+use "std/strings"
+use "std/unsafe"
+
+// File instance for the standard error (stderr).
+let mut stderr = os::Stderr()
+
+// ANSI sequences.
+const (
+	ansiReset         = "\033[0m"
+	ansiBold          = "\u001b[1m"
+	ansiRed           = "\033[31m"
+	ansiBrightMagenta = "\033[95m"
+)
+
+fn _print(s: str) {
+	stderr.WriteSync(unsafe::StrBytes(s))!
+}
+
+fn _println(s: str) {
+	_print(s)
+	_print("\n")
+}
+
+// Print with ANSI sequence.
+// Resets ANSI after print.
+fn ansiPrint(escape: str, text: str) {
+	_print(escape)
+	_print(text)
+	_print(ansiReset)
+}
+
+fn printFlat(log: Log) {
+	_println(log.Text)
+}
+
+fn printError(log: Log) {
+	_print(ansiRed)
+	_print("error: ")
+	_print(log.Text)
+	_print(ansiReset)
+	if len(log.Line) != 0 {
+		// For correct handling, trim leading and trailing space bytes.
+		const Spaces = "\r\n\v\b\t "
+		// Trim spaces of left first to know how many bytes were trimmed.
+		// Because we need to shift the log.Column that much to point to the correct position.
+		mut line := strings::TrimLeft(log.Line, Spaces)
+		// Handle the difference after trim.
+		trimmed := len(log.Line) - len(line)
+		// Trim for right.
+		line = strings::TrimRight(line, Spaces)
+		// Size of tabs may vary across platforms/editors/IDEs.
+		// Replace tabs with spaces for deterministic size.
+		line = strings::ReplaceAll(line, "\t", " ")
+
+		print("\n| ")
+		print(line)
+		print("\n|")
+		print(strings::Repeat(" ", log.Column-trimmed))
+		print("^")
+		if len(log.Suggestion) != 0 {
+			_print("\n| ")
+			ansiPrint(ansiBrightMagenta, "suggestion: ")
+			print(log.Suggestion)
+		}
+	} else if len(log.Suggestion) != 0 {
+		_print("\n| ")
+		ansiPrint(ansiBrightMagenta, "suggestion: ")
+		_print(log.Suggestion)
+	}
+	_println("\n")
+}
+
+// Prints log to the standard error (stderr).
+fn Print(log: Log) {
+	match log.Kind {
+	| Flat:
+		printFlat(log)
+	| Error:
+		printError(log)
+	}
+}
+
+// Prints all logs to the standard error (stderr).
+fn PrintAll(logs: []Log) {
+	for _, log in logs {
+		Print(log)
+	}
+}
