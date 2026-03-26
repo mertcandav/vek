@@ -74,3 +74,24 @@ fn NEG(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::NEG)
 	ret isa::EncodeIndex(buf, idx)
 }
+
+// Appends ADD instruction to buf.
+fn ADD(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
+	buf = append(buf, isa::ADD)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, v)
+}
+
+// Appends ADDIN instruction to buf.
+fn ADDIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::ADDIN)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends ADDFL instruction to buf.
+fn ADDFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::ADDFL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeFloat(buf, fl)
+}
