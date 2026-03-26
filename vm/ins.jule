@@ -28,6 +28,10 @@ type insfunc: fn(mut &vm: *VM): (err: str)
 // functional logic required for that instruction.
 let insmap: [...]insfunc = [
 	_NOP,
+	_ASF,
+	_CALL,
+	_ECALL,
+	_RET,
 	_AIN,
 	_AFL,
 	_MOV,
@@ -36,6 +40,58 @@ let insmap: [...]insfunc = [
 
 fn _NOP(mut &vm: *VM): (err: str) {
 	vm.pc++ // NOP
+
+	ret _NoError
+}
+
+fn _ASF(mut &vm: *VM): (err: str) {
+	vm.pc++                // ASF
+	off := decodeIndex(vm) // OFFSET
+
+	// ASF
+	mut sf := newStackFrame()
+	sf.prev = vm.sf
+	sf.stckoff = isa::Index(len(vm.stack) - isa::STCK_OFF - int(off))
+	vm.sf = sf
+
+	ret _NoError
+}
+
+fn _CALL(mut &vm: *VM): (err: str) {
+	vm.pc++               // CALL
+	pc := decodeIndex(vm) // PC
+
+	// CALL pc
+	vm.sf.retjmp = vm.pc
+	vm.pc = isa::PC(pc)
+
+	ret _NoError
+}
+
+fn _ECALL(mut &vm: *VM): (err: str) {
+	vm.pc++                 // ECALL
+	func := decodeIndex(vm) // FUNC
+
+	// ECALL func
+	vm.sf.retjmp = vm.pc
+	externmap[func](vm)
+
+	// RET
+	_RET(vm)
+
+	ret _NoError
+}
+
+fn _RET(mut &vm: *VM): (err: str) {
+	// Do not advance to skip RET opcode.
+	// Because we will update PC.
+
+	// RET
+	mut sf := vm.sf
+	vm.sf = sf.prev
+	freeStackFrame(sf)
+	vm.pc = sf.retjmp
+
 	ret _NoError
 }
 
@@ -74,7 +130,7 @@ fn _MOV(mut &vm: *VM): (err: str) {
 	if src == isa::STCK_PC {
 		// Source index is PC.
 		// Set value directly by integer value of PC.
-		setval_int(vm.stackRead(dst), vm.pc)
+		setval_int(vm.stackRead(dst), vm.PC())
 	} else {
 		copyval(vm.stackRead(dst), vm.stackRead(src))
 	}

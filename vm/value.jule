@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use "vek/vm/isa"
+use "std/conv"
 
 // Data types.
 const (
@@ -66,4 +67,16 @@ fn setval_int(mut dst: &value, z: int) {
 		dstin = new(isa::Int)
 	}
 	dstin.SetI64(i64(z))
+}
+
+// Prints the value v.
+fn printval(v: &value) {
+	match type v.data {
+	| &isa::Int:
+		_in := v.data.(&isa::Int)
+		println(_in.Format(10))
+	| isa::Float:
+		fl := v.data.(isa::Float)
+		println(conv::FormatFloat(fl, 'g', -1, 64))
+	}
 }

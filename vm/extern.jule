@@ -1,0 +1,29 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/vm/isa"
+
+// External Functions
+//
+// This mechanism utilizes the external function
+// logic permitted by the vek ISA specification via the ECALL instruction.
+// By default, every vek VM instance integrates these predefined
+// external functions into the program's execution environment,
+// ensuring a consistent set of standardized routines is
+// available for the binary to invoke.
+
+// The instruction map serves as a dispatch table where each
+// ECALL index acts as a direct index. This mechanism maps the
+// index to its corresponding externnal function execution routine,
+// enabling the virtual machine to resolve and trigger the specific
+// functional logic required for that extern call.
+let externmap: [...]insfunc = [
+	_EXTERN_PRINT,
+]
+
+fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
+	printval(vm.stackRead(isa::STCK_OFF))
+
+	ret _NoError
+}

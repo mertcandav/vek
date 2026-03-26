@@ -1,0 +1,51 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/vm/isa"
+
+// General stack frame cache.
+let mut sfcache = sfpool{}
+
+// Stack frame for the function scope.
+struct stackFrame {
+	prev:    &stackFrame // Previous stack frame.
+	stckoff: isa::Index  // Stack offset for the zero offset.
+	retjmp:  isa::PC     // The return PC.
+}
+
+// Pool for stack frames.
+struct sfpool {
+	tail: &stackFrame
+}
+
+impl sfpool {
+	// Returns a new stack frame from the pool.
+	fn alloc(mut *self): &stackFrame {
+		if self.tail == nil {
+			self.tail = new(stackFrame)
+		}
+		mut sf := self.tail
+		self.tail = sf.prev
+		sf.prev = nil
+		sf.stckoff = 0
+		sf.retjmp = 0
+		ret sf
+	}
+
+	// Puts stack frame back to the pool.
+	fn free(mut *self, mut sf: &stackFrame) {
+		sf.prev = self.tail
+		self.tail = sf
+	}
+}
+
+// Returns new stack frame.
+fn newStackFrame(): &stackFrame {
+	ret sfcache.alloc()
+}
+
+// Frees stack frame sf.
+fn freeStackFrame(mut sf: &stackFrame) {
+	sfcache.free(sf)
+}

@@ -10,10 +10,16 @@ use "vek/vm/isa"
 // This process involves the sequential fetching of opcodes,
 // managing the stack-based memory model, and updating the PC to maintain
 // the precise execution flow defined by the bytecode.
+//
+// Only a single VM instance is capable of executing a binary at any
+// given time. Concurrent execution, whether within a single
+// instance or across multiple distinct instances, results
+// in undefined behavior.
 struct VM {
 	bin:   []isa::Byte // vek binary.
-	pc:    isa::PC     // Program counter.
-	stack: []&value
+	stack: []&value    // Stack memory.
+	sf:    &stackFrame // Current stack frame.
+	pc:    isa::PC     // Raw Program Counter.
 }
 
 impl VM {
@@ -35,7 +41,12 @@ impl VM {
 	}
 
 	// Returns value from stack by index.
-	fn stackRead(mut *self, idx: isa::Index): &value {
+	fn stackRead(mut *self, mut idx: isa::Index): &value {
+		// If idx is general index, not for reserved registers,
+		// apply stack frame offset to point the scope's stack memory properly.
+		if idx >= isa::STCK_OFF {
+			idx += self.sf.stckoff
+		}
 		ret self.stack[idx]
 	}
 
@@ -57,6 +68,10 @@ impl VM {
 
 	// Runs the whole binary on the virtual machine.
 	fn Run(mut *self): &Error {
+		// Read the entry point PC.
+		pc := decodeIndex(self)
+		self.pc = isa::PC(pc)
+
 		for self.pc < len(self.bin) {
 			mut err := self.Next()
 			if err != nil {
@@ -85,5 +100,8 @@ fn New(): (vm: VM) {
 			vm.stack[i] = new(value)
 		}
 	}
+
+	// Initialize the global scope stack frame.
+	vm.sf = newStackFrame()
 	ret
 }
