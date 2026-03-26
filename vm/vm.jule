@@ -34,6 +34,11 @@ impl VM {
 	// Returns PC.
 	fn PC(*self): int { ret self.pc }
 
+	// Sets PC.
+	// This is unsafe operation.
+	// Affects directly execution of the binary.
+	fn SetPC(mut *self, pc: isa::PC) { self.pc = pc }
+
 	// Scans until opcode, including current byte.
 	fn scanUntil(mut *self, opcode: isa::Opcode) {
 		for self.bin[self.pc] != opcode {
