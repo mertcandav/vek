@@ -1,0 +1,51 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/asm"
+use "vek/isa"
+use "vek/log"
+use "vek/parser"
+use "vek/token"
+use "vek/vm"
+use "std/unsafe"
+
+// A general VM instance of vek.
+let mut vm = vm::New()
+
+// A generic binary buffer utilized by the VM for instruction
+// storage and execution.
+let mut bin = make([]isa::Byte, 0, 256)
+
+// A general scanner instance for parsing.
+let mut scanner = new(token::Scanner)
+
+// Parses the vek source code provided in string format, compiles it into
+// vek Assembly bytecode, and executes the resulting
+// instructions on the Virtual Machine (VM). This end-to-end
+// pipeline transforms high-level representations into a
+// runnable binary format within the VM's environment.
+fn eval(code: str) {
+	scanner.Reset(unsafe::BytesFromStr(code))
+	mut ast, mut logs := parser::Parse(scanner)
+	if len(logs) > 0 {
+		log::PrintAll(logs)
+		ret
+	}
+	// Save the current buffer length. This allows for the removal of
+	// any partial/temporary Assembly code in the event of a failure/print eval,
+	// facilitating a rollback to the last stable state.
+	n := len(bin)
+	bin, logs = asm::Compile(bin, ast)
+	if len(logs) > 0 {
+		bin = bin[:n]
+		log::PrintAll(logs)
+		ret
+	}
+	// Load new binary and execute.
+	vm.LoadBinary(bin)
+	vm.SetPC(n)
+	vm.Run()
+	// Clear the remove expression.
+	bin = bin[:n]
+}

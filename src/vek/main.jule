@@ -115,7 +115,10 @@ fn processCommand(mut args: []str) {
 	| CmdVersion:
 		version(args)
 	|:
-		throwError("unknown command: " + args[1])
+		// No special command.
+		// Join all arguments in one string and evaluate it.
+		code := strings::Join(args[1:], "")
+		eval(code)
 	}
 }
 

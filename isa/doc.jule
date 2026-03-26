@@ -220,7 +220,7 @@
 //		including the mandatory execution of the RET instruction
 //		to restore the previous stack frame.
 //
-//		ECALL [FUNC;INDEX]
+//		ECALL [INDEX]
 //
 //	RET:
 //		Terminates the current stack frame and restores the
