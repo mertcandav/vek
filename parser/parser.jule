@@ -1,0 +1,164 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek"
+use "vek/ast"
+use "vek/isa"
+use "vek/log"
+use "vek/token"
+use "std/conv"
+use "std/unsafe"
+
+// Parses vek source code and generates AST.
+struct parser {
+	logs:    []log::Log
+	scanner: &token::Scanner
+	tok:     token::Token
+}
+
+impl parser {
+	// Advance to the next token.
+	fn next(mut *self) {
+		self.tok = self.scanner.Next()
+		// Derive errors from the scanner.
+		if self.tok.ID == token::ILLEGAL {
+			self.logs = append(self.logs, self.scanner.Logs...)
+			self.scanner.Logs = self.scanner.Logs[:0]
+		}
+	}
+
+	fn tokPrec(*self): (int, int) {
+		ret self.tok.ID, self.tok.Precedence()
+	}
+
+	fn pushErr(mut *self, tok: token::Token, text: str) {
+		self.logs = append(self.logs, log::Log{
+			Kind: log::Error,
+			Column: tok.Column,
+			Line: tok.Line,
+			Text: text,
+		})
+	}
+
+	fn errorExpected(mut *self, tok: token::Token, mut msg: str) {
+		msg = "expected " + msg
+		self.pushErr(tok, msg)
+	}
+
+	fn expect(mut *self, op: int) {
+		if self.tok.ID != op {
+			self.errorExpected(self.tok, "'"+token::Str(op)+"'")
+		}
+		self.next() // make progress
+	}
+
+	fn parseName(mut *self): ast::Expr {
+		mut x := &ast::NameExpr{Token: self.tok, Name: self.tok.Kind}
+		self.next()
+		ret x
+	}
+
+	fn parseOperand(mut *self): ast::Expr {
+		match self.tok.ID {
+		| token::ILLEGAL:
+			// Errors are derived from the scanner.
+			ret nil
+		| token::NAME:
+			ret self.parseName()
+		| token::INT:
+			mut x := new(vek::Value)
+			x.Type = vek::TypeIN
+			mut _in := new(isa::Int)
+			_ = _in.SetStr(self.tok.Kind, 0)
+			x.Data = _in
+			self.next()
+			ret x
+		| token::FLOAT:
+			mut x := new(vek::Value)
+			x.Type = vek::TypeFL
+			let mut fl: isa::Float
+			fl = conv::ParseFloat(self.tok.Kind, 64) else { use 0 }
+			x.Data = fl
+			self.next()
+			ret x
+		| token::LPAREN:
+			self.next()
+			mut x := self.parseExpr()
+			if x == nil {
+				ret nil
+			}
+			self.expect(token::RPAREN)
+			ret x
+		|:
+			self.errorExpected(self.tok, "operand")
+			ret nil
+		}
+	}
+
+	fn parseUnaryExpr(mut *self): ast::Expr {
+		match self.tok.ID {
+		| token::ADD | token::SUB:
+			tok := self.tok
+			mut x := self.parseUnaryExpr()
+			if x == nil {
+				ret nil
+			}
+			ret &ast::UnaryExpr{Op: tok, X: x}
+		|:
+			ret self.parseOperand()
+		}
+	}
+
+	// Parses a (possibly) binary expression.
+	// If x is non-nil, it is used as the left operand.
+	fn parseBinaryExpr(mut *self, mut x: ast::Expr, prec1: int): ast::Expr {
+		if x == nil {
+			x = self.parseUnaryExpr()
+			if x == nil {
+				ret nil
+			}
+		}
+		for {
+			op, oprec := self.tokPrec()
+			if oprec < prec1 {
+				ret x
+			}
+			tok := self.tok
+			self.expect(op)
+			mut y := self.parseBinaryExpr(nil, oprec+1)
+			if y == nil {
+				ret nil
+			}
+			x = &ast::BinaryExpr{X: x, Op: tok, Y: y}
+		}
+	}
+
+	fn parseExpr(mut *self): ast::Expr {
+		ret self.parseBinaryExpr(nil, token::LowestPrec+1)
+	}
+}
+
+// Consumes the vek source code to perform lexical and syntactic
+// analysis, ultimately generating an Abstract Syntax Tree (AST).
+//
+// The scanner is responsible for the lexical analysis of the source code.
+// It automatically executes an initial Scanner.Next call prior
+// to the start of the parsing process.
+fn Parse(mut scanner: &token::Scanner): (ast::Expr, []log::Log) {
+	mut p := parser{
+		scanner: scanner,
+	}
+	p.next() // Advance to the first token.
+	mut expr := p.parseExpr()
+	// Early return for error cases.
+	if expr == nil || len(p.logs) > 0 {
+		ret expr, p.logs
+	}
+	// Check for EOF.
+	// All expression must be consumed.
+	if p.tok.ID != token::EOF {
+		p.pushErr(p.tok, "invalid syntax")
+	}
+	ret expr, p.logs
+}
