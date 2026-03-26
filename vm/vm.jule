@@ -68,10 +68,6 @@ impl VM {
 
 	// Runs the whole binary on the virtual machine.
 	fn Run(mut *self): &Error {
-		// Read the entry point PC.
-		pc := decodeIndex(self)
-		self.pc = isa::PC(pc)
-
 		for self.pc < len(self.bin) {
 			mut err := self.Next()
 			if err != nil {

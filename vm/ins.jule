@@ -28,6 +28,7 @@ type insfunc: fn(mut &vm: *VM): (err: str)
 // functional logic required for that instruction.
 let insmap: [...]insfunc = [
 	_NOP,
+	_JMP,
 	_ASF,
 	_CALL,
 	_ECALL,
@@ -40,6 +41,16 @@ let insmap: [...]insfunc = [
 
 fn _NOP(mut &vm: *VM): (err: str) {
 	vm.pc++ // NOP
+
+	ret _NoError
+}
+
+fn _JMP(mut &vm: *VM): (err: str) {
+	vm.pc++               // JMP
+	pc := decodeIndex(vm) // PC
+
+	// JMP pc
+	vm.pc = isa::PC(pc)
 
 	ret _NoError
 }
@@ -69,12 +80,12 @@ fn _CALL(mut &vm: *VM): (err: str) {
 }
 
 fn _ECALL(mut &vm: *VM): (err: str) {
-	vm.pc++                 // ECALL
-	func := decodeIndex(vm) // FUNC
+	vm.pc++                // ECALL
+	idx := decodeIndex(vm) // INDEX
 
-	// ECALL func
+	// ECALL idx
 	vm.sf.retjmp = vm.pc
-	externmap[func](vm)
+	externmap[idx](vm)
 
 	// RET
 	_RET(vm)
