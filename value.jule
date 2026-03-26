@@ -1,0 +1,23 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/isa"
+
+// Data types.
+const (
+	TypeIN = iota // Integer.
+	TypeFL        // Floating-point.
+)
+
+// Data of a vek value.
+enum Data: type {
+	&isa::Int,  // Integer.
+	isa::Float, // Floating-point.
+}
+
+// A vek value.
+struct Value {
+	Type: int
+	Data: Data
+}

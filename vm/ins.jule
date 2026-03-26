@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek"
 use "vek/isa"
 use "std/math"
 
@@ -111,9 +112,9 @@ fn _AIN(mut &vm: *VM): (err: str) {
 	mut _in := decodeInt(vm) // Integer.
 
 	// AIN _in
-	vm.stack = append(vm.stack, &value{
-		typ: typIN,
-		data: _in,
+	vm.stack = append(vm.stack, &vek::Value{
+		Type: vek::TypeIN,
+		Data: _in,
 	})
 
 	ret _NoError
@@ -124,9 +125,9 @@ fn _AFL(mut &vm: *VM): (err: str) {
 	fl := decodeFloat(vm) // Floating-point.
 
 	// AFL fl
-	vm.stack = append(vm.stack, &value{
-		typ: typFL,
-		data: fl,
+	vm.stack = append(vm.stack, &vek::Value{
+		Type: vek::TypeFL,
+		Data: fl,
 	})
 
 	ret _NoError
@@ -156,8 +157,8 @@ fn _MOVIN(mut &vm: *VM): (err: str) {
 
 	// MOVIN idx,in
 	mut v := vm.stackRead(idx)
-	v.typ = typIN
-	v.data = _in
+	v.Type = vek::TypeIN
+	v.Data = _in
 
 	ret _NoError
 }
@@ -169,8 +170,8 @@ fn _MOVFL(mut &vm: *VM): (err: str) {
 
 	// MOVFL idx,fl
 	mut v := vm.stackRead(idx)
-	v.typ = typFL
-	v.data = fl
+	v.Type = vek::TypeFL
+	v.Data = fl
 
 	ret _NoError
 }

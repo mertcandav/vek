@@ -2,14 +2,9 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek"
 use "vek/isa"
 use "std/conv"
-
-// Data types.
-const (
-	typIN = iota // Integer.
-	typFL        // Floating-point.
-)
 
 // A placeholder value for the PC.
 // This approach is explicitly permitted by the specification.
@@ -18,51 +13,39 @@ const (
 // it acts as a read-only abstraction, with the sole purpose
 // of exposing the current instruction pointer's value
 // for observational or diagnostic operations.
-let mut valuePC = new(value)
-
-// Data of a vek VM value.
-enum data: type {
-	&isa::Int,  // Integer.
-	isa::Float, // Floating-point.
-}
-
-// A vek VM value.
-struct value {
-	typ:  int
-	data: data
-}
+let mut valuePC = new(vek::Value)
 
 // Copies src's value to dst.
-fn copyval(mut dst: &value, mut src: &value) {
-	dst.typ = src.typ
-	match type src.data {
+fn copyval(mut dst: &vek::Value, mut src: &vek::Value) {
+	dst.Type = src.Type
+	match type src.Data {
 	| &isa::Int:
-		srcin := src.data.(&isa::Int)
+		srcin := src.Data.(&isa::Int)
 		// Optimization:
 		// If dst's value is integer, use the existing buffer.
 		// Otherwise, allocate a new integer.
-		mut dstin, ok := dst.data.(&isa::Int)
+		mut dstin, ok := dst.Data.(&isa::Int)
 		if !ok {
 			dstin = new(isa::Int)
 		}
 		dstin.Set(&*srcin)
-		dst.data = dstin
+		dst.Data = dstin
 	| isa::Float:
 		// Make sure dst will have a different heap allocation.
 		// Because in-place computations will mutate the
 		// internal allocation of the [data].
-		fl := src.data.(isa::Float)
-		dst.data = fl
+		fl := src.Data.(isa::Float)
+		dst.Data = fl
 	}
 }
 
 // Sets value of dst to z.
-fn setval_int(mut dst: &value, z: int) {
+fn setval_int(mut dst: &vek::Value, z: int) {
 	// Optimization:
 	// If dst's value is integer, use the existing buffer.
 	// Otherwise, allocate a new integer.
-	dst.typ = typIN
-	mut dstin, ok := dst.data.(&isa::Int)
+	dst.Type = vek::TypeIN
+	mut dstin, ok := dst.Data.(&isa::Int)
 	if !ok {
 		dstin = new(isa::Int)
 	}
@@ -70,13 +53,13 @@ fn setval_int(mut dst: &value, z: int) {
 }
 
 // Prints the value v.
-fn printval(v: &value) {
-	match type v.data {
+fn printval(v: &vek::Value) {
+	match type v.Data {
 	| &isa::Int:
-		_in := v.data.(&isa::Int)
+		_in := v.Data.(&isa::Int)
 		println(_in.Format(10))
 	| isa::Float:
-		fl := v.data.(isa::Float)
+		fl := v.Data.(isa::Float)
 		println(conv::FormatFloat(fl, 'g', -1, 64))
 	}
 }

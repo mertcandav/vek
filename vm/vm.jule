@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek"
 use "vek/isa"
 
 // A vek virtual machine.
@@ -16,10 +17,10 @@ use "vek/isa"
 // instance or across multiple distinct instances, results
 // in undefined behavior.
 struct VM {
-	bin:   []isa::Byte // vek binary.
-	stack: []&value    // Stack memory.
-	sf:    &stackFrame // Current stack frame.
-	pc:    isa::PC     // Raw Program Counter.
+	bin:   []isa::Byte   // vek binary.
+	stack: []&vek::Value // Stack memory.
+	sf:    &stackFrame   // Current stack frame.
+	pc:    isa::PC       // Raw Program Counter.
 }
 
 impl VM {
@@ -41,7 +42,7 @@ impl VM {
 	}
 
 	// Returns value from stack by index.
-	fn stackRead(mut *self, mut idx: isa::Index): &value {
+	fn stackRead(mut *self, mut idx: isa::Index): &vek::Value {
 		// If idx is general index, not for reserved registers,
 		// apply stack frame offset to point the scope's stack memory properly.
 		if idx >= isa::STCK_OFF {
@@ -83,7 +84,7 @@ fn New(): (vm: VM) {
 	// Initialize the stack and reserved areas.
 	// Allocate a reasonable amounf of additional space for potential stack variables.
 	const Reserved = 2 // Count of the reserved stack variables (registers).
-	vm.stack = make([]&value, Reserved, Reserved+10)
+	vm.stack = make([]&vek::Value, Reserved, Reserved+10)
 	for i in vm.stack {
 		// Initialize all stack with undefined values.
 		// This is allowed by the specification.
@@ -93,7 +94,7 @@ fn New(): (vm: VM) {
 			// See valuePC's documentation.
 			vm.stack[i] = valuePC
 		|:
-			vm.stack[i] = new(value)
+			vm.stack[i] = new(vek::Value)
 		}
 	}
 
