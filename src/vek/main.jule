@@ -1,0 +1,133 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek"
+use "std/os"
+use "std/strings"
+
+// vek commands.
+const (
+	CmdHelp    = "help"
+	CmdVersion = "version"
+)
+
+// Map for "vek help" command.
+let HelpMap: [...][2]str = [
+	[CmdHelp, "Show the list of available commands"],
+	[CmdVersion, "Show version"],
+]
+
+fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
+	mut max := len(HelpMap[0][0])
+	for _, k in HelpMap {
+		n := len(k[0])
+		if n > max {
+			max = n
+		}
+	}
+
+	const Space = 3 // Space of between command name and description.
+	for _, part in HelpMap {
+		s.WriteStr(strings::Repeat(pads, pad))!
+		s.WriteStr(part[0])!
+		s.WriteStr(strings::Repeat(" ", (max-len(part[0]))+Space))!
+		s.WriteStr(part[1])!
+		s.WriteByte('\n')!
+	}
+}
+
+fn showInfo(args: []str) {
+	println(
+		`vek is a tool for high performance computations.
+
+Usage:
+	vek ...expression
+	vek <command> [arguments]
+
+The commands are:`)
+	mut s := strings::Builder{}
+	writeCommandsList(&s, "\t", 1)
+	print(s.Str())
+	println(`
+Use "vek help <command>" for more information about a command.`)
+}
+
+// Command: vek help
+fn help(args: []str, pads: str, pad: int) {
+	if len(args) == 2 { // vek help
+		mut max := len(HelpMap[0][0])
+		for _, k in HelpMap {
+			n := len(k[0])
+			if n > max {
+				max = n
+			}
+		}
+
+		mut s := strings::Builder{}
+		s.WriteStr("The help command shows information about vek and commands.\n\nThe commands are:\n")!
+		writeCommandsList(&s, pads, pad)
+		s.WriteByte('\n')!
+		s.WriteStr(`Use "vek help <command>" to see information about a command.`)!
+		println(s.Str())
+		ret
+	}
+	if len(args) > 3 { // vek help <command> [unknown]
+		printErrorMessage("invalid command: " + args[3])
+		ret
+	}
+	// vek help <command>
+	command := args[2]
+	match command {
+	| CmdHelp:
+		println(`The help command shows information about vek and commands.
+
+vek help             Show the general help information about vek
+vek help <command>   Show the information about a command`)
+	| CmdVersion:
+		println(`The version command shows your vek version.
+
+Usage:
+	vek version
+
+This is the version of vek.`)
+	|:
+		printErrorMessage("invalid command: " + command + `
+write "vek help" to see commands`)
+	}
+}
+
+// Command: vek version
+fn version(args: []str) {
+	if len(args) > 2 {
+		printErrorMessage("invalid command: " + args[2])
+		ret
+	}
+	println(vek::Version)
+}
+
+// Try to process compiler commands.
+// Reports whether "ARGS" is command and processed.
+fn processCommand(mut args: []str) {
+	match args[1] {
+	| CmdHelp:
+		help(args, "\t", 1)
+	| CmdVersion:
+		version(args)
+	|:
+		throwError("unknown command: " + args[1])
+	}
+}
+
+fn main() {
+	mut args := os::Args()
+
+	// Not started with arguments.
+	// Here is "2" but "args" always have one element for store program name.
+	if len(args) < 2 {
+		showInfo(args)
+		ret
+	}
+
+	processCommand(args)
+}

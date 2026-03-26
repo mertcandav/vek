@@ -1,0 +1,16 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "std/os"
+
+const errorExitCode = 1
+
+fn printErrorMessage(msg: str) {
+	println(msg)
+}
+
+fn throwError(msg: str) {
+	println(msg)
+	os::Exit(errorExitCode)
+}
