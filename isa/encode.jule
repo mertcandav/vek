@@ -6,6 +6,12 @@ use "std/math"
 
 // Encodes integer and appends to buf.
 fn EncodeInt(mut buf: []Byte, x: Int): []Byte {
+	sign := x.Sign()
+	if sign == -1 {
+		buf = append(buf, 1)
+	} else {
+		buf = append(buf, 0)
+	}
 	buf = x.AppendBytes(buf)
 	buf = append(buf, NOP)
 	ret buf

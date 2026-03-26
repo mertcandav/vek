@@ -112,6 +112,9 @@
 //		An integer is encoded within the binary on a byte-by-byte basis.
 //		To signal the completion of the encoding sequence,
 //		a NOP opcode is appended as a mandatory terminator.
+//		A sign-byte is prepended to the byte sequence representing the
+//		integer. A sign-byte value of 1 indicates a negative number,
+//		while a value of 0 denotes a positive integer.
 //
 //	Floating-Point:
 //		Floating-point types are represented as 64-bit double-precision values.
@@ -236,7 +239,7 @@
 //		Pushes an integer value onto the stack. This instruction handles
 //		the multi-byte encoding of arbitrary-precision integers.
 //
-//		AIN [BYTES...] [NOP]
+//		AIN [SIGN] [BYTES...] [NOP]
 //
 //	AFL:
 //		Pushes a 64-bit floating-point value onto the stack.
@@ -262,7 +265,7 @@
 //		content is overwritten with the new encoded sequence
 //		including its mandatory NOP terminator.
 //
-//		MOVIN [BYTES...] [NOP]
+//		MOVIN [SIGN] [BYTES...] [NOP]
 //
 //	MOVFL:
 //		Copies a 64-bit floating-point value into the memory slot at a

@@ -178,12 +178,17 @@ fn _MOVFL(mut &vm: *VM): (err: str) {
 
 // Decodes integer.
 fn decodeInt(mut &vm: *VM): &isa::Int {
+	sign := vm.bin[vm.pc]
+	vm.pc++ // sign-byte
 	start := vm.pc
 	vm.scanUntil(isa::NOP)
 	enc := vm.bin[start:vm.pc]
 	vm.pc++ // NOP
 	mut _in := new(isa::Int)
 	_in.SetBytes(enc)
+	if sign == 1 {
+		_in.Neg(&*_in)
+	}
 	ret _in
 }
 
