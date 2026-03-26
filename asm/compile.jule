@@ -1,0 +1,67 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek"
+use "vek/ast"
+use "vek/isa"
+use "vek/log"
+
+struct compiler {
+	bin:  []isa::Byte
+	logs: []log::Log
+}
+
+impl compiler {
+	// Compiles print expression.
+	fn compilePrint(mut *self, ast: ast::Expr) {
+		v, ok := ast.(&vek::Value)
+		if ok {
+			match type v.Data {
+			| &isa::Int:
+				_in := v.Data.(&isa::Int)
+				self.bin = AIN(self.bin, _in)
+			| isa::Float:
+				fl := v.Data.(isa::Float)
+				self.bin = AFL(self.bin, fl)
+			}
+		} else {
+			panic("unreachable")
+		}
+		self.bin = ASF(self.bin, 1)
+		self.bin = ECALL(self.bin, 0)
+	}
+
+	// Compiles expression.
+	fn compile(mut *self, ast: ast::Expr) {
+		self.compilePrint(ast)
+	}
+}
+
+fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
+	match type v.Data {
+	| &isa::Int:
+		_in := v.Data.(&isa::Int)
+		ret isa::EncodeInt(buf, *_in)
+	| isa::Float:
+		fl := v.Data.(isa::Float)
+		ret isa::EncodeFloat(buf, fl)
+	}
+	panic("unreachable")
+}
+
+// Analyzes the vek AST and compiles to vek Assembly (ASM).
+// This process transforms high-level syntax into a low-level,
+// machine-readable instruction set according to ISA specification.
+//
+// Appends the generated Assembly code to the bin and returns it.
+// In the event of a failure, the resulting binary may contain
+// partially compiled assembly up to the point where
+// the error was encountered.
+fn Compile(mut bin: []isa::Byte, ast: ast::Expr): ([]isa::Byte, []log::Log) {
+	mut c := compiler{
+		bin: bin,
+	}
+	c.compile(ast)
+	ret c.bin, c.logs
+}
