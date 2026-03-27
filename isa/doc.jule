@@ -13,6 +13,13 @@
 // significantly from the instruction set architectures of
 // conventional physical hardware.
 //
+// The stack functions effectively as a register-map.
+// Predefined registers are also mapped onto the stack,
+// meaning every memory slot within the stack can be utilized as a
+// general-purpose register. This architecture enables direct data
+// manipulation on the stack, minimizing overhead by treating
+// memory offsets as register indices.
+//
 //
 //
 // Binary Representation
