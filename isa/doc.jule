@@ -334,3 +334,51 @@
 //			performed, and the final result is stored as a float.
 //
 //		ADDFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	SUB:
+//		Subtracts the value at the source index from the destination
+//		index. This instruction supports mixed-mode arithmetic,
+//		automatically promoting types to ensure precision
+//		during the subtraction process.
+//
+//		- Integer and Integer:
+//			The result is an integer; the subtraction is performed directly.
+//		- Float and Float:
+//			The result is a float; the subtraction is performed directly.
+//		- Integer and Float:
+//			The integer is cast to a float before the subtraction.
+//			The resulting difference is stored as a float.
+//
+//		SUB [DESTINATION;INDEX],[SOURCE;INDEX]
+//
+//	SUBIN:
+//		Subtracts an immediate integer value from the destination index.
+//		This instruction facilitates direct arithmetic with constants,
+//		optimizing performance by bypassing additional register
+//		or memory lookups.
+//
+//		- Destination is Integer:
+//			The subtraction is performed directly.
+//			The result remains an integer.
+//		- Destination is Float:
+//			The immediate integer is first promoted (cast)
+//			to a float value. The subtraction is then performed,
+//			and the final result is stored as a float.
+//
+//		SUBIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//
+//	SUBFL:
+//		Subtracts a literal floating-point value from the destination index.
+//		This instruction facilitates direct arithmetic with constants,
+//		optimizing performance by bypassing additional register
+//		or memory lookups.
+//
+//		- Destination is Float:
+//			The subtraction is performed directly.
+//			The result remains a float.
+//		- Destination is Integer:
+//			The destination's integer is first promoted (cast)
+//			to a float value. The subtraction is then performed,
+//			and the final result is stored as a float.
+//
+//		SUBFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]

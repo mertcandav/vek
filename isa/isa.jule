@@ -40,6 +40,9 @@ const (
 	ADD
 	ADDIN
 	ADDFL
+	SUB
+	SUBIN
+	SUBFL
 )
 
 // Stack constants.
