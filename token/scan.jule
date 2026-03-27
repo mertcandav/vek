@@ -29,7 +29,10 @@ struct Scanner {
 impl Scanner {
 	// Resets scanner to scan buf.
 	fn Reset(mut *self, mut buf: []byte) {
+		self.Logs = self.Logs[:0]
 		self.buf = buf
+		self.offset = 0
+		self.rdOffset = 0
 		self.row = 1
 		self.col = 0
 		self.r = ' '
