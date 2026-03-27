@@ -39,6 +39,7 @@ let insmap: [...]insfunc = [
 	_AFL,
 	_MOV,
 	_MOVIN,
+	_MOVFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
