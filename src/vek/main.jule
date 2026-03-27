@@ -3,19 +3,26 @@
 // license that can be found in the LICENSE file.
 
 use "vek"
+use "vek/asm"
+use "vek/log"
+use "vek/parser"
+use "std/flag"
 use "std/os"
 use "std/strings"
+use "std/unsafe"
 
 // vek commands.
 const (
 	CmdHelp    = "help"
 	CmdVersion = "version"
+	CmdBuild   = "build"
 )
 
 // Map for "vek help" command.
 let HelpMap: [...][2]str = [
 	[CmdHelp, "Show the list of available commands"],
 	[CmdVersion, "Show version"],
+	[CmdBuild, "Builds vek Assembly from source"],
 ]
 
 fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
@@ -91,6 +98,11 @@ Usage:
 	vek version
 
 This is the version of vek.`)
+	| CmdBuild:
+		println(`The build command builds vek Assembly from source.
+
+Usage:
+	vek build [arguments] [source]`)
 	|:
 		printErrorMessage("invalid command: " + command + `
 write "vek help" to see commands`)
@@ -106,6 +118,53 @@ fn version(args: []str) {
 	println(vek::Version)
 }
 
+// Command: vek build
+fn build(mut args: []str) {
+	if len(args) < 2 {
+		printErrorMessage("build: expression missing")
+		ret
+	}
+	args = args[2:] // Remove the program path and build command.
+
+	let mut fs = flag::FlagSet.New()
+	let mut out = fs.Add("out", 'o', "", "Output identifier")
+
+	mut content := fs.Parse(args) else {
+		throwError(error.(str))
+		use nil // Avoid error.
+	}
+	if len(content) == 0 {
+		printErrorMessage("build: expression missing")
+		ret
+	}
+
+	// Compile all expressions and merge them in a single binary.
+	// The binary buffer bin will not be used again since this program
+	// works in build argument.
+	for _, code in content {
+		scanner.Reset(unsafe::BytesFromStr(code))
+		mut ast, mut logs := parser::Parse(scanner)
+		if len(logs) > 0 {
+			log::PrintAll(logs)
+			ret
+		}
+		bin, logs = asm::Compile(bin, ast)
+		if len(logs) > 0 {
+			log::PrintAll(logs)
+			ret
+		}
+	}
+
+	buf := asm::Print(bin)
+	if *out == "" {
+		println(unsafe::StrFromBytes(buf))
+	} else {
+		os::WriteFileSync(*out, buf, 0660) else {
+			throwError(error.(str))
+		}
+	}
+}
+
 // Try to process compiler commands.
 // Reports whether "ARGS" is command and processed.
 fn processCommand(mut args: []str) {
@@ -114,6 +173,8 @@ fn processCommand(mut args: []str) {
 		help(args, "\t", 1)
 	| CmdVersion:
 		version(args)
+	| CmdBuild:
+		build(args)
 	|:
 		for _, code in args[1:] {
 			eval(code)
