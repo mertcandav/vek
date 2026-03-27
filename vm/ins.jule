@@ -54,6 +54,7 @@ let insmap: [...]insfunc = [
 	_QUOIN,
 	_QUOFL,
 	_REM,
+	_REMIN,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -364,6 +365,18 @@ fn _REM(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	valv := vm.stackRead(val)
 	dstv.REM(valv)
+
+	ret _NoError
+}
+
+fn _REMIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // REMIN
+	dst := decodeIndex(vm)   // DESTINATION
+	mut _in := decodeInt(vm) // Integer.
+
+	// REMIN dst,_in
+	mut dstv := vm.stackRead(dst)
+	dstv.REMIN(_in)
 
 	ret _NoError
 }
