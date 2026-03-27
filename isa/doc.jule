@@ -224,12 +224,13 @@
 //
 //		RET
 //
-//	POP:
-//		Deallocates N elements from the top of the stack. The N
-//		argument must be encoded as an index. This instruction effectively
-//		shrinks the current stack frame by adjusting the stack pointer.
+//	SETSP:
+//		Explicitly sets the index pointed to by the stack pointer.
+//		The stack pointer must point to the next available
+//		memory location to be used for the subsequent stack insertion.
+//		This instruction provides direct control over the stack's growth.
 //
-//		POP [N;AS-INDEX]
+//		SETSP [INDEX]
 //
 //	AIN:
 //		Pushes an integer value onto the stack. This instruction handles

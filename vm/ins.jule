@@ -34,6 +34,7 @@ let insmap: [...]insfunc = [
 	_CALL,
 	_ECALL,
 	_RET,
+	_SETSP,
 	_AIN,
 	_AFL,
 	_MOV,
@@ -103,6 +104,16 @@ fn _RET(mut &vm: *VM): (err: str) {
 	vm.sf = sf.prev
 	freeStackFrame(sf)
 	vm.pc = sf.retjmp
+
+	ret _NoError
+}
+
+fn _SETSP(mut &vm: *VM): (err: str) {
+	vm.pc++                // SETSP
+	idx := decodeIndex(vm) // INDEX
+
+	// SETP idx
+	vm.stack = vm.stack[:idx]
 
 	ret _NoError
 }

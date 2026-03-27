@@ -30,7 +30,7 @@ const (
 	CALL
 	ECALL
 	RET
-	POP
+	SETSP
 	AIN
 	AFL
 	MOV
