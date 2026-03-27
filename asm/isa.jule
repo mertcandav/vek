@@ -103,3 +103,24 @@ fn ADDFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeFloat(buf, fl)
 }
+
+// Appends SUB instruction to buf.
+fn SUB(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
+	buf = append(buf, isa::SUB)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, v)
+}
+
+// Appends SUBIN instruction to buf.
+fn SUBIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::SUBIN)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends SUBFL instruction to buf.
+fn SUBFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::SUBFL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeFloat(buf, fl)
+}
