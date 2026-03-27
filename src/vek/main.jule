@@ -42,7 +42,7 @@ fn showInfo(args: []str) {
 		`vek is a tool for high performance computations.
 
 Usage:
-	vek ...expression
+	vek expression expression expression ...
 	vek <command> [arguments]
 
 The commands are:`)
@@ -115,10 +115,9 @@ fn processCommand(mut args: []str) {
 	| CmdVersion:
 		version(args)
 	|:
-		// No special command.
-		// Join all arguments in one string and evaluate it.
-		code := strings::Join(args[1:], "")
-		eval(code)
+		for _, code in args[1:] {
+			eval(code)
+		}
 	}
 }
 
