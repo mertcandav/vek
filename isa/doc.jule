@@ -430,3 +430,49 @@
 //			final result is stored as a float.
 //
 //		MULFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	QUO:
+//		Divides (T-division) the value at the destination index by the value at the source
+//		index. This instruction supports mixed-mode arithmetic,
+//		automatically promoting types to maintain numerical precision
+//		during the division process.
+//
+//		- Integer and Integer:
+//			The result is an integer; performs integer division (truncating
+//			any fractional part).
+//		- Float and Float:
+//			The result is a float; performs standard floating-point division.
+//		- Integer and Float / Float and Integer:
+//			The integer operand is cast to a float before the operation.
+//			The resulting quotient is stored as a float.
+//
+//		QUO [DESTINATION;INDEX],[SOURCE;INDEX]
+//
+//  QUOIN:
+//		Divides (T-division) the value at the destination index by a literal integer value.
+//		This instruction facilitates direct arithmetic with constants,
+//		optimizing performance by bypassing additional register lookups.
+//
+//		- Destination is Integer:
+//			Performs integer division using the immediate value.
+//			The result remains an integer.
+//		- Destination is Float:
+//			The immediate integer is first promoted (cast) to a float
+//			value. The division is then performed, and the final
+//			result is stored as a float.
+//
+//		QUOIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//
+//	QUOFL:
+//		Divides (T-division) the value at the destination index by a literal floating-point
+//		value. This instruction allows for direct division by float
+//		constants while ensuring consistent type promotion.
+//
+//		- Destination is Float:
+//			The values are divided directly. The result remains a float.
+//		- Destination is Integer:
+//			The destination's integer is first promoted (cast) to a float
+//			value. The division is then performed, and the final
+//			result is stored as a float.
+//
+//		QUOFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]

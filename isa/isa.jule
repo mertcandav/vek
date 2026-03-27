@@ -46,6 +46,9 @@ const (
 	MUL
 	MULIN
 	MULFL
+	QUO
+	QUOIN
+	QUOFL
 )
 
 // Stack constants.
