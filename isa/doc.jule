@@ -476,3 +476,51 @@
 //			result is stored as a float.
 //
 //		QUOFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	REM:
+//		Calculates the remainder of the division (T-division) of the destination index
+//		by the source index value. This instruction supports mixed-mode
+//		arithmetic, automatically promoting types to ensure precision
+//		during the modulo operation.
+//
+//		- Integer and Integer:
+//			The result is an integer; the remainder is calculated directly.
+//		- Float and Float:
+//			The result is a float; the remainder is calculated directly.
+//		- Integer and Float:
+//			The integer is cast to a float before the division.
+//			The resulting remainder is stored as a float.
+//
+//		REM [DESTINATION;INDEX],[VALUE;INDEX]
+//
+//	REMIN:
+//		Calculates the remainder of the destination index divided (T-divison) by an
+//		immediate integer value. This instruction facilitates direct
+//		arithmetic with constants, optimizing performance by bypassing
+//		additional register or memory lookups.
+//
+//		- Destination is Integer:
+//			The remainder is calculated directly.
+//			The result remains an integer.
+//		- Destination is Float:
+//			The immediate integer is first promoted (cast) to a float
+//			value. The modulo operation is then performed, and the
+//			final result is stored as a float.
+//
+//		REMIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//
+//	REMFL:
+//		Calculates the remainder of the destination index divided (T-divison) by a
+//		literal floating-point value. This instruction facilitates direct
+//		arithmetic with constants, optimizing performance by bypassing
+//		additional register or memory lookups.
+//
+//		- Destination is Float:
+//			The remainder is calculated directly.
+//			The result remains a float.
+//		- Destination is Integer:
+//			The destination's integer is first promoted (cast) to a
+//			float value. The modulo operation is then performed,
+//			and the final result is stored as a float.
+//
+//		REMFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]

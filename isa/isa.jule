@@ -49,6 +49,9 @@ const (
 	QUO
 	QUOIN
 	QUOFL
+	REM
+	REMIN
+	REMFL
 )
 
 // Stack constants.
