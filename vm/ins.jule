@@ -43,6 +43,7 @@ let insmap: [...]insfunc = [
 	_NEG,
 	_ADD,
 	_ADDIN,
+	_ADDFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -137,7 +138,7 @@ fn _AIN(mut &vm: *VM): (err: str) {
 
 fn _AFL(mut &vm: *VM): (err: str) {
 	vm.pc++               // AFL
-	fl := decodeFloat(vm) // Floating-point.
+	fl := decodeFloat(vm) // Float.
 
 	// AFL fl
 	vm.stack = append(vm.stack, &vek::Value{
@@ -175,7 +176,7 @@ fn _MOVIN(mut &vm: *VM): (err: str) {
 fn _MOVFL(mut &vm: *VM): (err: str) {
 	vm.pc++                // MOVFL
 	idx := decodeIndex(vm) // INDEX
-	fl := decodeFloat(vm)  // Floating-point.
+	fl := decodeFloat(vm)  // Float.
 
 	// MOVFL idx,fl
 	mut v := vm.stackRead(idx)
@@ -217,6 +218,18 @@ fn _ADDIN(mut &vm: *VM): (err: str) {
 	// ADDIN dst,_in
 	mut dstv := vm.stackRead(dst)
 	dstv.ADDIN(_in)
+
+	ret _NoError
+}
+
+fn _ADDFL(mut &vm: *VM): (err: str) {
+	vm.pc++                   // ADDFL
+	dst := decodeIndex(vm)    // DESTINATION
+	mut fl := decodeFloat(vm) // Float.
+
+	// ADDFL dst,fl
+	mut dstv := vm.stackRead(dst)
+	dstv.ADDFL(fl)
 
 	ret _NoError
 }

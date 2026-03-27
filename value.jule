@@ -4,6 +4,7 @@
 
 use "vek/internal/mem"
 use "vek/isa"
+use "std/fmt"
 
 // Data types.
 const (
