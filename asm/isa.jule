@@ -38,6 +38,12 @@ fn RET(mut buf: []isa::Byte): []isa::Byte {
 	ret append(buf, isa::RET)
 }
 
+// Appends POP instruction to buf.
+fn POP(mut buf: []isa::Byte, n: isa::Index): []isa::Byte {
+	buf = append(buf, isa::POP)
+	ret isa::EncodeIndex(buf, n)
+}
+
 // Appends AIN instruction to buf.
 fn AIN(mut buf: []isa::Byte, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::AIN)
