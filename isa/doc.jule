@@ -235,6 +235,13 @@
 //
 //		RET
 //
+//	POP:
+//		Deallocates N elements from the top of the stack. The N
+//		argument must be encoded as an index. This instruction effectively
+//		shrinks the current stack frame by adjusting the stack pointer.
+//
+//		POP [N;AS-INDEX]
+//
 //	AIN:
 //		Pushes an integer value onto the stack. This instruction handles
 //		the multi-byte encoding of arbitrary-precision integers.
