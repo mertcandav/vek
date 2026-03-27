@@ -4,7 +4,7 @@
 
 use "vek/internal/mem"
 use "vek/isa"
-use "std/fmt"
+use "std/math"
 
 // Data types.
 const (
@@ -200,6 +200,40 @@ impl Value {
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
 			self.Data = fl / v
+		}
+	}
+
+	// self = self % v (T-division)
+	fn REM(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.REMFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.REMIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// self = self % v (T-division)
+	fn REMIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(math::Mod(self.Data.(isa::Float), fl))
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Rem(&*a, &*v)
+		}
+	}
+
+	// self = self % v (T-division)
+	fn REMFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(math::Mod(self.Data.(isa::Float), v))
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = math::Mod(fl, v)
 		}
 	}
 }
