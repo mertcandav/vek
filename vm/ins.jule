@@ -46,6 +46,7 @@ let insmap: [...]insfunc = [
 	_ADDFL,
 	_SUB,
 	_SUBIN,
+	_SUBFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -225,9 +226,9 @@ fn _ADDIN(mut &vm: *VM): (err: str) {
 }
 
 fn _ADDFL(mut &vm: *VM): (err: str) {
-	vm.pc++                   // ADDFL
-	dst := decodeIndex(vm)    // DESTINATION
-	mut fl := decodeFloat(vm) // Float.
+	vm.pc++                // ADDFL
+	dst := decodeIndex(vm) // DESTINATION
+	fl := decodeFloat(vm)  // Float.
 
 	// ADDFL dst,fl
 	mut dstv := vm.stackRead(dst)
@@ -257,6 +258,18 @@ fn _SUBIN(mut &vm: *VM): (err: str) {
 	// SUBIN dst,_in
 	mut dstv := vm.stackRead(dst)
 	dstv.SUBIN(_in)
+
+	ret _NoError
+}
+
+fn _SUBFL(mut &vm: *VM): (err: str) {
+	vm.pc++                // SUBFL
+	dst := decodeIndex(vm) // DESTINATION
+	fl := decodeFloat(vm)  // Float.
+
+	// SUBFL dst,fl
+	mut dstv := vm.stackRead(dst)
+	dstv.SUBFL(fl)
 
 	ret _NoError
 }
