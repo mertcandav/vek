@@ -42,6 +42,7 @@ let insmap: [...]insfunc = [
 	_MOVFL,
 	_NEG,
 	_ADD,
+	_ADDIN,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -204,6 +205,18 @@ fn _ADD(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	valv := vm.stackRead(val)
 	dstv.ADD(valv)
+
+	ret _NoError
+}
+
+fn _ADDIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // ADDIN
+	dst := decodeIndex(vm)   // DESTINATION
+	mut _in := decodeInt(vm) // Integer.
+
+	// ADDIN dst,_in
+	mut dstv := vm.stackRead(dst)
+	dstv.ADDIN(_in)
 
 	ret _NoError
 }
