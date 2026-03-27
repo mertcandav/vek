@@ -100,6 +100,42 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = ADDFL(self.bin, offX, fl)
 			}
+		| token::SUB:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = SUBIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = SUBFL(self.bin, offX, fl)
+			}
+		| token::MUL:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = MULIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = MULFL(self.bin, offX, fl)
+			}
+		| token::QUO:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = QUOIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = QUOFL(self.bin, offX, fl)
+			}
+		| token::REM:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = REMIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = REMFL(self.bin, offX, fl)
+			}
 		|:
 			panic("unreachable")
 		}
@@ -111,6 +147,14 @@ impl compiler {
 		match op {
 		| token::ADD:
 			self.bin = ADD(self.bin, offX, offY)
+		| token::SUB:
+			self.bin = SUB(self.bin, offX, offY)
+		| token::MUL:
+			self.bin = MUL(self.bin, offX, offY)
+		| token::QUO:
+			self.bin = QUO(self.bin, offX, offY)
+		| token::REM:
+			self.bin = REM(self.bin, offX, offY)
 		|:
 			panic("unreachable")
 		}
@@ -161,6 +205,14 @@ fn binaryInplace(op: int, mut x: &vek::Value, y: &vek::Value) {
 	match op {
 	| token::ADD:
 		x.ADD(y)
+	| token::SUB:
+		x.SUB(y)
+	| token::MUL:
+		x.MUL(y)
+	| token::QUO:
+		x.QUO(y)
+	| token::REM:
+		x.REM(y)
 	|:
 		panic("unreachable")
 	}
