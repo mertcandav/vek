@@ -22,6 +22,9 @@ let externmap: [...]insfunc = [
 	_EXTERN_PRINT,
 ]
 
+// Outputs the top value of the stack to the standard output (stdout) stream.
+// This function retrieves the most recently pushed element and displays its
+// string representation in the console.
 fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
 	printval(vm.stackRead(isa::STCK_OFF))
 
