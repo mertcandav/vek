@@ -50,6 +50,7 @@ let insmap: [...]insfunc = [
 	_MUL,
 	_MULIN,
 	_MULFL,
+	_QUO,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -310,6 +311,19 @@ fn _MULFL(mut &vm: *VM): (err: str) {
 	// MULFL dst,fl
 	mut dstv := vm.stackRead(dst)
 	dstv.MULFL(fl)
+
+	ret _NoError
+}
+
+fn _QUO(mut &vm: *VM): (err: str) {
+	vm.pc++                // QUO
+	dst := decodeIndex(vm) // DESTINATION
+	val := decodeIndex(vm) // VALUE
+
+	// QUO dst,val
+	mut dstv := vm.stackRead(dst)
+	valv := vm.stackRead(val)
+	dstv.QUO(valv)
 
 	ret _NoError
 }
