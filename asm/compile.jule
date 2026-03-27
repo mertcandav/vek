@@ -11,25 +11,30 @@ use "vek/token"
 struct compiler {
 	bin:     []isa::Byte
 	logs:    []log::Log
-	stckoff: isa::Index // Last offset of stack.
+	stckoff: isa::Index // Next offset of stack.
 }
 
 impl compiler {
+	fn pushValue(mut *self, v: &vek::Value) {
+		match type v.Data {
+		| &isa::Int:
+			_in := v.Data.(&isa::Int)
+			self.bin = AIN(self.bin, _in)
+		| isa::Float:
+			fl := v.Data.(isa::Float)
+			self.bin = AFL(self.bin, fl)
+		}
+		self.stckoff++
+	}
+
 	// Compiles print expression.
 	fn compilePrint(mut *self, mut ast: ast::Expr) {
 		v, _ := self.compileExpr(ast)
 		if v != nil {
-			match type v.Data {
-			| &isa::Int:
-				_in := v.Data.(&isa::Int)
-				self.bin = AIN(self.bin, _in)
-			| isa::Float:
-				fl := v.Data.(isa::Float)
-				self.bin = AFL(self.bin, fl)
-			}
+			self.pushValue(v)
 		}
 		self.bin = ASF(self.bin, 1)
-		self.bin = ECALL(self.bin, 0)
+		self.bin = ECALL(self.bin, _EXTERN_PRINT)
 	}
 
 	fn compileUnaryExpr(mut *self, mut ast: &ast::UnaryExpr): (&vek::Value, isa::Index) {
@@ -49,12 +54,72 @@ impl compiler {
 		ret v, off
 	}
 
+	// Evaluates operation op with operands x and y where x is a constant value.
+	// Writes result to a stack memory and returns the index.
+	fn binaryConstantX(mut *self, op: int, x: &vek::Value, offY: isa::Index): isa::Index {
+		offX := self.stckoff
+		self.pushValue(x)
+		self.binaryByIndex(op, offX, offY)
+		ret offX
+	}
+
+	// Evaluates operation op with operands x and y where y is a constant value.
+	// Writes result to x.
+	fn binaryConstantY(mut *self, op: int, offX: isa::Index, y: &vek::Value) {
+		match op {
+		| token::ADD:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = ADDIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = ADDFL(self.bin, offX, fl)
+			}
+		|:
+			panic("unreachable")
+		}
+	}
+
+	// Evaluates operation op with operands x and y.
+	// Writes result to x.
+	fn binaryByIndex(mut *self, op: int, offX: isa::Index, offY: isa::Index) {
+		match op {
+		| token::ADD:
+			self.bin = ADD(self.bin, offX, offY)
+		|:
+			panic("unreachable")
+		}
+	}
+
+	fn compileBinaryExpr(mut *self, mut ast: &ast::BinaryExpr): (&vek::Value, isa::Index) {
+		op := ast.Op.ID
+		mut x, offX := self.compileExpr(ast.X)
+		mut y, offY := self.compileExpr(ast.Y)
+		match {
+		| x != nil && y != nil:
+			binaryInplace(op, x, y)
+			ret x, 0
+		| x != nil:
+			off := self.binaryConstantX(op, x, offY)
+			ret nil, off
+		| y != nil:
+			self.binaryConstantY(op, offX, y)
+			ret nil, offX
+		|:
+			self.binaryByIndex(op, offX, offY)
+			ret nil, offX
+		}
+	}
+
 	fn compileExpr(mut *self, mut ast: ast::Expr): (&vek::Value, isa::Index) {
 		match type ast {
 		| &vek::Value:
 			ret ast.(&vek::Value), 0
 		| &ast::UnaryExpr:
 			ret self.compileUnaryExpr(ast.(&ast::UnaryExpr))
+		| &ast::BinaryExpr:
+			ret self.compileBinaryExpr(ast.(&ast::BinaryExpr))
 		|:
 			panic("unreachable")
 		}
@@ -63,6 +128,17 @@ impl compiler {
 	// Compiles expression.
 	fn compile(mut *self, mut ast: ast::Expr) {
 		self.compilePrint(ast)
+	}
+}
+
+// Evaluates operation op with operands x and y.
+// Writes result to x.
+fn binaryInplace(op: int, mut x: &vek::Value, y: &vek::Value) {
+	match op {
+	| token::ADD:
+		x.ADD(y)
+	|:
+		panic("unreachable")
 	}
 }
 
