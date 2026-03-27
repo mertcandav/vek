@@ -64,14 +64,16 @@ fn MOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
 }
 
 // Appends MOVIN instruction to buf.
-fn MOVIN(mut buf: []isa::Byte, _in: &isa::Int): []isa::Byte {
+fn MOVIN(mut buf: []isa::Byte, idx: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::MOVIN)
+	buf = isa::EncodeIndex(buf, idx)
 	ret isa::EncodeInt(buf, *_in)
 }
 
 // Appends MOVFL instruction to buf.
-fn MOVFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
+fn MOVFL(mut buf: []isa::Byte, idx: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::MOVFL)
+	buf = isa::EncodeIndex(buf, idx)
 	ret isa::EncodeFloat(buf, fl)
 }
 

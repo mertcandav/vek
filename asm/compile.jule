@@ -8,6 +8,11 @@ use "vek/isa"
 use "vek/log"
 use "vek/token"
 
+// Due to the constraints of the operating system and the
+// underlying memory allocation mechanisms, reaching such a
+// high valid index is practically impossible.
+const invalidIndex = isa::Index.Max
+
 struct compiler {
 	bin:  []isa::Byte
 	logs: []log::Log
@@ -15,6 +20,11 @@ struct compiler {
 }
 
 impl compiler {
+	fn restoreSP(mut *self, sp: isa::Index) {
+		self.sp = sp
+		self.bin = SETSP(self.bin, sp)
+	}
+
 	fn pushValue(mut *self, v: &vek::Value) {
 		match type v.Data {
 		| &isa::Int:
@@ -27,8 +37,22 @@ impl compiler {
 		self.sp++
 	}
 
+	fn movValue(mut *self, idx: isa::Index, v: &vek::Value) {
+		match type v.Data {
+		| &isa::Int:
+			_in := v.Data.(&isa::Int)
+			self.bin = MOVIN(self.bin, idx, _in)
+		| isa::Float:
+			fl := v.Data.(isa::Float)
+			self.bin = MOVFL(self.bin, idx, fl)
+		}
+	}
+
 	// Compiles print expression.
 	fn compilePrint(mut *self, mut ast: ast::Expr) {
+		sp := self.sp
+		defer { self.restoreSP(sp) }
+
 		v, _ := self.compileExpr(ast)
 		if v != nil {
 			self.pushValue(v)
