@@ -145,3 +145,24 @@ fn MULFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeFloat(buf, fl)
 }
+
+// Appends QUO instruction to buf.
+fn QUO(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
+	buf = append(buf, isa::QUO)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, v)
+}
+
+// Appends QUOIN instruction to buf.
+fn QUOIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::QUOIN)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends QUOFL instruction to buf.
+fn QUOFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::QUOFL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeFloat(buf, fl)
+}
