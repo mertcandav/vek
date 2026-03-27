@@ -52,6 +52,7 @@ let insmap: [...]insfunc = [
 	_MULFL,
 	_QUO,
 	_QUOIN,
+	_QUOFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -337,6 +338,18 @@ fn _QUOIN(mut &vm: *VM): (err: str) {
 	// QUOIN dst,_in
 	mut dstv := vm.stackRead(dst)
 	dstv.QUOIN(_in)
+
+	ret _NoError
+}
+
+fn _QUOFL(mut &vm: *VM): (err: str) {
+	vm.pc++                // QUOFL
+	dst := decodeIndex(vm) // DESTINATION
+	fl := decodeFloat(vm)  // Float.
+
+	// QUOFL dst,fl
+	mut dstv := vm.stackRead(dst)
+	dstv.QUOFL(fl)
 
 	ret _NoError
 }
