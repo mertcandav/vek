@@ -45,6 +45,7 @@ let insmap: [...]insfunc = [
 	_ADDIN,
 	_ADDFL,
 	_SUB,
+	_SUBIN,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -244,6 +245,18 @@ fn _SUB(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	valv := vm.stackRead(val)
 	dstv.SUB(valv)
+
+	ret _NoError
+}
+
+fn _SUBIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // SUBIN
+	dst := decodeIndex(vm)   // DESTINATION
+	mut _in := decodeInt(vm) // Integer.
+
+	// SUBIN dst,_in
+	mut dstv := vm.stackRead(dst)
+	dstv.SUBIN(_in)
 
 	ret _NoError
 }
