@@ -43,6 +43,9 @@ const (
 	SUB
 	SUBIN
 	SUBFL
+	MUL
+	MULIN
+	MULFL
 )
 
 // Stack constants.

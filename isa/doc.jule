@@ -382,3 +382,51 @@
 //			and the final result is stored as a float.
 //
 //		SUBFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+//
+//	MUL:
+//		Multiplies the value at the destination index by the value from
+//		the source index. This instruction supports mixed-mode arithmetic,
+//		automatically promoting types to ensure precision during the
+//		multiplication process.
+//
+//		- Integer and Integer:
+//			The result is an integer; values are multiplied directly.
+//		- Float and Float:
+//			The result is a float; values are multiplied directly.
+//		- Integer and Float:
+//			The integer is cast to a float before the multiplication.
+//			The resulting product is stored as a float.
+//
+//		MUL [DESTINATION;INDEX],[VALUE;INDEX]
+//
+//	MULIN:
+//		Multiplies the destination index by an immediate integer value.
+//		This instruction facilitates direct arithmetic with constants,
+//		optimizing performance by bypassing additional register or
+//		memory lookups.
+//
+//		- Destination is Integer:
+//			The values are multiplied directly.
+//			The result remains an integer.
+//		- Destination is Float:
+//			The immediate integer is first promoted (cast) to a float
+//			value. The multiplication is then performed, and the final
+//			result is stored as a float.
+//
+//		MULIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//
+//	MULFL:
+//		Multiplies the destination index by a literal floating-point value.
+//		This instruction facilitates direct arithmetic with constants,
+//		optimizing performance by bypassing additional register or
+//		memory lookups.
+//
+//		- Destination is Float:
+//			The values are multiplied directly.
+//			The result remains a float.
+//		- Destination is Integer:
+//			The destination's integer is first promoted (cast) to a
+//			float value. The multiplication is then performed, and the
+//			final result is stored as a float.
+//
+//		MULFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
