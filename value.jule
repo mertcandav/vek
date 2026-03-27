@@ -134,4 +134,38 @@ impl Value {
 			self.Data = fl - v
 		}
 	}
+
+	// Multiplies v's value with itself value.
+	fn MUL(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.MULFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.MULIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// Multiplies v's value with itself value.
+	fn MULIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(self.Data.(isa::Float) * fl)
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Mul(&*a, &*v)
+		}
+	}
+
+	// Multiplies v's value with itself value.
+	fn MULFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(self.Data.(isa::Float) * v)
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = fl * v
+		}
+	}
 }
