@@ -5,7 +5,7 @@
 use "vek"
 use "vek/isa"
 
-// A vek virtual machine.
+// A reference vek VM (Virtual Machine).
 //
 // Executes a vek binary in strict accordance with the vek ISA specification.
 // This process involves the sequential fetching of opcodes,
