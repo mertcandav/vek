@@ -56,7 +56,7 @@ impl Value {
 		}
 	}
 
-	// Negates value.
+	// self = -self
 	fn NEG(mut *self) {
 		match type self.Data {
 		| isa::Float:
@@ -67,7 +67,7 @@ impl Value {
 		}
 	}
 
-	// Adds v's value to itself value.
+	// self = self + v
 	fn ADD(mut *self, v: &Value) {
 		match type v.Data {
 		| isa::Float:
@@ -77,7 +77,7 @@ impl Value {
 		}
 	}
 
-	// Adds v's value to itself value.
+	// self = self + v
 	fn ADDIN(mut *self, v: &isa::Int) {
 		match type self.Data {
 		| isa::Float:
@@ -89,7 +89,7 @@ impl Value {
 		}
 	}
 
-	// Adds v's value to itself value.
+	// self = self + v
 	fn ADDFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
@@ -101,7 +101,7 @@ impl Value {
 		}
 	}
 
-	// Subtracts v's value from itself value.
+	// self = self - v
 	fn SUB(mut *self, v: &Value) {
 		match type v.Data {
 		| isa::Float:
@@ -111,7 +111,7 @@ impl Value {
 		}
 	}
 
-	// Subtracts v's value from itself value.
+	// self = self - v
 	fn SUBIN(mut *self, v: &isa::Int) {
 		match type self.Data {
 		| isa::Float:
@@ -123,7 +123,7 @@ impl Value {
 		}
 	}
 
-	// Subtracts v's value from itself value.
+	// self = self - v
 	fn SUBFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
@@ -135,7 +135,7 @@ impl Value {
 		}
 	}
 
-	// Multiplies v's value with itself value.
+	// self = self * v
 	fn MUL(mut *self, v: &Value) {
 		match type v.Data {
 		| isa::Float:
@@ -145,7 +145,7 @@ impl Value {
 		}
 	}
 
-	// Multiplies v's value with itself value.
+	// self = self * v
 	fn MULIN(mut *self, v: &isa::Int) {
 		match type self.Data {
 		| isa::Float:
@@ -157,7 +157,7 @@ impl Value {
 		}
 	}
 
-	// Multiplies v's value with itself value.
+	// self = self * v
 	fn MULFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
@@ -166,6 +166,40 @@ impl Value {
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
 			self.Data = fl * v
+		}
+	}
+
+	// self = self / v (T-division)
+	fn QUO(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.QUOFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.QUOIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// self = self / v (T-division)
+	fn QUOIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(self.Data.(isa::Float) / fl)
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Quo(&*a, &*v)
+		}
+	}
+
+	// self = self / v (T-division)
+	fn QUOFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(self.Data.(isa::Float) / v)
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = fl / v
 		}
 	}
 }
