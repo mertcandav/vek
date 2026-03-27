@@ -139,13 +139,7 @@ fn _MOV(mut &vm: *VM): (err: str) {
 	dst := decodeIndex(vm) // DESTINATION
 
 	// MOV src,dst
-	if src == isa::STCK_PC {
-		// Source index is PC.
-		// Set value directly by integer value of PC.
-		setval_int(vm.stackRead(dst), vm.PC())
-	} else {
-		copyval(vm.stackRead(dst), vm.stackRead(src))
-	}
+	copyval(vm.stackRead(dst), vm.stackRead(src))
 
 	ret _NoError
 }

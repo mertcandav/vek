@@ -94,13 +94,7 @@ fn New(): (vm: VM) {
 		// Initialize all stack with undefined values.
 		// This is allowed by the specification.
 		// No need for default values.
-		match i {
-		| isa::STCK_PC:
-			// See valuePC's documentation.
-			vm.stack[i] = valuePC
-		|:
-			vm.stack[i] = new(vek::Value)
-		}
+		vm.stack[i] = new(vek::Value)
 	}
 
 	// Initialize the global scope stack frame.

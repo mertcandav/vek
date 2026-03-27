@@ -79,17 +79,6 @@
 //		destination for return values and temporary
 //		data processing during instruction execution.
 //
-//	PC:
-//		The Program Counter acts as a specialized register that
-//		tracks the execution flow by holding the current memory index.
-//		In this ISA, it increments sequentially after each byte-by-byte decode
-//		cycle unless a branching or jump instruction explicitly modifies its
-//		value to redirect the control flow.
-//
-//		The outcome of any explicit write operation to this register
-//		is strictly undefined. It is not required to map or point to a valid data entry
-//		within the stack memory space. Read-Only.
-//
 //
 //
 // Data Types

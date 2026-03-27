@@ -6,15 +6,6 @@ use "vek"
 use "vek/isa"
 use "std/conv"
 
-// A placeholder value for the PC.
-// This approach is explicitly permitted by the specification.
-// The Program Counter (PC) is not required to function as a
-// actual Read/Write (R/W) register on the stack. Instead,
-// it acts as a read-only abstraction, with the sole purpose
-// of exposing the current instruction pointer's value
-// for observational or diagnostic operations.
-let mut valuePC = new(vek::Value)
-
 // Copies src's value to dst.
 fn copyval(mut dst: &vek::Value, mut src: &vek::Value) {
 	dst.Type = src.Type
