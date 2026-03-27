@@ -1,0 +1,385 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/isa"
+use "std/conv"
+use "std/math"
+
+const _EOF = isa::OPCOUNT
+
+struct printer {
+	mut buf:    []byte
+	bin:        []isa::Byte
+	mut off:    int
+	mut b:      isa::Byte
+	mut indent: str
+}
+
+impl printer {}
+
+impl printer {
+	fn next(*self) {
+		self.off++
+		if self.off >= len(self.bin) {
+			self.b = _EOF
+		} else {
+			self.b = self.bin[self.off]
+		}
+	}
+
+	fn append(*self, txt: str) {
+		self.buf = append(self.buf, self.indent...)
+		self.buf = append(self.buf, txt...)
+	}
+
+	fn appendInt(*self, _in: &isa::Int) {
+		self.buf = append(self.buf, "0x"...)
+		txt := _in.Format(16)
+		self.buf = append(self.buf, txt...)
+	}
+
+	fn appendFloat(*self, fl: isa::Float) {
+		self.buf = conv::AppendFloat(self.buf, fl, 'e', -1, 64)
+	}
+
+	fn appendIndex(*self, idx: isa::Index) {
+		self.buf = append(self.buf, "0x"...)
+		self.buf = conv::AppendUint(self.buf, idx, 16)
+	}
+
+	fn decodeInt(*self): (&isa::Int, bool) {
+		sign := self.b
+		self.next()
+		if self.b == _EOF {
+			ret nil, false
+		}
+		start := self.off
+		for self.b != _EOF && self.b != isa::NOP {
+			self.next()
+		}
+		if self.b == _EOF {
+			ret nil, false
+		}
+		enc := self.bin[start:self.off]
+		mut _in := new(isa::Int)
+		_in.SetBytes(enc)
+		if sign == 1 {
+			_in.Neg(&*_in)
+		}
+		ret _in, true
+	}
+
+	fn decodeFloat(*self): (isa::Float, bool) {
+		let mut b: u64
+		b |= u64(self.b) << 56
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 48
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 40
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 32
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 24
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 16
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b) << 8
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		b |= u64(self.b)
+		ret math::F64frombits(b), true
+	}
+
+	fn decodeIndex(*self): (idx: isa::Index, bool) {
+		idx |= isa::Index(self.b) << 56
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 48
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 40
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 32
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 24
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 16
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b) << 8
+		self.next()
+		if self.b == _EOF {
+			ret 0, false
+		}
+		idx |= isa::Index(self.b)
+		ret idx, true
+	}
+
+	fn printIndex(*self, opcode: str): bool {
+		self.append(opcode)
+		self.append(" ")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		idx, ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndex(idx)
+		self.append("\n")
+		ret true
+	}
+
+	fn printIndexFloat(*self, opcode: str): bool {
+		self.append(opcode)
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		src, mut ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		fl, ok := self.decodeFloat()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndex(src)
+		self.append(", ")
+		self.appendFloat(fl)
+		self.append("\n")
+		ret true
+	}
+
+	fn printIndexInt(*self, opcode: str): bool {
+		self.append(opcode)
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		src, mut ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		_in, ok := self.decodeInt()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndex(src)
+		self.append(", ")
+		self.appendInt(_in)
+		self.append("\n")
+		ret true
+	}
+
+	fn printIndexIndex(*self, opcode: str): bool {
+		self.append(opcode)
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		src, mut ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		dst, ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndex(src)
+		self.append(", ")
+		self.appendIndex(dst)
+		self.append("\n")
+		ret true
+	}
+
+	fn printOP(*self, opcode: str): bool {
+		self.append(opcode)
+		self.append("\n")
+		self.next()
+		ret true
+	}
+
+	fn printAIN(*self): bool {
+		self.append("AIN\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		_in, ok := self.decodeInt()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendInt(_in)
+		self.append("\n")
+		ret true
+	}
+
+	fn printAFL(*self): bool {
+		self.append("AFL\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		fl, ok := self.decodeFloat()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendFloat(fl)
+		self.append("\n")
+		ret true
+	}
+
+	fn print(*self): bool {
+		match self.b {
+		| isa::NOP:
+			ret self.printOP("NOP")
+		| isa::JMP:
+			ret self.printIndex("JMP")
+		| isa::ASF:
+			ret self.printIndex("ASF")
+		| isa::CALL:
+			ret self.printIndex("CALL")
+		| isa::ECALL:
+			ret self.printIndex("ECALL")
+		| isa::RET:
+			ret self.printOP("RET")
+		| isa::SETSP:
+			ret self.printIndex("SETSP")
+		| isa::AIN:
+			ret self.printAIN()
+		| isa::AFL:
+			ret self.printAFL()
+		| isa::MOV:
+			ret self.printIndexIndex("MOV")
+		| isa::MOVIN:
+			ret self.printIndexInt("MOVIN")
+		| isa::MOVFL:
+			ret self.printIndexFloat("MOVFL")
+		| isa::NEG:
+			ret self.printIndex("NEG")
+		| isa::ADD:
+			ret self.printIndexIndex("ADD")
+		| isa::ADDIN:
+			ret self.printIndexInt("ADDIN")
+		| isa::ADDFL:
+			ret self.printIndexFloat("ADDFL")
+		| isa::SUB:
+			ret self.printIndexIndex("SUB")
+		| isa::SUBIN:
+			ret self.printIndexInt("SUBIN")
+		| isa::SUBFL:
+			ret self.printIndexFloat("SUBFL")
+		| isa::MUL:
+			ret self.printIndexIndex("MUL")
+		| isa::MULIN:
+			ret self.printIndexInt("MULIN")
+		| isa::MULFL:
+			ret self.printIndexFloat("MULFL")
+		| isa::QUO:
+			ret self.printIndexIndex("QUO")
+		| isa::QUOIN:
+			ret self.printIndexInt("QUOIN")
+		| isa::QUOFL:
+			ret self.printIndexFloat("QUOFL")
+		| isa::REM:
+			ret self.printIndexIndex("REM")
+		| isa::REMIN:
+			ret self.printIndexInt("REMIN")
+		| isa::REMFL:
+			ret self.printIndexFloat("REMFL")
+		|:
+			ret false
+		}
+	}
+
+	fn printAll(*self): []byte {
+		self.next()
+		for self.b != _EOF {
+			ok := self.print()
+			if !ok {
+				ret nil
+			}
+		}
+		ret self.buf
+	}
+}
+
+// Decompiles and translates the binary-encoded Vek Assembly
+// into its human-readable text representation. This instruction
+// processes the instruction stream within the buffer,
+// resolving opcodes and operands back into their
+// mnemonic forms to facilitate debugging,
+// logging, and code inspection.
+//
+// Returns nil if the binary input is malformed or improperly
+// formatted.
+fn Print(bin: []isa::Byte): []byte {
+	if len(bin) == 0 {
+		ret nil
+	}
+	p := printer{
+		buf: make([]byte, 0, len(bin)),
+		bin: bin,
+		off: -1,
+	}
+	ret p.printAll()
+}
