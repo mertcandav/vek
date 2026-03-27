@@ -40,6 +40,7 @@ let insmap: [...]insfunc = [
 	_MOV,
 	_MOVIN,
 	_MOVFL,
+	_NEG,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -178,6 +179,17 @@ fn _MOVFL(mut &vm: *VM): (err: str) {
 	mut v := vm.stackRead(idx)
 	v.Type = vek::TypeFL
 	v.Data = fl
+
+	ret _NoError
+}
+
+fn _NEG(mut &vm: *VM): (err: str) {
+	vm.pc++                // NEG
+	idx := decodeIndex(vm) // INDEX
+
+	// NEG idx
+	mut v := vm.stackRead(idx)
+	v.NEG()
 
 	ret _NoError
 }
