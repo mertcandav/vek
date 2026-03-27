@@ -68,7 +68,6 @@ impl Value {
 	}
 
 	// Adds v's value to itself value.
-	// Reports whether operation is success.
 	fn ADD(mut *self, v: &Value) {
 		match type v.Data {
 		| isa::Float:
@@ -79,7 +78,6 @@ impl Value {
 	}
 
 	// Adds v's value to itself value.
-	// Reports whether operation is success.
 	fn ADDIN(mut *self, v: &isa::Int) {
 		match type self.Data {
 		| isa::Float:
@@ -91,8 +89,7 @@ impl Value {
 		}
 	}
 
-	// Adds x's value to itself value.
-	// Reports whether operation is success.
+	// Adds v's value to itself value.
 	fn ADDFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
@@ -101,6 +98,40 @@ impl Value {
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
 			self.Data = fl + v
+		}
+	}
+
+	// Subtracts v's value from itself value.
+	fn SUB(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.SUBFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.SUBIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// Subtracts v's value from itself value.
+	fn SUBIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(self.Data.(isa::Float) - fl)
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Sub(&*a, &*v)
+		}
+	}
+
+	// Subtracts v's value from itself value.
+	fn SUBFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(self.Data.(isa::Float) - v)
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = fl - v
 		}
 	}
 }
