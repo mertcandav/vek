@@ -124,3 +124,24 @@ fn SUBFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeFloat(buf, fl)
 }
+
+// Appends MUL instruction to buf.
+fn MUL(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
+	buf = append(buf, isa::MUL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, v)
+}
+
+// Appends MULIN instruction to buf.
+fn MULIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::MULIN)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends MULFL instruction to buf.
+fn MULFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::MULFL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeFloat(buf, fl)
+}
