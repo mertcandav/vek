@@ -155,7 +155,14 @@ fn build(mut args: []str) {
 		}
 	}
 
-	buf := asm::Print(bin)
+	// Setup print options.
+	mut options := 0
+	// If output will be printed to stdout, use highlighting.
+	if *out == "" {
+		options |= asm::PRI_HL
+	}
+
+	buf := asm::Print(bin, options)
 	if *out == "" {
 		println(unsafe::StrFromBytes(buf))
 	} else {

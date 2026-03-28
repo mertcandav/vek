@@ -2,16 +2,29 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek/ansi"
 use "vek/isa"
 use "std/conv"
 use "std/math"
 
-const _EOF = isa::OPCOUNT
+// Print options.
+const (
+	PRI_HL = 1 << iota // Highlighed.
+)
+
+const (
+	_EOF = isa::OPCOUNT
+
+	fgOP     = ansi::Blue
+	fgNumber = ansi::Green
+	fgIndex  = ansi::Cyan
+)
 
 struct printer {
 	mut buf:    []byte
 	bin:        []isa::Byte
 	mut off:    int
+	options:    int
 	mut b:      isa::Byte
 	mut indent: str
 }
@@ -34,18 +47,46 @@ impl printer {
 	}
 
 	fn appendInt(*self, _in: &isa::Int) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgNumber)
+		}
 		self.buf = append(self.buf, "0x"...)
 		txt := _in.Format(16)
 		self.buf = append(self.buf, txt...)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
 	}
 
 	fn appendFloat(*self, fl: isa::Float) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgNumber)
+		}
 		self.buf = conv::AppendFloat(self.buf, fl, 'e', -1, 64)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
 	}
 
 	fn appendIndex(*self, idx: isa::Index) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgIndex)
+		}
 		self.buf = append(self.buf, "0x"...)
 		self.buf = conv::AppendUint(self.buf, idx, 16)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
+	}
+
+	fn appendOP(*self, opcode: str) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgOP)
+		}
+		self.buf = append(self.buf, opcode...)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
 	}
 
 	fn decodeInt(*self): (&isa::Int, bool) {
@@ -152,7 +193,7 @@ impl printer {
 	}
 
 	fn printIndex(*self, opcode: str): bool {
-		self.append(opcode)
+		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
@@ -169,7 +210,7 @@ impl printer {
 	}
 
 	fn printIndexFloat(*self, opcode: str): bool {
-		self.append(opcode)
+		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
@@ -196,7 +237,7 @@ impl printer {
 	}
 
 	fn printIndexInt(*self, opcode: str): bool {
-		self.append(opcode)
+		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
@@ -223,7 +264,7 @@ impl printer {
 	}
 
 	fn printIndexIndex(*self, opcode: str): bool {
-		self.append(opcode)
+		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
@@ -250,14 +291,15 @@ impl printer {
 	}
 
 	fn printOP(*self, opcode: str): bool {
-		self.append(opcode)
+		self.appendOP(opcode)
 		self.append("\n")
 		self.next()
 		ret true
 	}
 
 	fn printAIN(*self): bool {
-		self.append("AIN\t")
+		self.appendOP("AIN")
+		self.append("\t")
 		self.next()
 		if self.b == _EOF {
 			ret false
@@ -273,7 +315,8 @@ impl printer {
 	}
 
 	fn printAFL(*self): bool {
-		self.append("AFL\t")
+		self.appendOP("AFL")
+		self.append("\t")
 		self.next()
 		if self.b == _EOF {
 			ret false
@@ -372,7 +415,7 @@ impl printer {
 //
 // Returns nil if the binary input is malformed or improperly
 // formatted.
-fn Print(bin: []isa::Byte): []byte {
+fn Print(bin: []isa::Byte, options: int): []byte {
 	if len(bin) == 0 {
 		ret nil
 	}
@@ -380,6 +423,7 @@ fn Print(bin: []isa::Byte): []byte {
 		buf: make([]byte, 0, len(bin)),
 		bin: bin,
 		off: -1,
+		options: options,
 	}
 	ret p.printAll()
 }
