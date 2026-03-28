@@ -102,8 +102,16 @@ This is the version of vek.`)
 		println(`The build command builds vek bytecode from source.
 
 Usage:
-	vek build [arguments] [source]
-	
+	vek build [arguments] [source]...
+
+Evaluates all arguments provided (excluding options) as
+distinct expressions and consolidates them into a single,
+unified vek bytecode. This command performs incremental
+compilation of multiple inputs, merging their instruction
+sequences into a continuous binary executable.
+
+For example: vek "4 + 4" "5 * 5"
+
 The most common arguments are:
 	-S
 		Disassembles the binary bytecode into a human-readable
