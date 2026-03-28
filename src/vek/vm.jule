@@ -35,7 +35,7 @@ fn eval(mut buf: []byte) {
 	// any partial/temporary bytecode in the event of a failure/print eval,
 	// facilitating a rollback to the last stable state.
 	n := len(bin)
-	bin, logs = asm::Compile(bin, ast)
+	bin, logs = asm::Compile(bin, vm.Memory(), ast)
 	if len(logs) > 0 {
 		bin = bin[:n]
 		log::PrintAll(logs)

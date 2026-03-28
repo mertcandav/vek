@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek"
 use "vek/isa"
 
 // External Functions
@@ -21,6 +22,103 @@ use "vek/isa"
 let externmap: [...]insfunc = [
 	_EXTERN_PRINT,
 ]
+
+const (
+	_Ln2  = 0.693147180559945309417232121458176568075500134360255254120680009 // https://oeis.org/A002162
+	_Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790  // https://oeis.org/A002392
+)
+
+let mut _value_Pi = newFL(3.14159265358979323846264338327950288419716939937510582097494459)     // https://oeis.org/A000796
+let mut _value_Phi = newFL(1.61803398874989484820458683436563811772030917980576286213544862)    // https://oeis.org/A001622
+let mut _value_Euler = newFL(0.577215664901532860606512090082402431042159335939923598805767234) // https://oeis.org/A001620
+
+// A high-level, key-value lookup table for
+// managing static constants. This map associates unique
+// identifiers (names) with their corresponding literal values,
+// facilitating efficient symbol resolution and
+// global data access throughout the
+// bytecode execution lifecycle.
+let mut constmap = map[str]&vek::Value{
+	"E":   newFL(2.71828182845904523536028747135266249775724709369995957496696763), // https://oeis.org/A001113
+	"Pi":  _value_Pi,
+	"π":   _value_Pi,
+	"Pi2": newFL(9.86960440108935861883449099987615113531369940724079062641334937), // https://oeis.org/A002388
+	"Pi3": newFL(31.0062766802998201754763150671013952022252885658851076941445381), // https://oeis.org/A091925
+	"Pi4": newFL(97.4090910340024372364403326887051112497275856726854216914678593), // https://oeis.org/A092425
+	"Pi6": newFL(961.389193575304437030219443652419898867217528081046615941076187), // https://oeis.org/A092732
+	"Phi": _value_Phi,
+	"Φ":   _value_Phi,
+	"φ":   _value_Phi,
+	"ϕ":   _value_Phi,
+
+	"Sqrt2":   newFL(1.41421356237309504880168872420969807856967187537694807317667974), // https://oeis.org/A002193
+	"SqrtE":   newFL(1.64872127070012814684865078781416357165377610071014801157507931), // https://oeis.org/A019774
+	"SqrtPi":  newFL(1.77245385090551602729816748334114518279754945612238712821380779), // https://oeis.org/A002161
+	"SqrtPhi": newFL(1.27201964951406896425242246173749149171560804184009624861664038), // https://oeis.org/A139339
+
+	"Ln2":    newFL(_Ln2),
+	"Log2E":  newFL(1 / _Ln2),
+	"Ln10":   newFL(_Ln10),
+	"Log10E": newFL(1 / _Ln10),
+
+	"Euler":                   _value_Euler,
+	"γ":                       _value_Euler,
+	"Gauss":                   newFL(2.62205755429211981046483958989111941368275495143162316281682170),  // https://oeis.org/A062539
+	"Gelfond":                 newFL(23.1406926327792690057290863679485473802661062426002119934450464),  // https://oeis.org/A039661
+	"Apery":                   newFL(1.20205690315959428539973816151144999076498629234049888179227155),  // https://oeis.org/A002117
+	"Khinchin":                newFL(2.68545200106530644530971483548179569382038229399446295305115234),  // https://oeis.org/A002210
+	"Catalan":                 newFL(0.915965594177219015054603514932384110774149374281672134266498119), // https://oeis.org/A006752
+	"Faraday":                 newFL(96485.33212),                                                       // https://physics.nist.gov/cgi-bin/cuu/Value?f, https://oeis.org/A163999
+	"Avogadro":                newFL(6.02214076 * 1e+23),                                                // https://physics.nist.gov/cgi-bin/cuu/Value?na, https://oeis.org/A322578
+	"Chaitin":                 newFL(0.0078749969978123844),                                             // https://oeis.org/A100264
+	"Planck":                  newFL(6.62607015 * 1e-34),                                                // https://physics.nist.gov/cgi-bin/cuu/Value?h, https://oeis.org/A003676
+	"ReducedPlanck":           newFL(1.054571817 * 1e-34),                                               // https://physics.nist.gov/cgi-bin/cuu/Value?hbar, https://oeis.org/A254181
+	"Rydberg":                 newFL(10973731.568157),                                                   // https://physics.nist.gov/cgi-bin/cuu/Value?ryd, https://oeis.org/A081821
+	"Boltzmann":               newFL(1.380649 * 1e-23),                                                  // https://physics.nist.gov/cgi-bin/cuu/Value?k, https://oeis.org/A070063
+	"StefanBoltzmann":         newFL(5.670374419 * 1e-8),                                                // https://physics.nist.gov/cgi-bin/cuu/Value?sigma, https://oeis.org/A081820
+	"Conway":                  newFL(1.30357726903429639125709911215255189073070250465940487575486139),  // https://oeis.org/A014715
+	"Lehmer":                  newFL(1.17628081825991750654407033847403505069341580656469525983010634),  // https://oeis.org/A073011
+	"Ramanujan":               newFL(262537412640768743.999999999999250072597198185688879353856337336),  // https://oeis.org/A060295
+	"VonKlitzing":             newFL(25812.80745),                                                       // https://physics.nist.gov/cgi-bin/cuu/Value?rk, https://oeis.org/A248510
+	"ConventionalVonKlitzing": newFL(25812.807),                                                         // https://physics.nist.gov/cgi-bin/cuu/Value?rk90, https://oeis.org/A362590
+	"Josephson":               newFL(483597.8484 * 1e+9),                                                // https://physics.nist.gov/cgi-bin/cuu/Value?kjos, https://oeis.org/A248508
+
+	"GelfondSchneider":     newFL(2.66514414269022518865029724987313984827421131371465949283597959), // https://oeis.org/A007507
+	"SqrtGelfondSchneider": newFL(1.63252691943815284477349538102471960207910885705311411724778068), // https://oeis.org/A078333
+
+	"FirstFeigenbaum":  newFL(4.66920160910299067185320382046620161725818557747576863274565134), // https://oeis.org/A006890
+	"SecondFeigenbaum": newFL(2.50290787509589282228390287321821578638127137672714997733619205), // https://oeis.org/A006891
+
+	"InvSqrtPi2":              newFL(0.398942280401432677939946059934381868475858631164934657665925829), // https://oeis.org/A231863
+	"Erf1":                    newFL(0.842700792949714869341220635082609259296066997966302908459937897), // https://oeis.org/A099286
+	"GaussianGravity":         newFL(1.720209895 * 1e-2),                                                // https://oeis.org/A248363
+	"NewtonianGravity":        newFL(6.67430 * 1e-11),                                                   // https://physics.nist.gov/cgi-bin/cuu/Value?bg, https://oeis.org/A070058
+	"AtomicMass":              newFL(1.66053906892 * 1e-27),                                             // https://physics.nist.gov/cgi-bin/cuu/Value?u, https://oeis.org/A081825
+	"ElectronMass":            newFL(9.1093837139 * 1e-31),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?me, https://oeis.org/A081801
+	"ProtonMass":              newFL(1.67262192595 * 1e-27),                                             // https://physics.nist.gov/cgi-bin/cuu/Value?mp, https://oeis.org/A070059
+	"ProtonElectronMassRatio": newFL(1836.152673426),                                                    // https://physics.nist.gov/cgi-bin/cuu/Value?mpsme, https://oeis.org/A005601
+	"BohrRadius":              newFL(5.29177210544 * 1e-11),                                             // https://physics.nist.gov/cgi-bin/cuu/Value?bohrrada0, https://oeis.org/A003671
+	"PlanckLength":            newFL(1.616255 * 1e-35),                                                  // https://physics.nist.gov/cgi-bin/cuu/Value?plkl, https://oeis.org/A078300
+	"PlanckTemperature":       newFL(1.416784 * 1e+32),                                                  // https://physics.nist.gov/cgi-bin/cuu/Value?plktmp, https://oeis.org/A210491
+	"PlanckTime":              newFL(5.391247 * 1e-44),                                                  // https://physics.nist.gov/cgi-bin/cuu/Value?plkt, https://oeis.org/A078302
+	"PlanckMass":              newFL(2.176434 * 1e-8),                                                   // https://physics.nist.gov/cgi-bin/cuu/Value?plkm, https://oeis.org/A078301
+	"BaselProblem":            newFL(1.64493406684822643647241516664602518921894990120679843773555822),  // https://oeis.org/A013661
+	"FineStructure":           newFL(7.2973525643 * 1e-3),                                               // https://physics.nist.gov/cgi-bin/cuu/Value?alph, https://oeis.org/A003673
+	"InvFineStructure":        newFL(137.035999177),                                                     // https://physics.nist.gov/cgi-bin/cuu/Value?alphinv, https://oeis.org/A005600
+	"Gas":                     newFL(8.314462618),                                                       // https://physics.nist.gov/cgi-bin/cuu/Value?r, https://oeis.org/A070064
+	"Magnetic":                newFL(1.25663706127 * 1e-6),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?mu0
+	"Electric":                newFL(8.8541878188 * 1e-12),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?ep0, https://oeis.org/A081799
+	"SpeedOfLight":            newFL(299792458),                                                         // https://physics.nist.gov/cgi-bin/cuu/Value?c, https://oeis.org/A003678
+	"ElementaryCharge":        newFL(1.602176634 * 1e-19),                                               // https://physics.nist.gov/cgi-bin/cuu/Value?e, https://oeis.org/A081823
+	"ElectronVolt":            newFL(1.602176634 * 1e-19),                                               // https://physics.nist.gov/cgi-bin/cuu/Value?evj
+	"MolarMass":               newFL(1.00000000105 * 1e-3),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?mu
+	"ConductanceQuantum":      newFL(7.748091729 * 1e-5),                                                // https://physics.nist.gov/cgi-bin/cuu/Value?conqu2e2sh, https://oeis.org/A081824
+	"ThomsonCrossSection":     newFL(6.6524587051 * 1e-29),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?sigmae, https://oeis.org/A255823
+	"HartreeEnergy":           newFL(4.3597447222060 * 1e-18),                                           // https://physics.nist.gov/cgi-bin/cuu/Value?hr, https://oeis.org/A229938
+	"BohrMagneton":            newFL(9.2740100657 * 1e-24),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?mub, https://oeis.org/A234371
+	"NuclearMagneton":         newFL(5.0507837393 * 1e-27),                                              // https://physics.nist.gov/cgi-bin/cuu/Value?mun
+	"MagneticFluxQuantum":     newFL(2.067833848 * 1e-15),                                               // https://physics.nist.gov/cgi-bin/cuu/Value?flxquhs2e, https://oeis.org/A248507
+}
 
 // Outputs the top value of the stack to the standard output (stdout) stream.
 // This function retrieves the most recently pushed element and displays its

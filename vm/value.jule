@@ -6,27 +6,11 @@ use "vek"
 use "vek/isa"
 use "std/conv"
 
-// Copies src's value to dst.
-fn copyval(mut dst: &vek::Value, mut src: &vek::Value) {
-	dst.Type = src.Type
-	match type src.Data {
-	| &isa::Int:
-		srcin := src.Data.(&isa::Int)
-		// Optimization:
-		// If dst's value is integer, use the existing buffer.
-		// Otherwise, allocate a new integer.
-		mut dstin, ok := dst.Data.(&isa::Int)
-		if !ok {
-			dstin = new(isa::Int)
-		}
-		dstin.Set(&*srcin)
-		dst.Data = dstin
-	| isa::Float:
-		// Make sure dst will have a different heap allocation.
-		// Because in-place computations will mutate the
-		// internal allocation of the [data].
-		fl := src.Data.(isa::Float)
-		dst.Data = fl
+// Returns new vek Value for float.
+fn newFL(fl: isa::Float): &vek::Value {
+	ret &vek::Value{
+		Type: vek::TypeFL,
+		Data: fl,
 	}
 }
 

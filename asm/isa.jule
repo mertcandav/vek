@@ -4,6 +4,11 @@
 
 use "vek/isa"
 
+// Due to the constraints of the operating system and the
+// underlying memory allocation mechanisms, reaching such a
+// high valid index is practically impossible.
+const invalidIndex = isa::Index.Max
+
 // Appends NOP instruction to buf.
 fn NOP(mut buf: []isa::Byte): []isa::Byte {
 	ret append(buf, isa::NOP)

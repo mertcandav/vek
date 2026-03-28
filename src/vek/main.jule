@@ -187,7 +187,7 @@ fn build(mut args: []str) {
 			log::PrintAll(logs)
 			ret
 		}
-		bin, logs = asm::Compile(bin, ast)
+		bin, logs = asm::Compile(bin, vm.Memory(), ast)
 		if len(logs) > 0 {
 			log::PrintAll(logs)
 			ret

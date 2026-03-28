@@ -34,10 +34,10 @@ impl parser {
 
 	fn pushErr(mut *self, tok: token::Token, text: str) {
 		self.logs = append(self.logs, log::Log{
-			Kind: log::Error,
+			Kind:   log::Error,
 			Column: tok.Column,
-			Line: tok.Line,
-			Text: text,
+			Line:   tok.Line,
+			Text:   text,
 		})
 	}
 

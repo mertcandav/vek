@@ -464,9 +464,9 @@ fn Print(bin: []isa::Byte, options: int): []byte {
 		ret nil
 	}
 	p := printer{
-		buf: make([]byte, 0, len(bin)),
-		bin: bin,
-		off: -1,
+		buf:     make([]byte, 0, len(bin)),
+		bin:     bin,
+		off:     -1,
 		options: options,
 	}
 	ret p.printAll()

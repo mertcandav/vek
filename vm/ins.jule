@@ -167,7 +167,7 @@ fn _MOV(mut &vm: *VM): (err: str) {
 	dst := decodeIndex(vm) // DESTINATION
 
 	// MOV src,dst
-	copyval(vm.stackRead(dst), vm.stackRead(src))
+	vm.stackRead(dst).Copy(vm.stackRead(src))
 
 	ret _NoError
 }

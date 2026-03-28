@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use "vek"
+use "vek/asm"
 use "vek/isa"
 
 // A reference vek VM (Virtual Machine).
@@ -20,6 +21,7 @@ struct VM {
 	bin:   []isa::Byte   // vek binary.
 	stack: []&vek::Value // Stack memory.
 	sf:    &stackFrame   // Current stack frame.
+	mem:   &asm::Memory  // VM memory.
 	pc:    isa::PC       // Raw Program Counter.
 }
 
@@ -33,6 +35,9 @@ impl VM {
 
 	// Returns PC.
 	fn PC(*self): int { ret self.pc }
+
+	// Returns the VM's mutable memory.
+	fn Memory(mut *self): &asm::Memory { ret self.mem }
 
 	// Sets PC.
 	// This is unsafe operation.
@@ -65,8 +70,8 @@ impl VM {
 		if err != "" {
 			ret &Error{
 				Opcode: opcode,
-				PC: pc,
-				Error: err,
+				PC:     pc,
+				Error:  err,
 			}
 		}
 		ret nil
@@ -99,5 +104,10 @@ fn New(): (vm: VM) {
 
 	// Initialize the global scope stack frame.
 	vm.sf = newStackFrame()
+
+	// Initialize local VM memory.
+	vm.mem = new(asm::Memory)
+	vm.mem.Constants = constmap
+
 	ret
 }

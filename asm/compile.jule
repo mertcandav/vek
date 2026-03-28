@@ -7,19 +7,38 @@ use "vek/ast"
 use "vek/isa"
 use "vek/log"
 use "vek/token"
+use "std/conv"
 
-// Due to the constraints of the operating system and the
-// underlying memory allocation mechanisms, reaching such a
-// high valid index is practically impossible.
-const invalidIndex = isa::Index.Max
+// Defines the physical and logical layout of the
+// virtual machine's memory.
+struct Memory {
+	// Constant variable identifier:value map.
+	Constants: map[str]&vek::Value
+}
+
+// Compilation options.
+const (
+	mutableConstant = 1 << iota // Do not clones constant value.
+)
 
 struct compiler {
-	bin:  []isa::Byte
-	logs: []log::Log
-	sp:   isa::Index // Stack Pointer (SP).
+	bin:     []isa::Byte
+	logs:    []log::Log
+	mem:     &Memory
+	sp:      isa::Index // Stack Pointer (SP).
+	options: int
 }
 
 impl compiler {
+	fn pushErr(mut *self, tok: token::Token, text: str) {
+		self.logs = append(self.logs, log::Log{
+			Kind:   log::Error,
+			Column: tok.Column,
+			Line:   tok.Line,
+			Text:   text,
+		})
+	}
+
 	fn restoreSP(mut *self, sp: isa::Index) {
 		self.sp = sp
 		self.bin = SETSP(self.bin, sp)
@@ -50,10 +69,19 @@ impl compiler {
 
 	// Compiles print expression.
 	fn compilePrint(mut *self, mut ast: ast::Expr) {
+		options := self.options
+		defer { self.options = options }
+		// Use mutableConstant to obtain mutable constant variables when possible.
+		// We will not mutate it, so avoid from clonning as much as possible.
+		self.options |= mutableConstant
+
 		sp := self.sp
 		defer { self.restoreSP(sp) }
 
-		v, _ := self.compileExpr(ast)
+		v, off := self.compileExpr(ast)
+		if v == nil && off == invalidIndex { // error
+			ret
+		}
 		if v != nil {
 			self.pushValue(v)
 		}
@@ -62,7 +90,16 @@ impl compiler {
 	}
 
 	fn compileUnaryExpr(mut *self, mut ast: &ast::UnaryExpr): (&vek::Value, isa::Index) {
+		options := self.options
+		defer { self.options = options }
+		// Remove if mutableConstant is passed.
+		// If the returned value is constant, we will mutate it.
+		self.options &= ^mutableConstant
+
 		mut v, off := self.compileExpr(ast.X)
+		if v == nil && off == invalidIndex { // error
+			ret nil, invalidIndex
+		}
 		match ast.Op.ID {
 		| token::ADD:
 			// NOP
@@ -161,13 +198,29 @@ impl compiler {
 	}
 
 	fn compileBinaryExpr(mut *self, mut ast: &ast::BinaryExpr): (&vek::Value, isa::Index) {
+		options := self.options
+		defer { self.options = options }
+		// Remove if mutableConstant is passed.
+		// If the returned value of operand X is constant, we will mutate it.
+		self.options &= ^mutableConstant
+
 		op := ast.Op.ID
 		mut x, offX := self.compileExpr(ast.X)
+		if x == nil && offX == invalidIndex { // error
+			ret nil, invalidIndex
+		}
+		// For operand Y, use mutableConstant to
+		// obtain mutable constant variables when possible.
+		// We will not mutate it anyway, so avoid from clonning as much as possible.
+		self.options |= mutableConstant
 		mut y, offY := self.compileExpr(ast.Y)
+		if y == nil && offY == invalidIndex { // error
+			ret nil, invalidIndex
+		}
 		match {
 		| x != nil && y != nil:
 			binaryInplace(op, x, y)
-			ret x, 0
+			ret x, invalidIndex
 		| x != nil:
 			off := self.binaryConstantX(op, x, offY)
 			ret nil, off
@@ -180,6 +233,20 @@ impl compiler {
 		}
 	}
 
+	fn compileNameExpr(mut *self, mut ast: &ast::NameExpr): (&vek::Value, isa::Index) {
+		mut constv, ok := self.mem.Constants[ast.Name]
+		if !ok {
+			self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
+			ret nil, invalidIndex
+		}
+		if self.options&mutableConstant != 0 {
+			ret constv, invalidIndex
+		}
+		mut v := new(vek::Value)
+		v.Copy(constv)
+		ret v, invalidIndex
+	}
+
 	fn compileExpr(mut *self, mut ast: ast::Expr): (&vek::Value, isa::Index) {
 		match type ast {
 		| &vek::Value:
@@ -188,9 +255,10 @@ impl compiler {
 			ret self.compileUnaryExpr(ast.(&ast::UnaryExpr))
 		| &ast::BinaryExpr:
 			ret self.compileBinaryExpr(ast.(&ast::BinaryExpr))
-		|:
-			panic("unreachable")
+		| &ast::NameExpr:
+			ret self.compileNameExpr(ast.(&ast::NameExpr))
 		}
+		panic("unreachable")
 	}
 
 	// Compiles expression.
@@ -239,10 +307,11 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 // In the event of a failure, the resulting binary may contain
 // partially compiled bytecode up to the point where
 // the error was encountered.
-fn Compile(mut bin: []isa::Byte, mut ast: ast::Expr): ([]isa::Byte, []log::Log) {
+fn Compile(mut bin: []isa::Byte, mut mem: &Memory, mut ast: ast::Expr): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
 		bin: bin,
-		sp: isa::STCK_OFF,
+		mem: mem,
+		sp:  isa::STCK_OFF,
 	}
 	c.compile(ast)
 	ret c.bin, c.logs

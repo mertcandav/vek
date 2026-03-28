@@ -41,10 +41,10 @@ impl Scanner {
 	// Pushes new error log to logs.
 	fn pushErr(mut *self, col: int, text: str, args: ...any) {
 		self.Logs = append(self.Logs, log::Log{
-			Kind: log::Error,
+			Kind:   log::Error,
 			Column: col,
-			Line: unsafe::StrFromBytes(self.buf),
-			Text: text,
+			Line:   unsafe::StrFromBytes(self.buf),
+			Text:   text,
 		})
 	}
 

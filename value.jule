@@ -33,6 +33,30 @@ struct Value {
 }
 
 impl Value {
+	// Copies src's value to self.
+	fn Copy(mut *self, mut src: &Value) {
+		self.Type = src.Type
+		match type src.Data {
+		| &isa::Int:
+			srcin := src.Data.(&isa::Int)
+			// Optimization:
+			// If self's value is integer, use the existing buffer.
+			// Otherwise, allocate a new integer.
+			mut dstin, ok := self.Data.(&isa::Int)
+			if !ok {
+				dstin = new(isa::Int)
+			}
+			dstin.Set(&*srcin)
+			self.Data = dstin
+		| isa::Float:
+			// Make sure self will have a different heap allocation.
+			// Because in-place computations will mutate the
+			// internal allocation of the [data].
+			fl := src.Data.(isa::Float)
+			self.Data = fl
+		}
+	}
+
 	// Reads data as floating-point.
 	// Returns 0 if cast failed.
 	fn AsFloat(*self): isa::Float {
