@@ -72,8 +72,17 @@ impl printer {
 		if self.options&PRI_HL != 0 {
 			self.append(fgIndex)
 		}
-		self.buf = append(self.buf, "0x"...)
-		self.buf = conv::AppendUint(self.buf, idx, 16)
+		self.buf = appendIndex(self.buf, idx)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
+	}
+
+	fn appendIndexECALL(*self, idx: isa::Index) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgIndex)
+		}
+		self.buf = appendIndexECALL(self.buf, idx)
 		if self.options&PRI_HL != 0 {
 			self.append(ansi::Reset)
 		}
@@ -205,6 +214,23 @@ impl printer {
 		}
 		self.next()
 		self.appendIndex(idx)
+		self.append("\n")
+		ret true
+	}
+
+	fn printIndexECALL(*self): bool {
+		self.appendOP("ECALL")
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		idx, ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndexECALL(idx)
 		self.append("\n")
 		ret true
 	}
@@ -342,7 +368,7 @@ impl printer {
 		| isa::CALL:
 			ret self.printIndex("CALL")
 		| isa::ECALL:
-			ret self.printIndex("ECALL")
+			ret self.printIndexECALL()
 		| isa::RET:
 			ret self.printOP("RET")
 		| isa::SETSP:
@@ -403,6 +429,24 @@ impl printer {
 			}
 		}
 		ret self.buf
+	}
+}
+
+fn appendIndex(mut buf: []byte, idx: isa::Index): []byte {
+	match idx {
+	| isa::STCK_RV:
+		ret append(buf, "RV"...)
+	|:
+		ret conv::AppendUint(buf, idx, 10)
+	}
+}
+
+fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
+	match idx {
+	| 0:
+		ret append(buf, "_EXTERN_PRINT"...)
+	|:
+		ret conv::AppendUint(buf, idx, 10)
 	}
 }
 
