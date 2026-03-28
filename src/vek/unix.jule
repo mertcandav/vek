@@ -1,0 +1,11 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+#build darwin || linux
+
+extern use "<unistd.h>"
+
+extern fn isatty(fd: uintptr): int
+
+fn isatty(fd: uintptr): bool { ret extern.isatty(fd) != 0 }

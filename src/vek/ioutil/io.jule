@@ -1,0 +1,95 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+// The vek implementation of token is based on the original Jule code from
+// https://github.com/julelang/jule/tree/667142f7843d74d657ebbd1b43452924f6217fe2/std/io package.
+//
+// The vek implementation will not follows Jule code.
+// It only uses Jule's implementation as base implementation.
+// API may be work/implemented different.
+//
+// The original Jule code came with this notice:
+// ====================================================
+// BSD 3-Clause License
+//
+// Copyright (c) 2022 The Jule Project Contributors.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// ====================================================
+
+use "std/io"
+use "std/os"
+
+// Reads from f until an error or EOF and returns the data it read.
+// A successful call throws no exception.
+fn ReadAll(mut f: &os::File)!: []byte {
+	// Build slices of exponentially growing size,
+	// then copy into a perfectly-sized slice at the end.
+	mut b := make([]byte, 0, 512)
+	// Starting with next equal to 256 (instead of say 512 or 1024)
+	// allows less memory usage for small inputs that finish in the
+	// early growth stages, but we grow the read sizes quickly such that
+	// it does not materially impact medium or large inputs.
+	mut next := 256
+	mut chunks := make([][]byte, 0, 4)
+	// Invariant: finalSize = sum(len(c) for c in chunks)
+	let mut finalSize: int
+	for {
+		n := f.ReadSync(b[len(b):cap(b)]) else {
+			// If any data was read, ignore the error and return the data.
+			if len(chunks) > 0 || len(b) > 0 {
+				break
+			}
+			throw error
+		}
+		if n == io::EOF {
+			break
+		}
+		b = b[:len(b)+n]
+		if cap(b)-len(b) < cap(b)/16 {
+			// Move to the next intermediate slice.
+			chunks = append(chunks, b)
+			finalSize += len(b)
+			b = append([]byte(nil), make([]byte, next)...)[:0]
+			next += next / 2
+		}
+	}
+	// On error this condition must be true: len(chunks) > 0 || len(b) > 0
+	// On EOF, len(chunks) and len(b) may be zero.
+	if len(chunks) == 0 {
+		ret b
+	}
+	// Build our final right-sized slice.
+	finalSize += len(b)
+	mut final := append([]byte(nil), make([]byte, finalSize)...)[:0]
+	for _, chunk in chunks {
+		final = append(final, chunk...)
+	}
+	final = append(final, b...)
+	ret final
+}

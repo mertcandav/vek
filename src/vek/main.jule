@@ -6,9 +6,11 @@ use "vek"
 use "vek/asm"
 use "vek/log"
 use "vek/parser"
+use "vek/src/vek/ioutil"
 use "std/flag"
 use "std/os"
 use "std/strings"
+use "std/sys"
 use "std/unsafe"
 
 // vek commands.
@@ -110,7 +112,16 @@ unified vek bytecode. This command performs incremental
 compilation of multiple inputs, merging their instruction
 sequences into a continuous binary executable.
 
-For example: vek "4 + 4" "5 * 5"
+In pipe mode, vek reads and evaluates the incoming expression
+from the standard input (stdin) and streams the computed
+result directly to the standard output (stdout). This facilitates
+seamless composition with other command-line utilities for
+automated processing workflows.
+
+Example usage:
+	vek "2 + 2"
+	vek "2 + 2" "5 * 5"
+	echo "2 + 2" | vek
 
 The most common arguments are:
 	-S
@@ -217,13 +228,28 @@ fn processCommand(mut args: []str) {
 		build(args)
 	|:
 		for _, code in args[1:] {
-			eval(code)
+			eval(unsafe::BytesFromStr(code))
 		}
 	}
 }
 
+// Read from pipe, then eval.
+fn handlePipe() {
+	mut data := ioutil::ReadAll(os::Stdin()) else {
+		throwError(error.(str))
+		use nil // Avoid error.
+	}
+	eval(data)
+}
+
 fn main() {
 	mut args := os::Args()
+
+	// If stdin is not a terminal, then it is a pipe.
+	if !isatty(sys::STDIN) {
+		handlePipe()
+		ret
+	}
 
 	// Not started with arguments.
 	// Here is "2" but "args" always have one element for store program name.

@@ -6,6 +6,10 @@
 
 use "std/sys"
 
+extern use "<io.h>"
+
+extern fn _isatty(fd: sys::Handle): int
+
 // When writing with WriteFile or WriteConsole, characters are parsed for VT100
 // and similar control character sequences that control cursor movement,
 // color/font mode, and other operations that can also be performed via the
@@ -29,6 +33,8 @@ fn enableVTP() {
 	dwMode |= enableVirtualTerminalProcessing
 	_ = unsafe { sys::SetConsoleMode(hOut, dwMode) }
 }
+
+fn isatty(h: sys::Handle): bool { ret extern._isatty(h) != 0 }
 
 fn init() {
 	enableVTP()
