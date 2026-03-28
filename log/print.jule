@@ -2,21 +2,13 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
-use "std/conv"
+use "vek/ansi"
 use "std/os"
 use "std/strings"
 use "std/unsafe"
 
 // File instance for the standard error (stderr).
 let mut stderr = os::Stderr()
-
-// ANSI sequences.
-const (
-	ansiReset         = "\033[0m"
-	ansiBold          = "\u001b[1m"
-	ansiRed           = "\033[31m"
-	ansiBrightMagenta = "\033[95m"
-)
 
 fn _print(s: str) {
 	stderr.WriteSync(unsafe::StrBytes(s))!
@@ -28,11 +20,11 @@ fn _println(s: str) {
 }
 
 // Print with ANSI sequence.
-// Resets ANSI after print.
+// Resets after print.
 fn ansiPrint(escape: str, text: str) {
 	_print(escape)
 	_print(text)
-	_print(ansiReset)
+	_print(ansi::Reset)
 }
 
 fn printFlat(log: Log) {
@@ -40,10 +32,10 @@ fn printFlat(log: Log) {
 }
 
 fn printError(log: Log) {
-	_print(ansiRed)
+	_print(ansi::Red)
 	_print("error: ")
 	_print(log.Text)
-	_print(ansiReset)
+	_print(ansi::Reset)
 	if len(log.Line) != 0 {
 		// For correct handling, trim leading and trailing space bytes.
 		const Spaces = "\r\n\v\b\t "
@@ -65,12 +57,12 @@ fn printError(log: Log) {
 		print("^")
 		if len(log.Suggestion) != 0 {
 			_print("\n| ")
-			ansiPrint(ansiBrightMagenta, "suggestion: ")
+			ansiPrint(ansi::BrightMagenta, "suggestion: ")
 			print(log.Suggestion)
 		}
 	} else if len(log.Suggestion) != 0 {
 		_print("\n| ")
-		ansiPrint(ansiBrightMagenta, "suggestion: ")
+		ansiPrint(ansi::BrightMagenta, "suggestion: ")
 		_print(log.Suggestion)
 	}
 	_println("\n")
