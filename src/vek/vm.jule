@@ -21,7 +21,7 @@ let mut bin = make([]isa::Byte, 0, 256)
 let mut scanner = new(token::Scanner)
 
 // Parses the vek source code provided in string format, compiles it into
-// vek Assembly bytecode, and executes the resulting
+// vek bytecode, and executes the resulting
 // instructions on the Virtual Machine (VM). This end-to-end
 // pipeline transforms high-level representations into a
 // runnable binary format within the VM's environment.
@@ -33,7 +33,7 @@ fn eval(code: str) {
 		ret
 	}
 	// Save the current buffer length. This allows for the removal of
-	// any partial/temporary Assembly code in the event of a failure/print eval,
+	// any partial/temporary bytecode in the event of a failure/print eval,
 	// facilitating a rollback to the last stable state.
 	n := len(bin)
 	bin, logs = asm::Compile(bin, ast)

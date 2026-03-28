@@ -22,7 +22,7 @@ const (
 let HelpMap: [...][2]str = [
 	[CmdHelp, "Show the list of available commands"],
 	[CmdVersion, "Show version"],
-	[CmdBuild, "Builds vek Assembly from source"],
+	[CmdBuild, "Builds vek bytecode from source"],
 ]
 
 fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
@@ -99,10 +99,28 @@ Usage:
 
 This is the version of vek.`)
 	| CmdBuild:
-		println(`The build command builds vek Assembly from source.
+		println(`The build command builds vek bytecode from source.
 
 Usage:
-	vek build [arguments] [source]`)
+	vek build [arguments] [source]
+	
+The most common arguments are:
+	-S
+		Disassembles the binary bytecode into a human-readable
+		vek Assembly representation. This flag triggers the mnemonic
+		translation of opcodes and operands, providing a clear
+		text-based view of the instruction stream for
+		verification, auditing, and low-level
+		debugging purposes.
+	-o --out <path>
+		Forces build to write the resulting output to the named output file.
+		It is srandard output stream (stdout) by default (empty).
+	-H
+		Enables syntax highlighting for the generated vek Assembly
+		code using ANSI escape sequences. This flag is active only when
+		the output is directed to the standard output stream (stdout),
+		providing enhanced readability for terminal-based
+		code inspection and manual auditing.`)
 	|:
 		printErrorMessage("invalid command: " + command + `
 write "vek help" to see commands`)
@@ -128,6 +146,8 @@ fn build(mut args: []str) {
 
 	let mut fs = flag::FlagSet.New()
 	let mut out = fs.Add("out", 'o', "", "Output identifier")
+	let mut _S = fs.Add("S", 'S', false, "Builds human-readable vek Assembly")
+	let mut _H = fs.Add("H", 'H', false, "Enables syntax highlighting for stdout output when used with -S")
 
 	mut content := fs.Parse(args) else {
 		throwError(error.(str))
@@ -157,12 +177,17 @@ fn build(mut args: []str) {
 
 	// Setup print options.
 	mut options := 0
-	// If output will be printed to stdout, use highlighting.
-	if *out == "" {
+	// If output will be printed to stdout, use highlighting if wanted.
+	if *out == "" && *_H {
 		options |= asm::PRI_HL
 	}
 
-	buf := asm::Print(bin, options)
+	let mut buf: []byte
+	if *_S {
+		buf = asm::Print(bin, options)
+	} else {
+		buf = bin
+	}
 	if *out == "" {
 		println(unsafe::StrFromBytes(buf))
 	} else {

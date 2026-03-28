@@ -450,8 +450,8 @@ fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
 	}
 }
 
-// Decompiles and translates the binary-encoded Vek Assembly
-// into its human-readable text representation. This instruction
+// Decompiles and translates the binary-encoded vek bytecode
+// into its human-readable vek Assembly representation. This instruction
 // processes the instruction stream within the buffer,
 // resolving opcodes and operands back into their
 // mnemonic forms to facilitate debugging,
