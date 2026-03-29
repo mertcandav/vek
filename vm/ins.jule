@@ -131,7 +131,7 @@ fn _SETSP(mut &vm: *VM): (err: str) {
 	idx := decodeIndex(vm) // INDEX
 
 	// SETP idx
-	vm.stack = vm.stack[:idx]
+	vm.stack = vm.stack[:vm.sf.stckoff+idx]
 
 	ret _NoError
 }
