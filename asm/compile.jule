@@ -83,6 +83,9 @@ impl compiler {
 	}
 
 	fn restoreSP(mut *self, sp: isa::Index) {
+		// Optimization:
+		// If the current and requested SP adjustment is same,
+		// avoid adding unnecessary SETSP instruction.
 		if self.sp == sp {
 			ret
 		}
@@ -269,6 +272,11 @@ impl compiler {
 			self.sp++ // Adjust SP.
 		}
 
+		// Clear temporary stack memory for operand Y.
+		// We always use operand X for result.
+		mut sp := self.sp
+		defer { self.restoreSP(sp) }
+
 		// For operand Y, use mutableMem to
 		// obtain mutable constant variables when possible.
 		// We will not mutate it anyway, so avoid from clonning as much as possible.
@@ -282,8 +290,16 @@ impl compiler {
 			binaryInplace(op, x, y)
 			ret x, invalidIndex
 		| x != nil:
-			off := self.binaryConstantX(op, x, offY)
-			ret nil, off
+			// Increment the Stack Pointer (SP) to account for
+			// the constant operand X. Since constant operands are not
+			// pre-allocated on the stack, the binaryConstantX operation
+			// will push its result onto a new stack memory. This manual
+			// adjustment ensures that SETSP can accurately
+			// truncate the stack and maintain frame
+			// integrity after the operation.
+			sp++
+			offX = self.binaryConstantX(op, x, offY)
+			ret nil, offX
 		| y != nil:
 			self.binaryConstantY(op, offX, y)
 			ret nil, offX
