@@ -1,0 +1,37 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "std/strings"
+
+// Filter for the code.
+// Reports true if code can pass the filter.
+type buildfilter: fn(code: str): bool
+
+// A sequence of filters designed to correctly
+// order and process build arguments arriving in arbitrary
+// sequences. Since a standard bek bytecode requires the
+// entry point to be positioned at the end, functions and
+// other declarations must be emitted first. This filter
+// array prioritizes let statements to ensure all
+// declarations are compiled before the remaining
+// expressions are consolidated into the entry point.
+//
+// This mechanism grants the user flexibility by removing
+// strict input ordering requirements. While it
+// introduces a minor computational overhead,
+// the impact is negligible in most scenarios.
+let buildFilters: [...]buildfilter = [
+	filterLet,
+	filterAny,
+]
+
+// Accepts only let statements.
+fn filterLet(code: str): bool {
+	ret strings::HasPrefix(code, "let ")
+}
+
+// Accepts any input type or value without restriction.
+fn filterAny(code: str): bool {
+	ret true
+}

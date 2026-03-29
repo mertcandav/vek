@@ -20,6 +20,7 @@ type FuncMap: map[str]&Func
 
 // Defines the logical layout of the virtual machine's memory.
 struct Memory {
+	Main:      isa::PC // PC of the entry point.
 	Constants: ConstantMap
 	Funcs:     FuncMap
 }

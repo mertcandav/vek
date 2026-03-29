@@ -4,6 +4,7 @@
 
 use "vek"
 use "vek/asm"
+use "vek/isa"
 use "vek/log"
 use "vek/parser"
 use "vek/src/vek/ioutil"
@@ -189,23 +190,47 @@ fn build(mut args: []str) {
 		printErrorMessage("build: expression missing")
 		ret
 	}
-
 	// Compile all expressions and merge them in a single binary.
 	// The binary buffer bin will not be used again since this program
 	// works in build argument.
-	for _, code in content {
-		scanner.Reset(unsafe::BytesFromStr(code))
-		mut ast, mut logs := parser::Parse(scanner)
-		if len(logs) > 0 {
-			log::PrintAll(logs)
-			ret
+
+	// Add reserved leading bytes to encode entry point jump instruction.
+	bin = asm::JMP(bin, 0)
+
+	// Compile binary properly, and detect the PC of the entry point.
+	mut pc := false
+	for _, filter in buildFilters {
+		if !pc && uintptr(filter) == uintptr(filterAny) {
+			vm.Memory().Main = isa::PC(len(bin))
+			pc = true
 		}
-		bin, logs = asm::Compile(bin, vm.Memory(), ast)
-		if len(logs) > 0 {
-			log::PrintAll(logs)
-			ret
+		for i, code in content {
+			if code == "" { // skip if it is empty
+				continue
+			}
+			ok := filter(code)
+			if !ok {
+				continue
+			}
+			// Set index-i to empty string to ingore it later.
+			content[i] = ""
+
+			scanner.Reset(unsafe::BytesFromStr(code))
+			mut ast, mut logs := parser::Parse(scanner)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret
+			}
+			bin, logs = asm::Compile(bin, vm.Memory(), ast)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret
+			}
 		}
 	}
+
+	// Encode the entry point jump instruction.
+	asm::JMP(bin[:0], isa::Index(vm.Memory().Main))
 
 	// Setup print options.
 	mut options := 0
@@ -216,7 +241,7 @@ fn build(mut args: []str) {
 
 	let mut buf: []byte
 	if *_S {
-		buf = asm::Print(bin, options)
+		buf = asm::PrintVM(bin, vm.Memory(), options)
 	} else {
 		buf = bin
 	}
