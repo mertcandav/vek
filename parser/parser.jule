@@ -196,6 +196,9 @@ impl parser {
 	}
 
 	fn parseArgList(mut *self): (list: []ast::Expr) {
+		if self.tok.ID == token::RPAREN {
+			ret
+		}
 		list = append(list, self.parseExpr())
 		for self.tok.ID == token::COMMA && len(self.logs) == 0 {
 			self.next()
