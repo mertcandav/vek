@@ -2,15 +2,18 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek/ansi"
 use "std/os"
 
 const errorExitCode = 1
 
 fn printErrorMessage(msg: str) {
+	print(ansi::Red)
 	println(msg)
+	print(ansi::Reset)
 }
 
 fn throwError(msg: str) {
-	println(msg)
+	printErrorMessage(msg)
 	os::Exit(errorExitCode)
 }

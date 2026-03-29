@@ -45,6 +45,6 @@ fn eval(mut buf: []byte) {
 	vm.LoadBinary(bin)
 	vm.SetPC(n)
 	vm.Run()
-	// Clear the remove expression.
+	// Clear the removable expression.
 	bin = bin[:n]
 }

@@ -8,6 +8,7 @@ use "vek/log"
 use "vek/parser"
 use "vek/src/vek/ioutil"
 use "std/flag"
+use "std/fmt"
 use "std/os"
 use "std/strings"
 use "std/sys"
@@ -18,6 +19,7 @@ const (
 	CmdHelp    = "help"
 	CmdVersion = "version"
 	CmdBuild   = "build"
+	CmdRun     = "run"
 )
 
 // Map for "vek help" command.
@@ -25,6 +27,7 @@ let HelpMap: [...][2]str = [
 	[CmdHelp, "Show the list of available commands"],
 	[CmdVersion, "Show version"],
 	[CmdBuild, "Builds vek bytecode from source"],
+	[CmdRun, "Runs vek bytecode from source"],
 ]
 
 fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
@@ -49,6 +52,12 @@ fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
 fn showInfo(args: []str) {
 	println(
 		`vek is a tool for high performance computations.
+
+In pipe mode, vek reads and evaluates the incoming expression
+from the standard input (stdin) and streams the computed
+result directly to the standard output (stdout). This facilitates
+seamless composition with other command-line utilities for
+automated processing workflows.
 
 Usage:
 	vek expression expression expression ...
@@ -112,18 +121,11 @@ unified vek bytecode. This command performs incremental
 compilation of multiple inputs, merging their instruction
 sequences into a continuous binary executable.
 
-In pipe mode, vek reads and evaluates the incoming expression
-from the standard input (stdin) and streams the computed
-result directly to the standard output (stdout). This facilitates
-seamless composition with other command-line utilities for
-automated processing workflows.
-
 Example usage:
 	vek "2 + 2"
 	vek "2 + 2" "5 * 5"
-	echo "2 + 2" | vek
 
-The most common arguments are:
+Arguments:
 	-S
 		Disassembles the binary bytecode into a human-readable
 		vek Assembly representation. This flag triggers the mnemonic
@@ -140,6 +142,17 @@ The most common arguments are:
 		the output is directed to the standard output stream (stdout),
 		providing enhanced readability for terminal-based
 		code inspection and manual auditing.`)
+	| CmdRun:
+		println(`The run command runs vek bytecode from source.
+
+Usage:
+	vek run [source]...
+
+Reads all arguments provided as distinct bytecodes and runs.
+
+Example usage:
+	vek run prog1.bin
+	vek run prog1.bin prog2.bin`)
 	|:
 		printErrorMessage("invalid command: " + command + `
 write "vek help" to see commands`)
@@ -169,7 +182,7 @@ fn build(mut args: []str) {
 	let mut _H = fs.Add("H", 'H', false, "Enables syntax highlighting for stdout output when used with -S")
 
 	mut content := fs.Parse(args) else {
-		throwError(error.(str))
+		throwError(fmt::Sprint(error))
 		use nil // Avoid error.
 	}
 	if len(content) == 0 {
@@ -211,8 +224,28 @@ fn build(mut args: []str) {
 		println(unsafe::StrFromBytes(buf))
 	} else {
 		os::WriteFileSync(*out, buf, 0660) else {
-			throwError(error.(str))
+			throwError(fmt::Sprint(error))
 		}
+	}
+}
+
+// Command: vek run
+fn run(mut args: []str) {
+	if len(args) < 2 {
+		printErrorMessage("run: source missing")
+		ret
+	}
+	args = args[2:] // Remove the program path and run command.
+
+	for _, file in args {
+		mut data := os::ReadFileSync(file) else {
+			printErrorMessage("error: " + file + ": " + fmt::Sprint(error))
+			continue
+		}
+		// Load the binary and execute.
+		vm.LoadBinary(data)
+		vm.SetPC(0)
+		vm.Run()
 	}
 }
 
@@ -226,6 +259,8 @@ fn processCommand(mut args: []str) {
 		version(args)
 	| CmdBuild:
 		build(args)
+	| CmdRun:
+		run(args)
 	|:
 		for _, code in args[1:] {
 			eval(unsafe::BytesFromStr(code))
@@ -236,7 +271,7 @@ fn processCommand(mut args: []str) {
 // Read from pipe, then eval.
 fn handlePipe() {
 	mut data := ioutil::ReadAll(os::Stdin()) else {
-		throwError(error.(str))
+		throwError(fmt::Sprint(error))
 		use nil // Avoid error.
 	}
 	eval(data)
