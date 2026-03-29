@@ -377,6 +377,8 @@ impl printer {
 			ret self.printAIN()
 		| isa::AFL:
 			ret self.printAFL()
+		| isa::AMOV:
+			ret self.printIndex("AMOV")
 		| isa::MOV:
 			ret self.printIndexIndex("MOV")
 		| isa::MOVIN:
