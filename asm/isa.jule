@@ -61,6 +61,12 @@ fn AFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
 	ret isa::EncodeFloat(buf, fl)
 }
 
+// Appends AMOV instruction to buf.
+fn AMOV(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
+	buf = append(buf, isa::AMOV)
+	ret isa::EncodeIndex(buf, idx)
+}
+
 // Appends MOV instruction to buf.
 fn MOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
 	buf = append(buf, isa::MOV)
