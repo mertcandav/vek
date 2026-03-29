@@ -7,24 +7,21 @@ use "vek/ast"
 use "vek/isa"
 use "vek/log"
 use "vek/token"
+use "vek/vm/mem"
 use "std/conv"
-
-// Defines the physical and logical layout of the
-// virtual machine's memory.
-struct Memory {
-	// Constant variable identifier:value map.
-	Constants: map[str]&vek::Value
-}
+use "std/strings"
 
 // Compilation options.
 const (
-	mutableConstant = 1 << iota // Do not clones constant value.
+	mutableMem = 1 << iota // Do not clones memory value.
 )
 
 struct compiler {
 	bin:     []isa::Byte
 	logs:    []log::Log
-	mem:     &Memory
+	mem:     &mem::Memory
+	ifunc:   &mem::Func // Current function to call.
+	cfunc:   &mem::Func // Current function compiling.
 	sp:      isa::Index // Stack Pointer (SP).
 	options: int
 }
@@ -39,19 +36,68 @@ impl compiler {
 		})
 	}
 
+	fn lookupParam(*self, name: str): isa::Index {
+		if self.cfunc == nil {
+			ret invalidIndex
+		}
+		for i, p in self.cfunc.Params {
+			if p.Kind == name {
+				ret isa::STCK_OFF + isa::Index(i)
+			}
+		}
+		ret invalidIndex
+	}
+
+	// Checks for name and logs error if it is duplicated.
+	// Reports whether the name is duplicated.
+	fn checkDuplicateName(mut *self, name: token::Token): (exist: bool) {
+		_, exist = self.mem.Constants[name.Kind]
+		if !exist {
+			_, exist = self.mem.Funcs[name.Kind]
+		}
+		if exist {
+			self.pushErr(name, "duplicated name: "+conv::Quote(name.Kind))
+		}
+		ret
+	}
+
+	// Checks for parameters and logs error if one of them is duplicated.
+	// Reports whether at least one parameter is duplicated.
+	fn checkDuplicateParam(mut *self, func: &ast::Func): (exist: bool) {
+	Check:
+		for i, p in func.Params {
+		ParamsLookup:
+			for j, jp in func.Params {
+				match {
+				| j >= i:
+					// Skip current and following parameters.
+					break ParamsLookup
+				| p.Kind == jp.Kind:
+					exist = false
+					self.pushErr(p, "duplicate parameter: "+conv::Quote(p.Kind))
+					continue Check
+				}
+			}
+		}
+		ret
+	}
+
 	fn restoreSP(mut *self, sp: isa::Index) {
+		if self.sp == sp {
+			ret
+		}
 		self.sp = sp
-		self.bin = SETSP(self.bin, sp)
+		self.bin = SETSP(self.bin, sp) // SETSP sp
 	}
 
 	fn pushValue(mut *self, v: &vek::Value) {
 		match type v.Data {
 		| &isa::Int:
 			_in := v.Data.(&isa::Int)
-			self.bin = AIN(self.bin, _in)
+			self.bin = AIN(self.bin, _in) // AIN _in
 		| isa::Float:
 			fl := v.Data.(isa::Float)
-			self.bin = AFL(self.bin, fl)
+			self.bin = AFL(self.bin, fl) // AFL fl
 		}
 		self.sp++
 	}
@@ -60,10 +106,10 @@ impl compiler {
 		match type v.Data {
 		| &isa::Int:
 			_in := v.Data.(&isa::Int)
-			self.bin = MOVIN(self.bin, idx, _in)
+			self.bin = MOVIN(self.bin, idx, _in) // MOVIN idx, _in
 		| isa::Float:
 			fl := v.Data.(isa::Float)
-			self.bin = MOVFL(self.bin, idx, fl)
+			self.bin = MOVFL(self.bin, idx, fl) // MOVFL idx, fl
 		}
 	}
 
@@ -71,9 +117,9 @@ impl compiler {
 	fn compilePrint(mut *self, mut ast: ast::Expr) {
 		options := self.options
 		defer { self.options = options }
-		// Use mutableConstant to obtain mutable constant variables when possible.
+		// Use mutableMem to obtain mutable constant variables when possible.
 		// We will not mutate it, so avoid from clonning as much as possible.
-		self.options |= mutableConstant
+		self.options |= mutableMem
 
 		sp := self.sp
 		defer { self.restoreSP(sp) }
@@ -84,6 +130,11 @@ impl compiler {
 		}
 		if v != nil {
 			self.pushValue(v)
+		} else if off == isa::STCK_RV {
+			// If the value is in RV register, move it to the stack.
+			// _EXTERN_PRINT will read from stack, not from the RV register.
+			self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
+			// Do not increase SP, because we will restore it.
 		}
 		self.bin = ASF(self.bin, 1)
 		self.bin = ECALL(self.bin, _EXTERN_PRINT)
@@ -92,9 +143,9 @@ impl compiler {
 	fn compileUnaryExpr(mut *self, mut ast: &ast::UnaryExpr): (&vek::Value, isa::Index) {
 		options := self.options
 		defer { self.options = options }
-		// Remove if mutableConstant is passed.
+		// Remove if mutableMem is passed.
 		// If the returned value is constant, we will mutate it.
-		self.options &= ^mutableConstant
+		self.options &= ^mutableMem
 
 		mut v, off := self.compileExpr(ast.X)
 		if v == nil && off == invalidIndex { // error
@@ -200,19 +251,28 @@ impl compiler {
 	fn compileBinaryExpr(mut *self, mut ast: &ast::BinaryExpr): (&vek::Value, isa::Index) {
 		options := self.options
 		defer { self.options = options }
-		// Remove if mutableConstant is passed.
+		// Remove if mutableMem is passed.
 		// If the returned value of operand X is constant, we will mutate it.
-		self.options &= ^mutableConstant
+		self.options &= ^mutableMem
 
 		op := ast.Op.ID
-		mut x, offX := self.compileExpr(ast.X)
+		mut x, mut offX := self.compileExpr(ast.X)
 		if x == nil && offX == invalidIndex { // error
 			ret nil, invalidIndex
 		}
-		// For operand Y, use mutableConstant to
+
+		// Operand Y may be a function call.
+		// If the result index is RV register, move it to the stack.
+		if x == nil && offX == isa::STCK_RV {
+			self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
+			offX = self.sp
+			self.sp++ // Adjust SP.
+		}
+
+		// For operand Y, use mutableMem to
 		// obtain mutable constant variables when possible.
 		// We will not mutate it anyway, so avoid from clonning as much as possible.
-		self.options |= mutableConstant
+		self.options |= mutableMem
 		mut y, offY := self.compileExpr(ast.Y)
 		if y == nil && offY == invalidIndex { // error
 			ret nil, invalidIndex
@@ -233,18 +293,147 @@ impl compiler {
 		}
 	}
 
-	fn compileNameExpr(mut *self, mut ast: &ast::NameExpr): (&vek::Value, isa::Index) {
-		mut constv, ok := self.mem.Constants[ast.Name]
+	fn checkFuncCallCounts(mut *self, tok: token::Token, args: int): bool {
+		mut n := 0
+		if self.ifunc != nil {
+			n = len(self.ifunc.Params)
+		}
+		mut diff := n - args
+		if diff == 0 {
+			ret true
+		}
+		mut err := strings::Builder{}
+		match {
+		| diff < 0:
+			fall
+		| diff > n:
+			err.WriteStr("passed more argument than expected to call ")!
+		|:
+			err.WriteStr("missing arguments to call ")!
+		}
+		err.WriteStr(conv::Quote(tok.Kind))!
+		err.WriteStr("\n       want (")!
+		if self.ifunc != nil {
+			for i, p in self.ifunc.Params {
+				err.WriteStr(p.Kind)!
+				if len(self.ifunc.Params)-i > 1 {
+					err.WriteStr(", ")!
+				}
+			}
+		}
+		err.WriteByte(')')!
+		self.pushErr(tok, err.Str())
+		ret false
+	}
+
+	fn compileFuncCall0(mut *self, tok: token::Token, mut args: []ast::Expr): (&vek::Value, isa::Index) {
+		ok := self.checkFuncCallCounts(tok, len(args))
 		if !ok {
-			self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
 			ret nil, invalidIndex
 		}
-		if self.options&mutableConstant != 0 {
-			ret constv, invalidIndex
+
+		options := self.options
+		defer { self.options = options }
+		// Use mutableMem to obtain mutable constant variables when possible.
+		// We will not mutate it, so avoid from clonning as much as possible.
+		self.options |= mutableMem
+
+		sp := self.sp
+		defer { self.restoreSP(sp) }
+
+		for (_, mut arg) in args {
+			v, off := self.compileExpr(arg)
+			if v == nil && off == invalidIndex { // error
+				ret nil, invalidIndex
+			}
+			if v != nil {
+				self.pushValue(v)
+			} else if off == isa::STCK_RV {
+				// If the value is in RV register, move it to the stack.
+				// The function will read from stack, not from the RV register.
+				self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
+				self.sp++                               // Adjust SP.
+			}
 		}
-		mut v := new(vek::Value)
-		v.Copy(constv)
-		ret v, invalidIndex
+		self.bin = ASF(self.bin, isa::Index(len(args)))      // ASF len(args)
+		self.bin = CALL(self.bin, isa::Index(self.ifunc.PC)) // CALL ifunc
+
+		ret nil, isa::STCK_RV
+	}
+
+	fn compileFuncCall(mut *self, mut ast: &ast::FuncCall): (&vek::Value, isa::Index) {
+		// If we are compiling for a function, check for the parameters.
+		paramIdx := self.lookupParam(ast.Name.Kind)
+		if paramIdx != invalidIndex {
+			if len(ast.Args) > 0 {
+				self.pushErr(ast.Name, "calling stack memory like a function: "+conv::Quote(ast.Name.Kind))
+				ret nil, invalidIndex
+			}
+			ret nil, paramIdx
+		}
+
+		// Call to VM's constant memory.
+		mut constv, mut ok := self.mem.Constants[ast.Name.Kind]
+		if ok {
+			ok = self.checkFuncCallCounts(ast.Name, len(ast.Args))
+			if !ok {
+				ret nil, invalidIndex
+			}
+			ret self.callConstant(constv)
+		}
+
+		// Call to a function.
+		mut func, ok := self.mem.Funcs[ast.Name.Kind]
+		if ok {
+			mut ifunc := self.ifunc
+			defer { self.ifunc = ifunc }
+			self.ifunc = func
+			ret self.compileFuncCall0(ast.Name, ast.Args)
+		}
+
+		self.pushErr(ast.Name, "undefined identifier: "+conv::Quote(ast.Name.Kind))
+		ret nil, invalidIndex
+	}
+
+	fn callConstant(mut *self, mut v: &vek::Value): (&vek::Value, isa::Index) {
+		if self.options&mutableMem != 0 {
+			ret v, invalidIndex
+		}
+		mut vc := new(vek::Value)
+		vc.Copy(v)
+		ret vc, invalidIndex
+	}
+
+	fn compileNameExpr(mut *self, mut ast: &ast::NameExpr): (&vek::Value, isa::Index) {
+		// If we are compiling for a function, check for the parameters.
+		mut paramIdx := self.lookupParam(ast.Name)
+		if paramIdx != invalidIndex {
+			// Get copy of the parameter unless mutable memory requested.
+			if self.options&mutableMem == 0 {
+				self.bin = AMOV(self.bin, paramIdx) // AMOV paramIdx
+				paramIdx = self.sp
+				self.sp++ // Adjust SP.
+			}
+			ret nil, paramIdx
+		}
+
+		// Call to VM's constant memory.
+		mut constv, mut ok := self.mem.Constants[ast.Name]
+		if ok {
+			ret self.callConstant(constv)
+		}
+
+		// Call to a function.
+		mut func, ok := self.mem.Funcs[ast.Name]
+		if ok {
+			mut ifunc := self.ifunc
+			defer { self.ifunc = ifunc }
+			self.ifunc = func
+			ret self.compileFuncCall0(ast.Token, nil)
+		}
+
+		self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
+		ret nil, invalidIndex
 	}
 
 	fn compileExpr(mut *self, mut ast: ast::Expr): (&vek::Value, isa::Index) {
@@ -257,13 +446,67 @@ impl compiler {
 			ret self.compileBinaryExpr(ast.(&ast::BinaryExpr))
 		| &ast::NameExpr:
 			ret self.compileNameExpr(ast.(&ast::NameExpr))
+		| &ast::FuncCall:
+			ret self.compileFuncCall(ast.(&ast::FuncCall))
 		}
 		panic("unreachable")
 	}
 
-	// Compiles expression.
-	fn compile(mut *self, mut ast: ast::Expr) {
-		self.compilePrint(ast)
+	fn compileFunc(mut *self, mut ast: &ast::Func) {
+		mut exist := self.checkDuplicateName(ast.Name)
+		if exist {
+			ret
+		}
+		exist = self.checkDuplicateParam(ast)
+		if exist {
+			ret
+		}
+
+		// Adjust SP by parameters.
+		sp := self.sp
+		self.sp += isa::Index(len(ast.Params))
+		defer { self.sp = sp }
+
+		mut func := new(mem::Func)
+		func.PC = isa::PC(len(self.bin))
+		func.Params = ast.Params
+
+		// Set cfunc field.
+		self.cfunc = func
+		defer { self.cfunc = nil }
+
+		v, mut off := self.compileExpr(ast.X)
+		if v == nil && off == invalidIndex { // error
+			ret
+		}
+		if v != nil {
+			self.movValue(isa::STCK_RV, v) // (MOVIN|MOVFL) RV, v
+		} else if off != isa::STCK_RV {
+			// Move value to the RV register for function return.
+			self.bin = MOV(self.bin, off, isa::STCK_RV) // MOV off, RV
+		}
+		self.bin = RET(self.bin) // RET
+		self.mem.Funcs[ast.Name.Kind] = func
+	}
+
+	fn compileLet(mut *self, mut ast: ast::Let) {
+		match type ast {
+		| &ast::Func:
+			mut func := ast.(&ast::Func)
+			self.compileFunc(func)
+		}
+	}
+
+	// Compiles a node.
+	fn compile(mut *self, mut ast: ast::Node) {
+		match {
+		| ast.X != nil:
+			self.compilePrint(ast.X)
+		| ast.Let != nil:
+			self.compileLet(ast.Let)
+		|:
+			panic("unreachable")
+		}
 	}
 }
 
@@ -298,7 +541,7 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 	panic("unreachable")
 }
 
-// Analyzes the vek AST and compiles to vek bytecode.
+// Analyzes a single vek AST node and compiles to vek bytecode.
 // The generated vek bytecode will follow the reference vek VM.
 // This process transforms high-level syntax into a low-level,
 // machine-readable instruction set according to ISA specification.
@@ -307,7 +550,12 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 // In the event of a failure, the resulting binary may contain
 // partially compiled bytecode up to the point where
 // the error was encountered.
-fn Compile(mut bin: []isa::Byte, mut mem: &Memory, mut ast: ast::Expr): ([]isa::Byte, []log::Log) {
+//
+// Synchronizes or modifies the memory state
+// whenever a requirement or instruction demands a change.
+// Ensures that the memory state is updated only when the
+// compilation process is successful and free of errors.
+fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
 		bin: bin,
 		mem: mem,

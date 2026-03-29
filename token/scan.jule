@@ -13,6 +13,10 @@ const (
 	eof = -1     // end of file
 )
 
+let keywords = map[str]int{
+	"let": LET,
+}
+
 // Scanner scans tokens from FileSet data.
 // Any log will be appended to [Scanner.Logs].
 struct Scanner {
@@ -288,8 +292,11 @@ impl Scanner {
 			ret
 		}
 		match {
-		| isLetter(self.r):
-			self.scanName(&token)
+		| isLetter(self.r) && self.scanName(&token):
+			id, isKeyword := keywords[token.Kind]
+			if isKeyword {
+				token.ID = id
+			}
 		| isDecimal(self.r) || self.r == '.' && isDecimal(self.peek()):
 			self.scanNumber(&token)
 		|:
@@ -298,6 +305,12 @@ impl Scanner {
 			col := self.col
 			self.next()
 			match r {
+			| ',':
+				token.ID = COMMA
+				token.Kind = ","
+			| '=':
+				token.ID = ASSIGN
+				token.Kind = "="
 			| '(':
 				token.ID = LPAREN
 				token.Kind = "("

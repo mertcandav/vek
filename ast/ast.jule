@@ -11,6 +11,7 @@ enum Expr: type {
 	&NameExpr,
 	&UnaryExpr,
 	&BinaryExpr,
+	&FuncCall,
 }
 
 // Name expression.
@@ -30,4 +31,28 @@ struct BinaryExpr {
 	X:  Expr
 	Op: token::Token
 	Y:  Expr
+}
+
+// Function call expression.
+struct FuncCall {
+	Name: token::Token
+	Args: []Expr
+}
+
+// Declaration.
+enum Let: type {
+	&Func,
+}
+
+// Function declration.
+struct Func {
+	Name:   token::Token
+	Params: []token::Token
+	X:      Expr
+}
+
+// Node.
+struct Node {
+	Let: Let
+	X:   Expr
 }

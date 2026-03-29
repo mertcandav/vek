@@ -11,6 +11,11 @@ const (
 	FLOAT // floating-point literal
 	INT   // integer literal
 
+	LET // let
+
+	COMMA  // ,
+	ASSIGN // =
+
 	ADD // +
 	SUB // -
 	MUL // *
@@ -34,6 +39,10 @@ fn Str(id: int): str {
 		ret "float"
 	| INT:
 		ret "int"
+	| COMMA:
+		ret ","
+	| ASSIGN:
+		ret "="
 	| ADD:
 		ret "+"
 	| SUB:

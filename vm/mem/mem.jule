@@ -1,0 +1,25 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek"
+use "vek/isa"
+use "vek/token"
+
+// Function type.
+struct Func {
+	PC:     isa::PC // Where function is defined in the binary.
+	Params: []token::Token
+}
+
+// Constant variable name:value map type.
+type ConstantMap: map[str]&vek::Value
+
+// Function name:value map type.
+type FuncMap: map[str]&Func
+
+// Defines the logical layout of the virtual machine's memory.
+struct Memory {
+	Constants: ConstantMap
+	Funcs:     FuncMap
+}

@@ -41,10 +41,13 @@ fn eval(mut buf: []byte) {
 		log::PrintAll(logs)
 		ret
 	}
-	// Load new binary and execute.
-	vm.LoadBinary(bin)
-	vm.SetPC(n)
-	vm.Run()
-	// Clear the removable expression.
-	bin = bin[:n]
+	// Run and clear the temporary expression binary.
+	if ast.X != nil {
+		// Load new binary and execute.
+		vm.LoadBinary(bin)
+		vm.SetPC(n)
+		vm.Run()
+
+		bin = bin[:n]
+	}
 }

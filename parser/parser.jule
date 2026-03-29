@@ -53,10 +53,57 @@ impl parser {
 		self.next() // make progress
 	}
 
-	fn parseName(mut *self): ast::Expr {
-		mut x := &ast::NameExpr{Token: self.tok, Name: self.tok.Kind}
-		self.next()
-		ret x
+	fn parseLet(mut *self): ast::Let {
+		self.next() // let
+		name := self.tok
+		self.expect(token::NAME) // function name
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		self.expect(token::LPAREN) // (
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		mut list := self.parseParamList() // parameters
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		self.expect(token::RPAREN) // )
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		self.expect(token::ASSIGN)
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		mut x := self.parseExpr()
+		if x == nil {
+			ret nil
+		}
+		ret &ast::Func{
+			Name:   name,
+			Params: list,
+			X:      x,
+		}
+	}
+
+	fn parseFuncCall(mut *self, name: token::Token): &ast::FuncCall {
+		self.expect(token::LPAREN) // (
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		mut args := self.parseArgList() // arguments
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		self.expect(token::RPAREN) // )
+		if len(self.logs) > 0 {
+			ret nil
+		}
+		ret &ast::FuncCall{
+			Name: name,
+			Args: args,
+		}
 	}
 
 	fn parseOperand(mut *self): ast::Expr {
@@ -65,7 +112,16 @@ impl parser {
 			// Errors are derived from the scanner.
 			ret nil
 		| token::NAME:
-			ret self.parseName()
+			tok := self.tok
+			self.next()
+			if self.tok.ID == token::LPAREN {
+				mut func := self.parseFuncCall(tok)
+				if func == nil {
+					ret nil
+				}
+				ret func
+			}
+			ret &ast::NameExpr{Token: tok, Name: tok.Kind}
 		| token::INT:
 			mut x := new(vek::Value)
 			x.Type = vek::TypeIN
@@ -138,6 +194,41 @@ impl parser {
 	fn parseExpr(mut *self): ast::Expr {
 		ret self.parseBinaryExpr(nil, token::LowestPrec+1)
 	}
+
+	fn parseArgList(mut *self): (list: []ast::Expr) {
+		list = append(list, self.parseExpr())
+		for self.tok.ID == token::COMMA && len(self.logs) == 0 {
+			self.next()
+			list = append(list, self.parseExpr())
+		}
+
+		ret
+	}
+
+	fn parseParamList(mut *self): (list: []token::Token) {
+		if self.tok.ID == token::RPAREN {
+			ret
+		}
+		list = append(list, self.tok)
+		self.expect(token::NAME)
+		for self.tok.ID == token::COMMA && len(self.logs) == 0 {
+			self.next()
+			list = append(list, self.tok)
+			self.expect(token::NAME)
+		}
+
+		ret
+	}
+
+	fn parse(mut *self): (ast: ast::Node) {
+		match self.tok.ID {
+		| token::LET:
+			ast.Let = self.parseLet()
+		|:
+			ast.X = self.parseExpr()
+		}
+		ret
+	}
 }
 
 // Consumes the vek source code to perform lexical and syntactic
@@ -146,20 +237,20 @@ impl parser {
 // The scanner is responsible for the lexical analysis of the source code.
 // It automatically executes an initial Scanner.Next call prior
 // to the start of the parsing process.
-fn Parse(mut scanner: &token::Scanner): (ast::Expr, []log::Log) {
+fn Parse(mut scanner: &token::Scanner): (ast::Node, []log::Log) {
 	mut p := parser{
 		scanner: scanner,
 	}
 	p.next() // Advance to the first token.
-	mut expr := p.parseExpr()
+	mut ast := p.parse()
 	// Early return for error cases.
-	if expr == nil || len(p.logs) > 0 {
-		ret expr, p.logs
+	if len(p.logs) > 0 {
+		ret ast, p.logs
 	}
 	// Check for EOF.
 	// All expression must be consumed.
 	if p.tok.ID != token::EOF {
 		p.pushErr(p.tok, "invalid syntax")
 	}
-	ret expr, p.logs
+	ret ast, p.logs
 }
