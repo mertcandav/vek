@@ -33,6 +33,7 @@ const (
 	SETSP
 	AIN
 	AFL
+	AMOV
 	MOV
 	MOVIN
 	MOVFL

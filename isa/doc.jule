@@ -253,6 +253,11 @@
 //
 //		AFL [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 //
+//	AMOV:
+//		Pushes a copy of the source index's value onto the stack.
+//
+//		AMOV [INDEX]
+//
 //	MOV:
 //		Copies the value of a source index into a target index.
 //		This instruction performs a direct index-to-index
