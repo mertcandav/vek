@@ -78,6 +78,16 @@ impl printer {
 		}
 	}
 
+	fn appendRawIndex(*self, idx: isa::Index) {
+		if self.options&PRI_HL != 0 {
+			self.append(fgIndex)
+		}
+		self.buf = appendRawIndex(self.buf, idx)
+		if self.options&PRI_HL != 0 {
+			self.append(ansi::Reset)
+		}
+	}
+
 	fn appendIndexECALL(*self, idx: isa::Index) {
 		if self.options&PRI_HL != 0 {
 			self.append(fgIndex)
@@ -214,6 +224,23 @@ impl printer {
 		}
 		self.next()
 		self.appendIndex(idx)
+		self.append("\n")
+		ret true
+	}
+
+	fn printRawIndex(*self, opcode: str): bool {
+		self.appendOP(opcode)
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		idx, ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendRawIndex(idx)
 		self.append("\n")
 		ret true
 	}
@@ -362,17 +389,17 @@ impl printer {
 		| isa::NOP:
 			ret self.printOP("NOP")
 		| isa::JMP:
-			ret self.printIndex("JMP")
+			ret self.printRawIndex("JMP")
 		| isa::ASF:
-			ret self.printIndex("ASF")
+			ret self.printRawIndex("ASF")
 		| isa::CALL:
-			ret self.printIndex("CALL")
+			ret self.printRawIndex("CALL")
 		| isa::ECALL:
 			ret self.printIndexECALL()
 		| isa::RET:
 			ret self.printOP("RET")
 		| isa::SETSP:
-			ret self.printIndex("SETSP")
+			ret self.printRawIndex("SETSP")
 		| isa::AIN:
 			ret self.printAIN()
 		| isa::AFL:
@@ -439,8 +466,12 @@ fn appendIndex(mut buf: []byte, idx: isa::Index): []byte {
 	| isa::STCK_RV:
 		ret append(buf, "RV"...)
 	|:
-		ret conv::AppendUint(buf, idx, 10)
+		ret appendRawIndex(buf, idx)
 	}
+}
+
+fn appendRawIndex(mut buf: []byte, idx: isa::Index): []byte {
+	ret conv::AppendUint(buf, idx, 10)
 }
 
 fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
