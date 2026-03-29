@@ -37,6 +37,7 @@ let insmap: [...]insfunc = [
 	_SETSP,
 	_AIN,
 	_AFL,
+	_AMOV,
 	_MOV,
 	_MOVIN,
 	_MOVFL,
@@ -157,6 +158,18 @@ fn _AFL(mut &vm: *VM): (err: str) {
 		Type: vek::TypeFL,
 		Data: fl,
 	})
+
+	ret _NoError
+}
+
+fn _AMOV(mut &vm: *VM): (err: str) {
+	vm.pc++                // AMOV
+	idx := decodeIndex(vm) // INDEX
+
+	// AMOV idx
+	mut v := new(vek::Value)
+	v.Copy(vm.stackRead(idx))
+	vm.stack = append(vm.stack, v)
 
 	ret _NoError
 }
