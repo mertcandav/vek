@@ -22,5 +22,6 @@ type FuncMap: map[str]&Func
 struct Memory {
 	Main:      isa::PC // PC of the entry point.
 	Constants: ConstantMap
-	Funcs:     FuncMap
+	Funcs:     FuncMap // Declared functions.
+	EFuncs:    FuncMap // Extern functions.
 }

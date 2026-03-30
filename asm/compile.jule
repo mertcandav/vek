@@ -53,6 +53,9 @@ impl compiler {
 	fn checkDuplicateName(mut *self, name: token::Token): (exist: bool) {
 		_, exist = self.mem.Constants[name.Kind]
 		if !exist {
+			_, exist = self.mem.EFuncs[name.Kind]
+		}
+		if !exist {
 			_, exist = self.mem.Funcs[name.Kind]
 		}
 		if exist {
@@ -342,7 +345,7 @@ impl compiler {
 		ret false
 	}
 
-	fn compileFuncCall0(mut *self, tok: token::Token, mut args: []ast::Expr): (&vek::Value, isa::Index) {
+	fn compileFuncCall0(mut *self, tok: token::Token, mut args: []ast::Expr, _ECALL: bool): (&vek::Value, isa::Index) {
 		ok := self.checkFuncCallCounts(tok, len(args))
 		if !ok {
 			ret nil, invalidIndex
@@ -371,8 +374,12 @@ impl compiler {
 				self.sp++                               // Adjust SP.
 			}
 		}
-		self.bin = ASF(self.bin, isa::Index(len(args)))      // ASF len(args)
-		self.bin = CALL(self.bin, isa::Index(self.ifunc.PC)) // CALL ifunc
+		self.bin = ASF(self.bin, isa::Index(len(args))) // ASF len(args)
+		if _ECALL {
+			self.bin = ECALL(self.bin, isa::Index(self.ifunc.PC)) // ECALL ifunc
+		} else {
+			self.bin = CALL(self.bin, isa::Index(self.ifunc.PC)) // CALL ifunc
+		}
 
 		ret nil, isa::STCK_RV
 	}
@@ -399,12 +406,17 @@ impl compiler {
 		}
 
 		// Call to a function.
+		mut _EOF := false
 		mut func, ok := self.mem.Funcs[ast.Name.Kind]
+		if !ok {
+			func, ok = self.mem.EFuncs[ast.Name.Kind]
+			_EOF = ok
+		}
 		if ok {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Name, ast.Args)
+			ret self.compileFuncCall0(ast.Name, ast.Args, false)
 		}
 
 		self.pushErr(ast.Name, "undefined identifier: "+conv::Quote(ast.Name.Kind))
@@ -440,12 +452,17 @@ impl compiler {
 		}
 
 		// Call to a function.
+		mut _EOF := false
 		mut func, ok := self.mem.Funcs[ast.Name]
+		if !ok {
+			func, ok = self.mem.EFuncs[ast.Name]
+			_EOF = ok
+		}
 		if ok {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Token, nil)
+			ret self.compileFuncCall0(ast.Token, nil, _EOF)
 		}
 
 		self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
@@ -466,6 +483,20 @@ impl compiler {
 			ret self.compileFuncCall(ast.(&ast::FuncCall))
 		}
 		panic("unreachable")
+	}
+
+	fn compileRV(mut *self, mut ast: ast::Expr) {
+		v, mut off := self.compileExpr(ast)
+		if v == nil && off == invalidIndex { // error
+			ret
+		}
+		if v != nil {
+			self.movValue(isa::STCK_RV, v) // (MOVIN|MOVFL) RV, v
+		} else if off != isa::STCK_RV {
+			// Move value to the RV register for function return.
+			self.bin = MOV(self.bin, off, isa::STCK_RV) // MOV off, RV
+		}
+		self.bin = RET(self.bin) // RET
 	}
 
 	fn compileFunc(mut *self, mut ast: &ast::Func) {
@@ -514,10 +545,14 @@ impl compiler {
 	}
 
 	// Compiles a node.
-	fn compile(mut *self, mut ast: ast::Node) {
+	fn compile(mut *self, mut ast: ast::Node, RV: bool) {
 		match {
 		| ast.X != nil:
-			self.compilePrint(ast.X)
+			if RV {
+				self.compileRV(ast.X)
+			} else {
+				self.compilePrint(ast.X)
+			}
 		| ast.Let != nil:
 			self.compileLet(ast.Let)
 		|:
@@ -571,12 +606,12 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 // whenever a requirement or instruction demands a change.
 // Ensures that the memory state is updated only when the
 // compilation process is successful and free of errors.
-fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node): ([]isa::Byte, []log::Log) {
+fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node, RV: bool): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
 		bin: bin,
 		mem: mem,
 		sp:  isa::STCK_OFF,
 	}
-	c.compile(ast)
+	c.compile(ast, RV)
 	ret c.bin, c.logs
 }

@@ -11,6 +11,7 @@ use "vek/src/vek/ioutil"
 use "std/flag"
 use "std/fmt"
 use "std/os"
+use "std/slices"
 use "std/strings"
 use "std/sys"
 use "std/unsafe"
@@ -54,12 +55,6 @@ fn showInfo(args: []str) {
 	println(
 		`vek is a tool for high performance computations.
 
-In pipe mode, vek reads and evaluates the incoming expression
-from the standard input (stdin) and streams the computed
-result directly to the standard output (stdout). This facilitates
-seamless composition with other command-line utilities for
-automated processing workflows.
-
 Usage:
 	vek expression expression expression ...
 	vek <command> [arguments]
@@ -69,6 +64,21 @@ The commands are:`)
 	writeCommandsList(&s, "\t", 1)
 	print(s.Str())
 	println(`
+vek reads and compiles data streamed from the standard input (stdin).
+Rather than automatically evaluating and printing the result to stdout,
+the piped data is captured as a specialized "arg" function,
+which can be referenced by subsequent expressions.
+
+Much like the build command, pipe mode supports additional arguments
+that are consolidated into a single, unified binary.
+If the stdin content is a non-expression (such as a function declaration),
+it is compiled into the final bytecode, but the "arg" function returns 0.
+
+Pipe usage:
+	echo "2 + 2" | vek
+	echo "2 + 2" | vek "arg"
+	echo "2 + 2" | vek "arg*arg"
+
 Use "vek help <command>" for more information about a command.`)
 }
 
@@ -169,6 +179,57 @@ fn version(args: []str) {
 	println(vek::Version)
 }
 
+// Compile all expressions (content) and merge them in a single binary in "bin".
+// Resets the "bin" to zero before compile. All values will be ignored.
+//
+// Constraints:
+// The binary buffer "bin" will not be used again since this program
+// works in build argument or pipe mode.
+fn compileContent(mut content: []str): (ok: bool) {
+	// Ignore previous binary, if any.
+	bin = bin[:0]
+
+	// Add reserved leading bytes to encode entry point jump instruction.
+	bin = asm::JMP(bin, 0)
+
+	// Compile binary properly, and detect the PC of the entry point.
+	mut pc := false
+	for _, filter in buildFilters {
+		if !pc && uintptr(filter) == uintptr(filterAny) {
+			vm.Memory().Main = isa::PC(len(bin))
+			pc = true
+		}
+		for i, code in content {
+			if code == "" { // skip if it is empty
+				continue
+			}
+			ok = filter(code)
+			if !ok {
+				continue
+			}
+			// Set index-i to empty string to ingore it later.
+			content[i] = ""
+
+			scanner.Reset(unsafe::BytesFromStr(code))
+			mut ast, mut logs := parser::Parse(scanner)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret false
+			}
+			bin, logs = asm::Compile(bin, vm.Memory(), ast, false)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret false
+			}
+		}
+	}
+
+	// Encode the entry point jump instruction.
+	asm::JMP(bin[:0], isa::Index(vm.Memory().Main))
+
+	ret true
+}
+
 // Command: vek build
 fn build(mut args: []str) {
 	if len(args) < 2 {
@@ -190,47 +251,12 @@ fn build(mut args: []str) {
 		printErrorMessage("build: expression missing")
 		ret
 	}
-	// Compile all expressions and merge them in a single binary.
-	// The binary buffer bin will not be used again since this program
-	// works in build argument.
 
-	// Add reserved leading bytes to encode entry point jump instruction.
-	bin = asm::JMP(bin, 0)
-
-	// Compile binary properly, and detect the PC of the entry point.
-	mut pc := false
-	for _, filter in buildFilters {
-		if !pc && uintptr(filter) == uintptr(filterAny) {
-			vm.Memory().Main = isa::PC(len(bin))
-			pc = true
-		}
-		for i, code in content {
-			if code == "" { // skip if it is empty
-				continue
-			}
-			ok := filter(code)
-			if !ok {
-				continue
-			}
-			// Set index-i to empty string to ingore it later.
-			content[i] = ""
-
-			scanner.Reset(unsafe::BytesFromStr(code))
-			mut ast, mut logs := parser::Parse(scanner)
-			if len(logs) > 0 {
-				log::PrintAll(logs)
-				ret
-			}
-			bin, logs = asm::Compile(bin, vm.Memory(), ast)
-			if len(logs) > 0 {
-				log::PrintAll(logs)
-				ret
-			}
-		}
+	// Compile the into "bin" with command-line arguments.
+	ok := compileContent(content)
+	if !ok {
+		ret
 	}
-
-	// Encode the entry point jump instruction.
-	asm::JMP(bin[:0], isa::Index(vm.Memory().Main))
 
 	// Setup print options.
 	mut options := 0
@@ -293,13 +319,55 @@ fn processCommand(mut args: []str) {
 	}
 }
 
-// Read from pipe, then eval.
-fn handlePipe() {
+// Pipe mode.
+fn handlePipe(mut args: []str) {
+	args = args[1:] // Remove the program path.
+
+	// Read all pipe data from stdin.
 	mut data := ioutil::ReadAll(os::Stdin()) else {
 		throwError(fmt::Sprint(error))
 		use nil // Avoid error.
 	}
-	eval(data)
+
+	// If the input is not a standalone expression,
+	// it is compiled directly as part of the bytecode.
+	// However, if an expression is detected, it is wrapped and
+	// compiled as a function that evaluates the expression and
+	// returns the result. This compiled block serves as the
+	// internal implementation for the built-in "arg" function.
+	// Merge with any additional command-line arguments like
+	// the "build" command to compile and execute.
+	if len(data) > 0 {
+		_ARG := unsafe::StrFromBytes(data)
+		if filterLet(_ARG) {
+			args = slices::Insert(args, 0, _ARG)
+		} else {
+			scanner.Reset(data)
+			mut ast, mut logs := parser::Parse(scanner)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret
+			}
+			mut bin, logs := asm::Compile(nil, vm.Memory(), ast, true)
+			if len(logs) > 0 {
+				log::PrintAll(logs)
+				ret
+			}
+			vm.LoadArg(bin)
+			delete(vm.Memory().Funcs, "arg")
+		}
+	}
+
+	// Compile the into "bin" with command-line arguments.
+	ok := compileContent(args)
+	if !ok {
+		ret
+	}
+
+	// Load the binary and execute.
+	vm.LoadBinary(bin)
+	vm.SetPC(0)
+	vm.Run()
 }
 
 fn main() {
@@ -307,7 +375,7 @@ fn main() {
 
 	// If stdin is not a terminal, then it is a pipe.
 	if !isatty(sys::STDIN) {
-		handlePipe()
+		handlePipe(args)
 		ret
 	}
 

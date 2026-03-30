@@ -80,6 +80,16 @@ impl Value {
 		}
 	}
 
+	// Sets value to integer x.
+	fn SetInt(mut *self, x: i64) {
+		self.Type = TypeIN
+		mut _in, ok := self.Data.(&isa::Int)
+		if !ok {
+			_in = new(isa::Int)
+		}
+		_in.SetI64(x)
+	}
+
 	// self = -self
 	fn NEG(mut *self) {
 		match type self.Data {

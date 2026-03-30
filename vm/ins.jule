@@ -6,9 +6,6 @@ use "vek"
 use "vek/isa"
 use "std/math"
 
-// Error message indicating success.
-const _NoError = ""
-
 // The function signature for processing an instruction.
 // It defines the standardized interface for all execution routines,
 // typically accepting the current execution context and
@@ -107,8 +104,8 @@ fn _ECALL(mut &vm: *VM): (err: str) {
 	vm.sf.retjmp = vm.pc
 	externmap[idx](vm)
 
-	// RET
-	_RET(vm)
+	// Handling of RET instruction is belongs to the extern function.
+	// It must execute RET before return.
 
 	ret _NoError
 }
