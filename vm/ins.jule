@@ -406,12 +406,11 @@ fn _REMFL(mut &vm: *VM): (err: str) {
 
 // Decodes integer.
 fn decodeInt(mut &vm: *VM): &isa::Int {
+	datalen := decodeIndex(vm)
 	sign := vm.bin[vm.pc]
 	vm.pc++ // sign-byte
-	start := vm.pc
-	vm.scanUntil(isa::NOP)
-	enc := vm.bin[start:vm.pc]
-	vm.pc++ // NOP
+	enc := vm.bin[vm.pc : vm.pc+isa::PC(datalen)]
+	vm.pc += isa::PC(datalen)
 	mut _in := new(isa::Int)
 	_in.SetBytes(enc)
 	if sign == 1 {

@@ -3,17 +3,40 @@
 // license that can be found in the LICENSE file.
 
 use "std/math"
+use "std/slices"
+
+const (
+	// Size in bytes of an index encoded in bytecode.
+	IndexSize = 8
+)
 
 // Encodes integer and appends to buf.
 fn EncodeInt(mut buf: []Byte, x: Int): []Byte {
+	// Save the length of the buffer before encoding.
+	n := len(buf)
+
+	// Make sure we have enough leading space for byte-len encoding.
+	buf = slices::Grow(buf, IndexSize)
+	buf = buf[:len(buf)+IndexSize]
+
+	// Encode the sign-byte.
 	sign := x.Sign()
 	if sign == -1 {
 		buf = append(buf, 1)
 	} else {
 		buf = append(buf, 0)
 	}
+
+	// Encode the absolute value in bytes.
 	buf = x.AppendBytes(buf)
-	buf = append(buf, NOP)
+
+	// bytelen = count of bytes where appended to buf by [x.AppendBytes].
+	// bytelen = (len(AppendBytes(buf)) - sign-byte) - byte-len-size
+	bytelen := Index(len(buf) - n - 1 - IndexSize)
+
+	// Encode the byte-len for reserved leading space.
+	EncodeIndex(buf[:n], bytelen)
+
 	ret buf
 }
 

@@ -105,12 +105,12 @@
 //		automatically promote the result to a floating-point
 //		representation.
 //
-//		An integer is encoded within the binary on a byte-by-byte basis.
-//		To signal the completion of the encoding sequence,
-//		a NOP opcode is appended as a mandatory terminator.
-//		A sign-byte is prepended to the byte sequence representing the
-//		integer. A sign-byte value of 1 indicates a negative number,
-//		while a value of 0 denotes a positive integer.
+//		Integers are encoded within the binary using a byte-oriented sequence.
+//		The encoding begins with a length header specifying the byte-length of the
+//		absolute value. The byte-length header is an index actually.
+//		This is followed by a sign-byte, where 1 represents a negative value,
+//		and 0 represents a positive value. The remaining sequence consists of the
+//		byte representation of the absolute integer.
 //
 //	Floating-Point:
 //		Floating-point types are represented as 64-bit double-precision values.
@@ -243,7 +243,7 @@
 //		Pushes an integer value onto the stack. This instruction handles
 //		the multi-byte encoding of arbitrary-precision integers.
 //
-//		AIN [SIGN] [BYTES...] [NOP]
+//		AIN [BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	AFL:
 //		Pushes a 64-bit floating-point value onto the stack.
@@ -274,7 +274,7 @@
 //		content is overwritten with the new encoded sequence
 //		including its mandatory NOP terminator.
 //
-//		MOVIN [INDEX],[SIGN] [BYTES...] [NOP]
+//		MOVIN [INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	MOVFL:
 //		Copies a 64-bit floating-point value into the memory slot at a
@@ -322,7 +322,7 @@
 //			(cast) to a float value. The summation is then
 //			performed, and the final result is stored as a float.
 //
-//		ADDIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//		ADDIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	ADDFL:
 //		Adds a literal floating-point value to the destination index.
@@ -370,7 +370,7 @@
 //			to a float value. The subtraction is then performed,
 //			and the final result is stored as a float.
 //
-//		SUBIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//		SUBIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	SUBFL:
 //		Subtracts a literal floating-point value from the destination index.
@@ -418,7 +418,7 @@
 //			value. The multiplication is then performed, and the final
 //			result is stored as a float.
 //
-//		MULIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//		MULIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	MULFL:
 //		Multiplies the destination index by a literal floating-point value.
@@ -466,7 +466,7 @@
 //			value. The division is then performed, and the final
 //			result is stored as a float.
 //
-//		QUOIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//		QUOIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	QUOFL:
 //		Divides (T-division) the value at the destination index by a literal floating-point
@@ -512,7 +512,7 @@
 //			value. The modulo operation is then performed, and the
 //			final result is stored as a float.
 //
-//		REMIN [DESTINATION;INDEX],[SIGN] [BYTES...] [NOP]
+//		REMIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 //
 //	REMFL:
 //		Calculates the remainder of the destination index divided (T-divison) by a

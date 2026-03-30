@@ -51,8 +51,7 @@ impl printer {
 		if self.options&PRI_HL != 0 {
 			self.append(fgNumber)
 		}
-		self.buf = append(self.buf, "0x"...)
-		txt := _in.Format(16)
+		txt := _in.Format(10)
 		self.buf = append(self.buf, txt...)
 		if self.options&PRI_HL != 0 {
 			self.append(ansi::Reset)
@@ -146,19 +145,28 @@ impl printer {
 	}
 
 	fn decodeInt(*self): (&isa::Int, bool) {
+		bytelen, ok := self.decodeIndex()
+		if !ok {
+			ret nil, false
+		}
+		self.next()
+		if self.b == _EOF {
+			ret nil, false
+		}
 		sign := self.b
 		self.next()
 		if self.b == _EOF {
 			ret nil, false
 		}
 		start := self.pc
-		for self.b != _EOF && self.b != isa::NOP {
+		mut i := isa::Index(0)
+		for i < bytelen-1; i++ {
 			self.next()
+			if self.b == _EOF {
+				ret nil, false
+			}
 		}
-		if self.b == _EOF {
-			ret nil, false
-		}
-		enc := self.bin[start:self.pc]
+		enc := self.bin[start : self.pc+1]
 		mut _in := new(isa::Int)
 		_in.SetBytes(enc)
 		if sign == 1 {

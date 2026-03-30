@@ -606,6 +606,13 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 // whenever a requirement or instruction demands a change.
 // Ensures that the memory state is updated only when the
 // compilation process is successful and free of errors.
+//
+// If the node is identified as an expression,
+// the compiler wraps it into a functional block.
+// If RV is set to true, the block is compiled to
+// return the expression's result as a value.
+// Otherwise, it is compiled as a print call that
+// outputs the expression's result.
 fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node, RV: bool): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
 		bin: bin,
