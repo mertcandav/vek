@@ -245,6 +245,9 @@ fn Parse(mut scanner: &token::Scanner): (ast::Node, []log::Log) {
 		scanner: scanner,
 	}
 	p.next() // Advance to the first token.
+	if p.tok.ID == token::EOF {
+		ret ast::Node{}, nil
+	}
 	mut ast := p.parse()
 	// Early return for error cases.
 	if len(p.logs) > 0 {
