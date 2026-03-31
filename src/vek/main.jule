@@ -4,6 +4,7 @@
 
 use "vek"
 use "vek/asm"
+use "vek/bind/replxx"
 use "vek/isa"
 use "vek/log"
 use "vek/parser"
@@ -49,28 +50,6 @@ fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
 		s.WriteStr(part[1])!
 		s.WriteByte('\n')!
 	}
-}
-
-fn showInfo(args: []str) {
-	println(
-		`vek is a tool for high performance computations.
-
-Usage:
-	vek expression expression expression ...
-	vek <command> [arguments]
-
-The commands are:`)
-	mut s := strings::Builder{}
-	writeCommandsList(&s, "\t", 1)
-	print(s.Str())
-	println(`
-vek reads and evals data streamed from the standard input (stdin) in pipe mode.
-Any command-line argument is invalid in pipe mode.
-
-Pipe usage:
-	echo "2 + 2" | vek
-
-Use "vek help <command>" for more information about a command.`)
 }
 
 // Command: vek help
@@ -346,6 +325,52 @@ fn handlePipe(mut args: []str) {
 	}
 }
 
+// REPL mode.
+fn repl() {
+	const MaxTokenSize = 4096
+	const MaxTokenSizeStr = "4096"
+
+	repl := replxx::New()
+	defer { repl.End() }
+
+	println("Welcome to vek REPL (" + vek::Version + ")\nWrite \":help\" to see help.")
+
+REPL:
+	for {
+		mut rawinput := repl.Input(">>> \x00")
+		if rawinput == nil {
+			break
+		}
+
+		input := unsafe::BytesStr(rawinput)
+		match input {
+		| ":help":
+			println(`You are currently using vek in REPL (Read-Eval-Print Loop) mode.
+All declarations (like functions) are persisted and
+remain accessible for use in subsequent expressions.
+
+To execute specialized REPL commands, use the ":" prefix.
+
+Commands:
+	exit: Terminates the REPL loop and exits the program.
+`)
+			continue REPL
+		| ":exit":
+			break REPL
+		}
+
+		// Since input is a mask for the intenral buffer of Replxx,
+		// we have to clone it with a separate allocation.
+		mut data := append([]byte(nil), input...)
+
+		nonempty := eval(data)
+		// Add to history, if input parsed to an AST node.
+		if nonempty {
+			repl.HistoryAdd(rawinput)
+		}
+	}
+}
+
 fn main() {
 	mut args := os::Args()
 
@@ -356,9 +381,8 @@ fn main() {
 	}
 
 	// Not started with arguments.
-	// Here is "2" but "args" always have one element for store program name.
 	if len(args) < 2 {
-		showInfo(args)
+		repl()
 		ret
 	}
 

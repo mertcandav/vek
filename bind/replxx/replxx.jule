@@ -1,0 +1,78 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+// Link Replxx statically.
+#pass "-DREPLXX_STATIC"
+
+use "std/integ"
+use "std/integ/c"
+use "std/sys"
+use "std/unsafe"
+
+extern use "vek/bind/replxx/ConvertUTF.cpp"
+extern use "vek/bind/replxx/conversion.cxx"
+extern use "vek/bind/replxx/escape.cxx"
+extern use "vek/bind/replxx/history.cxx"
+extern use "vek/bind/replxx/prompt.cxx"
+extern use "vek/bind/replxx/replxx.cxx"
+extern use "vek/bind/replxx/replxx.h"
+extern use "vek/bind/replxx/replxx_impl.cxx"
+extern use "vek/bind/replxx/terminal.cxx"
+extern use "vek/bind/replxx/util.cxx"
+extern use "vek/bind/replxx/wcwidth.cpp"
+extern use "vek/bind/replxx/windows.cxx"
+
+extern fn strlen(*c::ConstChar): int
+
+extern fn replxx_init(): *extern.Replxx
+extern fn replxx_install_window_change_handler(*extern.Replxx)
+extern fn replxx_input(*extern.Replxx, *c::ConstChar): *c::ConstChar
+extern fn replxx_history_add(*extern.Replxx, *c::ConstChar)
+extern fn replxx_end(*extern.Replxx)
+
+extern let errno: int
+
+extern struct Replxx{}
+
+struct Replxx {
+	p: *extern.Replxx
+}
+
+impl Replxx {
+	// prompt must be NUL terminated.
+	// Returns nil slice for error or EOF.
+	// The returned byte-slice is a mask for the internal buffer of Replxx.
+	fn Input(*self, prompt: str): []byte {
+		for {
+			mut result := unsafe { extern.replxx_input(self.p, (*c::ConstChar)(&prompt[0])) }
+			if result == nil && extern.errno == int(sys::EAGAIN) {
+				continue
+			}
+			if result == nil {
+				ret nil
+			}
+			n := extern.strlen(result)
+			mut bytes := unsafe { unsafe::Slice((*byte)(result), n, n) }
+			ret bytes
+		}
+	}
+
+	// Adds line to the history.
+	// line must be returned from Input and non-nil/non-empty.
+	fn HistoryAdd(*self, line: []byte) {
+		unsafe { extern.replxx_history_add(self.p, (*c::ConstChar)(&line[0])) }
+	}
+
+	// Frees Replxx instance.
+	fn End(*self) {
+		extern.replxx_end(self.p)
+	}
+}
+
+// Returns new Replxx instance.
+fn New(): Replxx {
+	mut p := extern.replxx_init()
+	extern.replxx_install_window_change_handler(p)
+	ret Replxx{p: p}
+}
