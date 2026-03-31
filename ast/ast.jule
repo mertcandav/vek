@@ -56,3 +56,10 @@ struct Node {
 	Let: Let
 	X:   Expr
 }
+
+impl Node {
+	// Reports whether the node is empty.
+	fn Empty(*self): bool {
+		ret self.Let == nil && self.X == nil
+	}
+}

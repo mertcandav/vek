@@ -207,6 +207,10 @@ fn compileContent(mut content: []str): (ok: bool) {
 				log::PrintAll(logs)
 				ret false
 			}
+			// Ignore empty AST node.
+			if ast.Empty() {
+				ret false
+			}
 			bin, logs = asm::Compile(bin, vm.Memory(), ast)
 			if len(logs) > 0 {
 				log::PrintAll(logs)

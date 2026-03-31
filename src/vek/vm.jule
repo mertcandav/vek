@@ -31,6 +31,10 @@ fn eval(mut buf: []byte) {
 		log::PrintAll(logs)
 		ret
 	}
+	// Ignore empty AST node.
+	if ast.Empty() {
+		ret
+	}
 	// Save the current buffer length. This allows for the removal of
 	// any partial/temporary bytecode in the event of a failure/print eval,
 	// facilitating a rollback to the last stable state.
