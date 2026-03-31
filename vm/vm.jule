@@ -18,27 +18,14 @@ use "vek/vm/mem"
 // instance or across multiple distinct instances, results
 // in undefined behavior.
 struct VM {
-	argbin: []isa::Byte   // vek binary of the _EXTERN_ARG result.
-	bin:    []isa::Byte   // vek binary of the program.
-	stack:  []&vek::Value // Stack memory.
-	sf:     &stackFrame   // Current stack frame.
-	mem:    &mem::Memory  // VM memory.
-	err:    &Error        // Error cache.
-	pc:     isa::PC       // Raw Program Counter.
+	bin:   []isa::Byte   // vek binary of the program.
+	stack: []&vek::Value // Stack memory.
+	sf:    &stackFrame   // Current stack frame.
+	mem:   &mem::Memory  // VM memory.
+	pc:    isa::PC       // Raw Program Counter.
 }
 
 impl VM {
-	// Loads a pre-compiled binary block to be used by the built-in arg function.
-	// If the provided binary is nil or has a length of zero (len(bin) == 0),
-	// it is treated as uninitialized, and the arg function defaults
-	// to returning 0. The binary must be structured as a
-	// standard function: it must store the final result in the RV register,
-	// and terminate with a RET instruction.
-	// No function arguments.
-	fn LoadArg(mut *self, mut bin: []isa::Byte) {
-		self.argbin = bin
-	}
-
 	// Loads a vek binary
 	// This is an unsafe function because it will not check validity of the binary.
 	// If the program is corruped, the behavior is undefined.

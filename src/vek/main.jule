@@ -64,20 +64,11 @@ The commands are:`)
 	writeCommandsList(&s, "\t", 1)
 	print(s.Str())
 	println(`
-vek reads and compiles data streamed from the standard input (stdin).
-Rather than automatically evaluating and printing the result to stdout,
-the piped data is captured as a specialized "arg" function,
-which can be referenced by subsequent expressions.
-
-Much like the build command, pipe mode supports additional arguments
-that are consolidated into a single, unified binary.
-If the stdin content is a non-expression (such as a function declaration),
-it is compiled into the final bytecode, but the "arg" function returns 0.
+vek reads and evals data streamed from the standard input (stdin) in pipe mode.
+Any command-line argument is invalid in pipe mode.
 
 Pipe usage:
 	echo "2 + 2" | vek
-	echo "2 + 2" | vek "arg"
-	echo "2 + 2" | vek "arg*arg"
 
 Use "vek help <command>" for more information about a command.`)
 }
@@ -216,7 +207,7 @@ fn compileContent(mut content: []str): (ok: bool) {
 				log::PrintAll(logs)
 				ret false
 			}
-			bin, logs = asm::Compile(bin, vm.Memory(), ast, false)
+			bin, logs = asm::Compile(bin, vm.Memory(), ast)
 			if len(logs) > 0 {
 				log::PrintAll(logs)
 				ret false
@@ -320,54 +311,35 @@ fn processCommand(mut args: []str) {
 }
 
 // Pipe mode.
+// Read all incoming data line-by-line from stdin and eval.
 fn handlePipe(mut args: []str) {
-	args = args[1:] // Remove the program path.
-
-	// Read all pipe data from stdin.
-	mut data := ioutil::ReadAll(os::Stdin()) else {
-		throwError(fmt::Sprint(error))
-		use nil // Avoid error.
-	}
-
-	// If the input is not a standalone expression,
-	// it is compiled directly as part of the bytecode.
-	// However, if an expression is detected, it is wrapped and
-	// compiled as a function that evaluates the expression and
-	// returns the result. This compiled block serves as the
-	// internal implementation for the built-in "arg" function.
-	// Merge with any additional command-line arguments like
-	// the "build" command to compile and execute.
-	if len(data) > 0 {
-		_ARG := unsafe::StrFromBytes(data)
-		if filterLet(_ARG) {
-			args = slices::Insert(args, 0, _ARG)
-		} else {
-			scanner.Reset(data)
-			mut ast, mut logs := parser::Parse(scanner)
-			if len(logs) > 0 {
-				log::PrintAll(logs)
-				ret
-			}
-			mut bin, logs := asm::Compile(nil, vm.Memory(), ast, true)
-			if len(logs) > 0 {
-				log::PrintAll(logs)
-				ret
-			}
-			vm.LoadArg(bin)
-			delete(vm.Memory().Funcs, "arg")
-		}
-	}
-
-	// Compile the into "bin" with command-line arguments.
-	ok := compileContent(args)
-	if !ok {
+	if len(args) > 1 {
+		printErrorMessage("invalid command: " + args[1])
 		ret
 	}
 
-	// Load the binary and execute.
-	vm.LoadBinary(bin)
-	vm.SetPC(0)
-	vm.Run()
+	const MaxTokenSize = 4096
+	const MaxTokenSizeStr = "4096"
+
+	mut scan := ioutil::Scanner.New(os::Stdin())
+	scan.Buffer(make([]byte, 0, MaxTokenSize), MaxTokenSize)
+	for {
+		ok := scan.Scan() else {
+			match error {
+			| ioutil::ErrTooLong:
+				printErrorMessage("maximum input length " + MaxTokenSizeStr + " exceeded")
+				continue
+			|:
+				printErrorMessage("when reading from stdin: " + fmt::Sprint(error))
+			}
+			use false
+		}
+		if !ok {
+			break
+		}
+		mut data := scan.Token()
+		eval(data)
+	}
 }
 
 fn main() {

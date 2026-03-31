@@ -22,7 +22,9 @@ use "vek/vm/mem"
 // functional logic required for that extern call.
 //
 // Initialized by init.
-let mut externmap: [2]insfunc = []
+let mut externmap: [...]insfunc = [
+	_EXTERN_PRINT,
+]
 
 const (
 	_Ln2  = 0.693147180559945309417232121458176568075500134360255254120680009 // https://oeis.org/A002162
@@ -123,9 +125,7 @@ let mut constmap = mem::ConstantMap{
 
 // A registry of pre-defined external functions provided by the VM.
 // All functions must be called with ECALL instruction.
-let mut funcmap = mem::FuncMap{
-	"arg": &mem::Func{PC: 1},
-}
+let mut funcmap = mem::FuncMap{}
 
 // Outputs the top value of the stack to the standard output (stdout) stream.
 // This function retrieves the most recently pushed element and displays its
@@ -135,44 +135,4 @@ fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
 	_RET(vm) // RET
 
 	ret _NoError
-}
-
-// Returns the expression of the external argument, probably suplied by pipe.
-// Returns zero if there is no binary for "arg".
-fn _EXTERN_ARG(mut &vm: *VM): (err: str) {
-	if len(vm.argbin) == 0 {
-		// If argbin is not defined, return 0 by default.
-		mut rv := vm.stackRead(isa::STCK_RV)
-		rv.SetInt(0) // MOVIN RV, 0
-		_RET(vm)     // RET
-		err = _NoError
-	} else {
-		// If argbin is defined, it indicates
-		// that an expression from a pipe or external source has been
-		// compiled. VM temporarily loads argbin and pivots execution
-		// to this external block. Upon completion, control flow returns
-		// to the primary binary.
-		//
-		// Note: The argbin sequence must
-		// include an explicit RET (Return)
-		// instruction to ensure proper
-		// stack frame restoration.
-		// Do not emit it implicitly.
-		mut bin := vm.bin
-		vm.bin = vm.argbin
-		vm.pc = 0
-		vm.err = vm.Run()
-		vm.bin = bin
-		if vm.err != nil {
-			err = _ErrorCached
-		}
-	}
-
-	ret
-}
-
-fn init() {
-	// Initialize externmap.
-	externmap[0] = _EXTERN_PRINT
-	externmap[1] = _EXTERN_ARG
 }

@@ -485,20 +485,6 @@ impl compiler {
 		panic("unreachable")
 	}
 
-	fn compileRV(mut *self, mut ast: ast::Expr) {
-		v, mut off := self.compileExpr(ast)
-		if v == nil && off == invalidIndex { // error
-			ret
-		}
-		if v != nil {
-			self.movValue(isa::STCK_RV, v) // (MOVIN|MOVFL) RV, v
-		} else if off != isa::STCK_RV {
-			// Move value to the RV register for function return.
-			self.bin = MOV(self.bin, off, isa::STCK_RV) // MOV off, RV
-		}
-		self.bin = RET(self.bin) // RET
-	}
-
 	fn compileFunc(mut *self, mut ast: &ast::Func) {
 		mut exist := self.checkDuplicateName(ast.Name)
 		if exist {
@@ -545,14 +531,10 @@ impl compiler {
 	}
 
 	// Compiles a node.
-	fn compile(mut *self, mut ast: ast::Node, RV: bool) {
+	fn compile(mut *self, mut ast: ast::Node) {
 		match {
 		| ast.X != nil:
-			if RV {
-				self.compileRV(ast.X)
-			} else {
-				self.compilePrint(ast.X)
-			}
+			self.compilePrint(ast.X)
 		| ast.Let != nil:
 			self.compileLet(ast.Let)
 		|:
@@ -609,16 +591,13 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 //
 // If the node is identified as an expression,
 // the compiler wraps it into a functional block.
-// If RV is set to true, the block is compiled to
-// return the expression's result as a value.
-// Otherwise, it is compiled as a print call that
-// outputs the expression's result.
-fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node, RV: bool): ([]isa::Byte, []log::Log) {
+// It is compiled as a print call that outputs the expression's result.
+fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
 		bin: bin,
 		mem: mem,
 		sp:  isa::STCK_OFF,
 	}
-	c.compile(ast, RV)
+	c.compile(ast)
 	ret c.bin, c.logs
 }

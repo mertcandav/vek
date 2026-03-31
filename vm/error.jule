@@ -8,9 +8,6 @@ use "vek/isa"
 const (
 	// Error message indicating success.
 	_NoError = ""
-
-	// Error is cached on the vm.err field.
-	_ErrorCached = "_ErrorCached"
 )
 
 // A virtual machine error.
