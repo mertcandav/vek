@@ -140,7 +140,7 @@ impl compiler {
 			// If the value is in RV register, move it to the stack.
 			// _EXTERN_PRINT will read from stack, not from the RV register.
 			self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
-			// Do not increase SP, because we will restore it.
+			self.sp++                               // Adjust SP.
 		}
 		self.bin = ASF(self.bin, 1)
 		self.bin = ECALL(self.bin, _EXTERN_PRINT)
