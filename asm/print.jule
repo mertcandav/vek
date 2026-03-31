@@ -583,3 +583,70 @@ fn PrintVM(bin: []isa::Byte, mem: &mem::Memory, options: int): []byte {
 	}
 	ret p.printAll()
 }
+
+// Returns opcode in string.
+// Returns empty string if opcode is invalid.
+fn PrintOP(op: isa::Opcode): str {
+	match op {
+	| isa::NOP:
+		ret "NOP"
+	| isa::JMP:
+		ret "JMP"
+	| isa::ASF:
+		ret "ASF"
+	| isa::CALL:
+		ret "CALL"
+	| isa::ECALL:
+		ret "ECALL"
+	| isa::RET:
+		ret "RET"
+	| isa::SETSP:
+		ret "SETSP"
+	| isa::AIN:
+		ret "AIN"
+	| isa::AFL:
+		ret "AFL"
+	| isa::AMOV:
+		ret "AMOV"
+	| isa::MOV:
+		ret "MOV"
+	| isa::MOVIN:
+		ret "MOVIN"
+	| isa::MOVFL:
+		ret "MOVFL"
+	| isa::NEG:
+		ret "NEG"
+	| isa::ADD:
+		ret "ADD"
+	| isa::ADDIN:
+		ret "ADDIN"
+	| isa::ADDFL:
+		ret "ADDFL"
+	| isa::SUB:
+		ret "SUB"
+	| isa::SUBIN:
+		ret "SUBIN"
+	| isa::SUBFL:
+		ret "SUBFL"
+	| isa::MUL:
+		ret "MUL"
+	| isa::MULIN:
+		ret "MULIN"
+	| isa::MULFL:
+		ret "MULFL"
+	| isa::QUO:
+		ret "QUO"
+	| isa::QUOIN:
+		ret "QUOIN"
+	| isa::QUOFL:
+		ret "QUOFL"
+	| isa::REM:
+		ret "REM"
+	| isa::REMIN:
+		ret "REMIN"
+	| isa::REMFL:
+		ret "REMFL"
+	|:
+		ret ""
+	}
+}

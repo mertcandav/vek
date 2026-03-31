@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek/asm"
 use "vek/isa"
+use "std/conv"
+use "std/strings"
 
 // Special error values.
 const (
@@ -15,4 +18,17 @@ struct Error {
 	Opcode: isa::Opcode // The opcode.
 	PC:     isa::PC     // The PC of the opcode.
 	Error:  str         // The problem.
+}
+
+impl Error {
+	fn Str(*self): str {
+		mut b := strings::Builder{}
+		b.WriteStr("instruction ")!
+		b.WriteStr(asm::PrintOP(self.Opcode))!
+		b.WriteStr("; PC ")!
+		b.WriteStr(conv::Itoa(self.PC))!
+		b.WriteStr(": ")!
+		b.WriteStr(self.Error)!
+		ret b.Str()
+	}
 }

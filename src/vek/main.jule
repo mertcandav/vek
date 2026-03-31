@@ -264,7 +264,7 @@ fn run(mut args: []str) {
 
 	for _, file in args {
 		mut data := os::ReadFileSync(file) else {
-			printErrorMessage("error: " + file + ": " + fmt::Sprint(error))
+			printErrorMessage(file + ": " + fmt::Sprint(error))
 			continue
 		}
 		// Load the binary and execute.

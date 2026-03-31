@@ -9,6 +9,7 @@ const errorExitCode = 1
 
 fn printErrorMessage(msg: str) {
 	print(ansi::Red)
+	print("error: ")
 	println(msg)
 	print(ansi::Reset)
 }

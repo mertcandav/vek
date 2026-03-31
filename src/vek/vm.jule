@@ -50,9 +50,13 @@ fn eval(mut buf: []byte): (nonempty: bool) {
 		// Load new binary and execute.
 		vm.LoadBinary(bin)
 		vm.SetPC(n)
-		vm.Run()
-
+		err := vm.Run()
 		bin = bin[:n]
+
+		// Log error, if any.
+		if err != nil {
+			printErrorMessage(err.Str())
+		}
 	}
 	ret true
 }
