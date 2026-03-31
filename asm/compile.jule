@@ -406,17 +406,17 @@ impl compiler {
 		}
 
 		// Call to a function.
-		mut _EOF := false
+		mut _ECALL := false
 		mut func, ok := self.mem.Funcs[ast.Name.Kind]
 		if !ok {
 			func, ok = self.mem.EFuncs[ast.Name.Kind]
-			_EOF = ok
+			_ECALL = ok
 		}
 		if ok {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Name, ast.Args, false)
+			ret self.compileFuncCall0(ast.Name, ast.Args, _ECALL)
 		}
 
 		self.pushErr(ast.Name, "undefined identifier: "+conv::Quote(ast.Name.Kind))
@@ -452,17 +452,17 @@ impl compiler {
 		}
 
 		// Call to a function.
-		mut _EOF := false
+		mut _ECALL := false
 		mut func, ok := self.mem.Funcs[ast.Name]
 		if !ok {
 			func, ok = self.mem.EFuncs[ast.Name]
-			_EOF = ok
+			_ECALL = ok
 		}
 		if ok {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Token, nil, _EOF)
+			ret self.compileFuncCall0(ast.Token, nil, _ECALL)
 		}
 
 		self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
