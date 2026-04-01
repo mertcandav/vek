@@ -191,7 +191,7 @@ fn compileContent(mut content: []str): (ok: bool) {
 			if ast.Empty() {
 				ret false
 			}
-			bin, logs = asm::Compile(bin, vm.Memory(), ast)
+			bin, logs = asm::Compile(bin, vm.Memory(), ast, 0)
 			if len(logs) > 0 {
 				log::PrintAll(logs)
 				ret false

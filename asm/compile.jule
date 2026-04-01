@@ -13,7 +13,11 @@ use "std/strings"
 
 // Compilation options.
 const (
-	mutableMem = 1 << iota // Do not clones memory value.
+	// Calls _EXTERN_PRINT when compiling for it with a constant value.
+	// It will not generate binary when this triggers instant _EXTERN_PRINT calls.
+	ExecPrint = 1 << iota
+
+	mutableMem // Do not clones memory value.
 )
 
 struct compiler {
@@ -135,6 +139,10 @@ impl compiler {
 			ret
 		}
 		if v != nil {
+			if self.options&ExecPrint != 0 {
+				v.Print()
+				ret
+			}
 			self.pushValue(v)
 		} else if off == isa::STCK_RV {
 			// If the value is in RV register, move it to the stack.
@@ -592,11 +600,12 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 // If the node is identified as an expression,
 // the compiler wraps it into a functional block.
 // It is compiled as a print call that outputs the expression's result.
-fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node): ([]isa::Byte, []log::Log) {
+fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node, options: int): ([]isa::Byte, []log::Log) {
 	mut c := compiler{
-		bin: bin,
-		mem: mem,
-		sp:  isa::STCK_OFF,
+		bin:     bin,
+		mem:     mem,
+		sp:      isa::STCK_OFF,
+		options: options,
 	}
 	c.compile(ast)
 	ret c.bin, c.logs

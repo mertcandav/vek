@@ -24,6 +24,7 @@ let mut scanner = new(token::Scanner)
 // instructions on the Virtual Machine (VM). This end-to-end
 // pipeline transforms high-level representations into a
 // runnable binary format within the VM's environment.
+#disable nilptr boundary
 fn eval(mut buf: []byte): (nonempty: bool) {
 	scanner.Reset(buf)
 	mut ast, mut logs := parser::Parse(scanner)
@@ -39,7 +40,7 @@ fn eval(mut buf: []byte): (nonempty: bool) {
 	// any partial/temporary bytecode in the event of a failure/print eval,
 	// facilitating a rollback to the last stable state.
 	n := len(bin)
-	bin, logs = asm::Compile(bin, vm.Memory(), ast)
+	bin, logs = asm::Compile(bin, vm.Memory(), ast, asm::ExecPrint)
 	if len(logs) > 0 {
 		bin = bin[:n]
 		log::PrintAll(logs)

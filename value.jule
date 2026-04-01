@@ -4,6 +4,8 @@
 
 use "vek/internal/mem"
 use "vek/isa"
+use "vek/stdio"
+use "std/conv"
 use "std/math"
 
 // Data types.
@@ -33,6 +35,18 @@ struct Value {
 }
 
 impl Value {
+	// Prints the value.
+	fn Print(*self) {
+		match type self.Data {
+		| &isa::Int:
+			_in := self.Data.(&isa::Int)
+			stdio::Println(_in.Format(10))
+		| isa::Float:
+			fl := self.Data.(isa::Float)
+			stdio::Println(conv::FormatFloat(fl, 'g', -1, 64))
+		}
+	}
+
 	// Copies src's value to self.
 	fn Copy(mut *self, mut src: &Value) {
 		self.Type = src.Type

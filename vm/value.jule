@@ -4,8 +4,6 @@
 
 use "vek"
 use "vek/isa"
-use "vek/stdio"
-use "std/conv"
 
 // Returns new vek Value for float.
 fn newFL(fl: isa::Float): &vek::Value {
@@ -26,16 +24,4 @@ fn setval_int(mut dst: &vek::Value, z: int) {
 		dstin = new(isa::Int)
 	}
 	dstin.SetI64(i64(z))
-}
-
-// Prints the value v.
-fn printval(v: &vek::Value) {
-	match type v.Data {
-	| &isa::Int:
-		_in := v.Data.(&isa::Int)
-		stdio::Println(_in.Format(10))
-	| isa::Float:
-		fl := v.Data.(isa::Float)
-		stdio::Println(conv::FormatFloat(fl, 'g', -1, 64))
-	}
 }

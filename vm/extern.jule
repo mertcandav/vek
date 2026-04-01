@@ -131,7 +131,7 @@ let mut funcmap = mem::FuncMap{}
 // This function retrieves the most recently pushed element and displays its
 // string representation in the console.
 fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
-	printval(vm.stackRead(isa::STCK_OFF))
+	vm.stackRead(isa::STCK_OFF).Print()
 	_RET(vm) // RET
 
 	ret _NoError
