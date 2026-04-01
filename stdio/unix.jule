@@ -1,0 +1,29 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+#build darwin || linux
+
+use "std/os"
+use "std/sys"
+
+extern use "<unistd.h>"
+
+extern fn isatty(fd: uintptr): int
+
+fn IsTTY(fd: uintptr): bool { ret extern.isatty(fd) != 0 }
+
+fn stdoutIsNull(): bool {
+	let mut statStdout: sys::SysStat
+	sys::Fstat(int(sys::STDOUT), &statStdout) else { ret false }
+
+	let mut statDevNull: sys::SysStat
+	sys::Stat(os::DevNull, &statDevNull) else { ret false }
+
+	ret statStdout.Dev == statDevNull.Dev &&
+		statStdout.Ino == statDevNull.Ino
+}
+
+fn init() {
+	isPrint = !stdoutIsNull()
+}

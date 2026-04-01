@@ -34,7 +34,7 @@ fn enableVTP() {
 	_ = unsafe { sys::SetConsoleMode(hOut, dwMode) }
 }
 
-fn isatty(h: sys::Handle): bool { ret extern._isatty(h) != 0 }
+fn IsTTY(h: sys::Handle): bool { ret extern._isatty(h) != 0 }
 
 fn init() {
 	enableVTP()

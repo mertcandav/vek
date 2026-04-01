@@ -37,6 +37,12 @@ struct Value {
 impl Value {
 	// Prints the value.
 	fn Print(*self) {
+		// If output will not be printed,
+		// do not convert value to string.
+		// Avoid wasting runtime.
+		if !stdio::IsPrint() {
+			ret
+		}
 		match type self.Data {
 		| &isa::Int:
 			_in := self.Data.(&isa::Int)

@@ -380,7 +380,7 @@ fn main() {
 	mut args := os::Args()
 
 	// If stdin is not a terminal, then it is a pipe.
-	if !isatty(sys::STDIN) {
+	if !stdio::IsTTY(sys::STDIN) {
 		handlePipe(args)
 		ret
 	}

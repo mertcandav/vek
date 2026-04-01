@@ -7,18 +7,29 @@ use "std/os"
 
 let mut stdout = ioutil::Writer.New(os::Stdout())
 
+let mut isPrint = true
+
+// Reports whether the output will be printed to stdout.
+fn IsPrint(): bool { ret isPrint }
+
 #disable nilptr
 fn Print(s: str) {
-	stdout.WriteStr(s) else {}
+	if isPrint {
+		stdout.WriteStr(s) else {}
+	}
 }
 
 #disable nilptr
 fn Println(s: str) {
-	Print(s)
-	stdout.WriteByte('\n') else {}
+	if isPrint {
+		Print(s)
+		stdout.WriteByte('\n') else {}
+	}
 }
 
 #disable nilptr
 fn Flush() {
-	stdout.Flush() else {}
+	if isPrint {
+		stdout.Flush() else {}
+	}
 }
