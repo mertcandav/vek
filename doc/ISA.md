@@ -335,7 +335,11 @@ NEG [INDEX]
 
 ### Arithmetic - Register-to-Register
 
-All register-to-register arithmetic instructions operate on values identified by stack indices. They support **mixed-mode arithmetic** with automatic type promotion according to the following rules:
+All register-to-register arithmetic instructions operate on values identified by stack indices. They support **mixed-mode arithmetic** with automatic type promotion according to the their rules.
+
+#### `ADD`
+
+Adds the value at `[VALUE;INDEX]` to the value at `[DESTINATION;INDEX]`. Result is stored in the destination.
 
 | Left Operand | Right Operand | Result Type | Behavior |
 |---|---|---|---|
@@ -343,12 +347,6 @@ All register-to-register arithmetic instructions operate on values identified by
 | Float | Float | Float | Direct operation |
 | Integer | Float | Float | Integer is promoted to float before operation |
 | Float | Integer | Float | Integer is promoted to float before operation |
-
-> **Exception:** `QUO` (integer ÷ integer) performs truncating integer division (T-division) and returns an integer.
-
-#### `ADD`
-
-Adds the value at `[VALUE;INDEX]` to the value at `[DESTINATION;INDEX]`. Result is stored in the destination.
 
 ```
 ADD [DESTINATION;INDEX],[VALUE;INDEX]
@@ -358,6 +356,13 @@ ADD [DESTINATION;INDEX],[VALUE;INDEX]
 
 Subtracts the value at `[SOURCE;INDEX]` from the value at `[DESTINATION;INDEX]`. Result is stored in the destination.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
 ```
 SUB [DESTINATION;INDEX],[SOURCE;INDEX]
 ```
@@ -365,6 +370,13 @@ SUB [DESTINATION;INDEX],[SOURCE;INDEX]
 #### `MUL`
 
 Multiplies the value at `[DESTINATION;INDEX]` by the value at `[VALUE;INDEX]`. Result is stored in the destination.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
 
 ```
 MUL [DESTINATION;INDEX],[VALUE;INDEX]
@@ -374,8 +386,12 @@ MUL [DESTINATION;INDEX],[VALUE;INDEX]
 
 Divides the value at `[DESTINATION;INDEX]` by the value at `[SOURCE;INDEX]` using **truncating division (T-division)**. Result is stored in the destination.
 
-- Integer ÷ Integer → Integer (fractional part truncated toward zero)
-- Any mix involving float → Float
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation (fractional part truncated toward zero) |
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
 
 ```
 QUO [DESTINATION;INDEX],[SOURCE;INDEX]
@@ -385,6 +401,13 @@ QUO [DESTINATION;INDEX],[SOURCE;INDEX]
 
 Calculates the remainder of `[DESTINATION;INDEX]` divided by `[VALUE;INDEX]` using **truncating division (T-division)**. Result is stored in the destination.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
 ```
 REM [DESTINATION;INDEX],[VALUE;INDEX]
 ```
@@ -393,18 +416,16 @@ REM [DESTINATION;INDEX],[VALUE;INDEX]
 
 These instructions apply an arithmetic operation using a literal integer constant encoded directly in the instruction stream. They bypass register lookups for improved performance when working with known constants.
 
-**Type promotion rules:**
-
-| Destination Type | Behavior |
-|---|---|
-| Integer | Operation performed directly; result remains an integer. |
-| Float | Immediate integer is promoted to float before the operation; result is a float. |
-
 The immediate integer encoding follows the same format as `AIN`.
 
 #### `ADDIN`
 
 Adds an immediate integer to the destination index.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
 
 ```
 ADDIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
@@ -414,6 +435,11 @@ ADDIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 
 Subtracts an immediate integer from the destination index.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
 ```
 SUBIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 ```
@@ -421,6 +447,11 @@ SUBIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 #### `MULIN`
 
 Multiplies the destination index by an immediate integer.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
 
 ```
 MULIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
@@ -430,6 +461,11 @@ MULIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 
 Divides the destination index by an immediate integer using **T-division**.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation (fractional part truncated toward zero) |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
 ```
 QUOIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 ```
@@ -437,6 +473,11 @@ QUOIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 #### `REMIN`
 
 Calculates the remainder of the destination index divided by an immediate integer using **T-division**.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
 
 ```
 REMIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
@@ -446,16 +487,14 @@ REMIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 
 These instructions apply an arithmetic operation using a literal 64-bit IEEE 754 floating-point constant encoded directly in the instruction stream.
 
-**Type promotion rules:**
-
-| Destination Type | Behavior |
-|---|---|
-| Float | Operation performed directly; result remains a float. |
-| Integer | Destination integer is promoted to float before the operation; result is a float. |
-
 #### `ADDFL`
 
 Adds an immediate float to the destination index.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
 
 ```
 ADDFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
@@ -465,6 +504,11 @@ ADDFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE
 
 Subtracts an immediate float from the destination index.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+
 ```
 SUBFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 ```
@@ -472,6 +516,11 @@ SUBFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE
 #### `MULFL`
 
 Multiplies the destination index by an immediate float.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
 
 ```
 MULFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
@@ -481,6 +530,11 @@ MULFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE
 
 Divides the destination index by an immediate float using **T-division**.
 
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+
 ```
 QUOFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 ```
@@ -488,6 +542,11 @@ QUOFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE
 #### `REMFL`
 
 Calculates the remainder of the destination index divided by an immediate float using **T-division**.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
 
 ```
 REMFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
