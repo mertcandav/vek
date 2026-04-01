@@ -548,8 +548,6 @@ fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
 	match idx {
 	| _EXTERN_PRINT:
 		ret append(buf, "_EXTERN_PRINT"...)
-	| _EXTERN_ARG:
-		ret append(buf, "_EXTERN_ARG"...)
 	|:
 		ret appendRawIndex(buf, idx)
 	}
