@@ -2,6 +2,12 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+// This package provides the foundational infrastructure for the vek ISA.
+// It requires a compatible execution environment (virtual machine) to be
+// implemented for proper instruction execution.
+//
+// See https://github.com/mertcandav/vek/blob/master/doc/ISA.md
+
 use "std/math/big"
 
 // Integer type.
