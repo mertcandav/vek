@@ -21,9 +21,9 @@ The ISA defines only the standard.
    - [Control Flow](#control-flow)
    - [Stack Management](#stack-management)
    - [Data Movement](#data-movement)
-   - [Arithmetic - Register-to-Register](#arithmetic--register-to-register)
-   - [Arithmetic - Immediate Integer](#arithmetic--immediate-integer)
-   - [Arithmetic - Immediate Float](#arithmetic--immediate-float)
+   - [Arithmetic - Register-to-Register](#arithmetic---register-to-register)
+   - [Arithmetic - Immediate Integer](#arithmetic---immediate-integer)
+   - [Arithmetic - Immediate Float](#arithmetic---immediate-float)
 9. [Notation Guide](#notation-guide)
 
 ## Overview
