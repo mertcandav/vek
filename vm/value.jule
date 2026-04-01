@@ -4,6 +4,7 @@
 
 use "vek"
 use "vek/isa"
+use "vek/stdio"
 use "std/conv"
 
 // Returns new vek Value for float.
@@ -32,9 +33,9 @@ fn printval(v: &vek::Value) {
 	match type v.Data {
 	| &isa::Int:
 		_in := v.Data.(&isa::Int)
-		println(_in.Format(10))
+		stdio::Println(_in.Format(10))
 	| isa::Float:
 		fl := v.Data.(isa::Float)
-		println(conv::FormatFloat(fl, 'g', -1, 64))
+		stdio::Println(conv::FormatFloat(fl, 'g', -1, 64))
 	}
 }

@@ -1,0 +1,24 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/ioutil"
+use "std/os"
+
+let mut stdout = ioutil::Writer.New(os::Stdout())
+
+#disable nilptr
+fn Print(s: str) {
+	stdout.WriteStr(s) else {}
+}
+
+#disable nilptr
+fn Println(s: str) {
+	Print(s)
+	stdout.WriteByte('\n') else {}
+}
+
+#disable nilptr
+fn Flush() {
+	stdout.Flush() else {}
+}

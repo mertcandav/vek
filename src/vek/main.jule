@@ -5,10 +5,11 @@
 use "vek"
 use "vek/asm"
 use "vek/bind/replxx"
+use "vek/ioutil"
 use "vek/isa"
 use "vek/log"
 use "vek/parser"
-use "vek/src/vek/ioutil"
+use "vek/stdio"
 use "std/flag"
 use "std/fmt"
 use "std/os"
@@ -68,7 +69,7 @@ fn help(args: []str, pads: str, pad: int) {
 		writeCommandsList(&s, pads, pad)
 		s.WriteByte('\n')!
 		s.WriteStr(`Use "vek help <command>" to see information about a command.`)!
-		println(s.Str())
+		stdio::Println(s.Str())
 		ret
 	}
 	if len(args) > 3 { // vek help <command> [unknown]
@@ -79,19 +80,19 @@ fn help(args: []str, pads: str, pad: int) {
 	command := args[2]
 	match command {
 	| CmdHelp:
-		println(`The help command shows information about vek and commands.
+		stdio::Println(`The help command shows information about vek and commands.
 
 vek help             Show the general help information about vek
 vek help <command>   Show the information about a command`)
 	| CmdVersion:
-		println(`The version command shows your vek version.
+		stdio::Println(`The version command shows your vek version.
 
 Usage:
 	vek version
 
 This is the version of vek.`)
 	| CmdBuild:
-		println(`The build command builds vek bytecode from source.
+		stdio::Println(`The build command builds vek bytecode from source.
 
 Usage:
 	vek build [arguments] [source]...
@@ -124,7 +125,7 @@ Arguments:
 		providing enhanced readability for terminal-based
 		code inspection and manual auditing.`)
 	| CmdRun:
-		println(`The run command runs vek bytecode from source.
+		stdio::Println(`The run command runs vek bytecode from source.
 
 Usage:
 	vek run [source]...
@@ -146,7 +147,7 @@ fn version(args: []str) {
 		printErrorMessage("invalid command: " + args[2])
 		ret
 	}
-	println(vek::Version)
+	stdio::Println(vek::Version)
 }
 
 // Compile all expressions (content) and merge them in a single binary in "bin".
@@ -246,7 +247,7 @@ fn build(mut args: []str) {
 		buf = bin
 	}
 	if *out == "" {
-		println(unsafe::StrFromBytes(buf))
+		stdio::Println(unsafe::StrFromBytes(buf))
 	} else {
 		os::WriteFileSync(*out, buf, 0660) else {
 			throwError(fmt::Sprint(error))
@@ -333,10 +334,12 @@ fn repl() {
 	repl := replxx::New()
 	defer { repl.End() }
 
-	println("Welcome to vek REPL (" + vek::Version + ")\nWrite \":help\" to see help.")
+	stdio::Println("Welcome to vek REPL (" + vek::Version + ")\nWrite \":help\" to see help.")
 
 REPL:
 	for {
+		stdio::Flush()
+
 		mut rawinput := repl.Input(">>> \x00")
 		if rawinput == nil {
 			break
@@ -345,7 +348,7 @@ REPL:
 		input := unsafe::BytesStr(rawinput)
 		match input {
 		| ":help":
-			println(`You are currently using vek in REPL (Read-Eval-Print Loop) mode.
+			stdio::Println(`You are currently using vek in REPL (Read-Eval-Print Loop) mode.
 All declarations (like functions) are persisted and
 remain accessible for use in subsequent expressions.
 
@@ -372,6 +375,8 @@ Commands:
 }
 
 fn main() {
+	defer { stdio::Flush() }
+
 	mut args := os::Args()
 
 	// If stdin is not a terminal, then it is a pipe.

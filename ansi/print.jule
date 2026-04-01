@@ -2,10 +2,12 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "vek/stdio"
+
 // Print with ANSI sequence.
 // Resets after print.
 fn Print(escape: str, text: str) {
-	print(escape)
-	print(text)
-	print(Reset)
+	stdio::Print(escape)
+	stdio::Print(text)
+	stdio::Print(Reset)
 }

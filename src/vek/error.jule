@@ -3,18 +3,20 @@
 // license that can be found in the LICENSE file.
 
 use "vek/ansi"
+use "vek/stdio"
 use "std/os"
 
 const errorExitCode = 1
 
 fn printErrorMessage(msg: str) {
-	print(ansi::Red)
-	print("error: ")
-	println(msg)
-	print(ansi::Reset)
+	stdio::Print(ansi::Red)
+	stdio::Print("error: ")
+	stdio::Println(msg)
+	stdio::Print(ansi::Reset)
 }
 
 fn throwError(msg: str) {
 	printErrorMessage(msg)
+	stdio::Flush()
 	os::Exit(errorExitCode)
 }

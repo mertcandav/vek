@@ -50,15 +50,15 @@ fn printError(log: Log) {
 		// Replace tabs with spaces for deterministic size.
 		line = strings::ReplaceAll(line, "\t", " ")
 
-		print("\n| ")
-		print(line)
-		print("\n|")
-		print(strings::Repeat(" ", log.Column-trimmed))
-		print("^")
+		_print("\n| ")
+		_print(line)
+		_print("\n|")
+		_print(strings::Repeat(" ", log.Column-trimmed))
+		_print("^")
 		if len(log.Suggestion) != 0 {
 			_print("\n| ")
 			ansiPrint(ansi::BrightMagenta, "suggestion: ")
-			print(log.Suggestion)
+			_print(log.Suggestion)
 		}
 	} else if len(log.Suggestion) != 0 {
 		_print("\n| ")
