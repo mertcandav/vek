@@ -218,6 +218,25 @@ impl compiler {
 				ret false
 			}
 			ret true
+		| token::SHR:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				if _in.Sign() == -1 {
+					self.pushErr(*tok, "shift value must be unsigned integer")
+					ret false
+				}
+				if !_in.IsU64() {
+					self.pushErr(*tok, "shift value is too large")
+					ret false
+				}
+				n := _in.U64()
+				x.SHR(n)
+			| isa::Float:
+				self.pushErr(*tok, "shift value must be unsigned integer")
+				ret false
+			}
+			ret true
 		|:
 			panic("unreachable")
 		}
@@ -305,6 +324,25 @@ impl compiler {
 				ret false
 			}
 			ret true
+		| token::SHR:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				if _in.Sign() == -1 {
+					self.pushErr(*tok, "shift value must be unsigned integer")
+					ret false
+				}
+				if !_in.IsU64() {
+					self.pushErr(*tok, "shift value is too large")
+					ret false
+				}
+				n := _in.U64()
+				self.bin = SHR(self.bin, offX, n)
+			| isa::Float:
+				self.pushErr(*tok, "shift value must be unsigned integer")
+				ret false
+			}
+			ret true
 		|:
 			panic("unreachable")
 		}
@@ -329,7 +367,7 @@ impl compiler {
 		| token::REM:
 			self.bin = REM(self.bin, offX, offY)
 			ret true
-		| token::SHL:
+		| token::SHL | token::SHR:
 			self.pushErr(*tok, "shit value must be constant unsigned integer")
 			ret false
 		|:

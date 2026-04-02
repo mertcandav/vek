@@ -559,15 +559,34 @@ These instructions implement a specific process whose behavior can vary dependin
 
 #### `SHL`
 
-Performs a bitwise shift on the value stored at the target index.
+Performs a bitwise left shift on the value stored at the target index.
 The operation requires a constant index as an argument, which defines the specific shift count.
 
 If the target value is an integer, the operation shifts the bits of the integer representation accordingly.
 
 If the target value is a float, the operation shifts the underlying bit pattern of the float.
 
+In the event of a numeric or bitwise overflow, the operation does not trap or throw an exception.
+Instead, the result is strictly defined to resolve to 0.
+
 ```
 SHL [DESTINATION;INDEX],[SHIFT;INDEX]
+```
+
+#### `SHR`
+
+Performs a bitwise right shift on the value stored at the target index.
+The operation requires a constant index as an argument, which defines the specific shift count.
+
+If the target value is an integer, the operation shifts the bits of the integer representation accordingly.
+
+If the target value is a float, the operation shifts the underlying bit pattern of the float.
+
+In the event of a numeric or bitwise overflow, the operation does not trap or throw an exception.
+Instead, the result is strictly defined to resolve to 0.
+
+```
+SHR [DESTINATION;INDEX],[SHIFT;INDEX]
 ```
 
 ## Quick Reference - Instruction Summary
@@ -603,4 +622,5 @@ SHL [DESTINATION;INDEX],[SHIFT;INDEX]
 | `REM` | 26 | `[DST],[VAL]` | Remainder of division (T-div) |
 | `REMIN` | 27 | `[DST],[INT]` | Remainder by immediate integer (T-div) |
 | `REMFL` | 28 | `[DST],[FLOAT]` | Remainder by immediate float (T-div) |
-| `SHL` | 28 | `[DST],[INT]` | Bitwise left shift |
+| `SHL` | 29 | `[DST],[INT]` | Bitwise left shift |
+| `SHR` | 30 | `[DST],[INT]` | Bitwise right shift |

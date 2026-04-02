@@ -304,4 +304,18 @@ impl Value {
 			_in.Lsh(&*_in, uint(n))
 		}
 	}
+
+	// self = self >> n
+	fn SHR(mut *self, n: isa::Index) {
+		match type self.Data {
+		| isa::Float:
+			fl := self.Data.(isa::Float)
+			mut bits := math::F64bits(fl)
+			bits >>= n
+			self.SetFloat(math::F64frombits(bits))
+		| &isa::Int:
+			mut _in := self.Data.(&isa::Int)
+			_in.Rsh(&*_in, uint(n))
+		}
+	}
 }

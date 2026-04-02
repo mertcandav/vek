@@ -311,6 +311,12 @@ impl Scanner {
 					token.ID = SHL
 					token.Kind = "<<"
 				}
+			| '>':
+				if self.r == '>' {
+					self.next()
+					token.ID = SHR
+					token.Kind = ">>"
+				}
 			| ',':
 				token.ID = COMMA
 				token.Kind = ","

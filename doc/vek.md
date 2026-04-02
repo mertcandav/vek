@@ -79,11 +79,12 @@ Arithmetic operators are used to perform common mathematical operations.
 | `/` | `QUO`, `QUOIN`, `QUFL` | Division | integer, floats |
 | `%` | `REM`, `REMIN`, `RELFL` | Modulus | integers, floats |
 | `<<` | `SHL` | Shift left | integers, floats |
+| `>>` | `SHR` | Shift rifgt | integers, floats |
 
 ### Precedences
 | Precedence (Descending) | Operator(s) |
 | ----------------------- | ----------- |
-| 2 |  `*` `%` `/` `<<` |
+| 2 |  `*` `%` `/` `<<`, `>>` |
 | 1 | `+` `-` |
 
 ## Keywords

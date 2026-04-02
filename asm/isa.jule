@@ -205,3 +205,10 @@ fn SHL(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeIndex(buf, n)
 }
+
+// Appends SHR instruction to buf.
+fn SHR(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
+	buf = append(buf, isa::SHR)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, n)
+}

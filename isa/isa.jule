@@ -60,6 +60,7 @@ const (
 	REMIN
 	REMFL
 	SHL
+	SHR
 
 	// Count of opcodes.
 	OPCOUNT

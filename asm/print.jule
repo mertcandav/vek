@@ -535,6 +535,8 @@ impl printer {
 			ret self.printIndexFloat("REMFL")
 		| isa::SHL:
 			ret self.printIndexRawIndex("SHL")
+		| isa::SHR:
+			ret self.printIndexRawIndex("SHR")
 		|:
 			ret false
 		}
@@ -675,6 +677,8 @@ fn PrintOP(op: isa::Opcode): str {
 		ret "REMFL"
 	| isa::SHL:
 		ret "SHL"
+	| isa::SHR:
+		ret "SHR"
 	|:
 		ret ""
 	}
