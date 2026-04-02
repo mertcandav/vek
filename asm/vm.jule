@@ -5,4 +5,5 @@
 // VM's external functions.
 const (
 	_EXTERN_PRINT = iota
+	_EXTERN_BITLEN
 )

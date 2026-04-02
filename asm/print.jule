@@ -568,13 +568,25 @@ impl printer {
 	}
 }
 
+let registermap: [...]str = [
+	"RV",
+	"R0",
+	"R1",
+	"R2",
+	"R3",
+	"R4",
+	"R5",
+	"R6",
+	"R7",
+	"R8",
+	"R9",
+]
+
 fn appendIndex(mut buf: []byte, idx: isa::Index): []byte {
-	match idx {
-	| isa::STCK_RV:
-		ret append(buf, "RV"...)
-	|:
+	if idx >= isa::Index(len(registermap)) {
 		ret appendRawIndex(buf, idx)
 	}
+	ret append(buf, registermap[idx]...)
 }
 
 fn appendRawIndex(mut buf: []byte, idx: isa::Index): []byte {

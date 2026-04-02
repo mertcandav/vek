@@ -94,7 +94,7 @@ fn New(): (vm: VM) {
 	// Initialize the stack and reserved areas.
 	// Allocate a reasonable amounf of additional space for potential stack variables.
 	const Reserved = isa::STCK_OFF // Count of the reserved stack variables (registers).
-	vm.stack = make([]&vek::Value, Reserved, Reserved+10)
+	vm.stack = make([]&vek::Value, Reserved)
 	for i in vm.stack {
 		// Initialize all stack with undefined values.
 		// This is allowed by the specification.

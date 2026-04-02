@@ -79,6 +79,16 @@ Unless otherwise noted, all registers are **ready for use immediately** but hold
 | Register | Description |
 |----------|-------------|
 | `RV` | **Return Value.** A multi-purpose register used to store the final result of a computation or intermediate values. Serves as the primary destination for return values and temporary data during instruction execution. |
+| `R0` | General purpose register |
+| `R1` | General purpose register |
+| `R2` | General purpose register |
+| `R3` | General purpose register |
+| `R4` | General purpose register |
+| `R5` | General purpose register |
+| `R6` | General purpose register |
+| `R7` | General purpose register |
+| `R8` | General purpose register |
+| `R9` | General purpose register |
 
 ## Data Types
 
