@@ -89,6 +89,11 @@ impl compiler {
 		ret
 	}
 
+	fn restoreSP0(mut *self, sp: isa::Index) {
+		self.sp = sp
+		self.bin = SETSP(self.bin, sp) // SETSP sp
+	}
+
 	fn restoreSP(mut *self, sp: isa::Index) {
 		// Optimization:
 		// If the current and requested SP adjustment is same,
@@ -144,11 +149,11 @@ impl compiler {
 				ret
 			}
 			self.pushValue(v)
-		} else if off == isa::STCK_RV {
-			// If the value is in RV register, move it to the stack.
-			// _EXTERN_PRINT will read from stack, not from the RV register.
-			self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
-			self.sp++                               // Adjust SP.
+		} else if off == isa::STCK_RV || off == isa::STCK_R0 {
+			// If the value is in RV/R0 register, move it to the stack.
+			// _EXTERN_PRINT will read from stack, not from the RV/R0 register.
+			self.bin = AMOV(self.bin, off) // AMOV off
+			self.sp++                      // Adjust SP.
 		}
 		self.bin = ASF(self.bin, 1)
 		self.bin = ECALL(self.bin, _EXTERN_PRINT)
@@ -248,9 +253,16 @@ impl compiler {
 	// Evaluates operation op with operands x and y where x is a constant value.
 	// Writes result to a stack memory and returns the index.
 	fn binaryConstantX(mut *self, &tok: *token::Token, op: int, x: &vek::Value, offY: isa::Index): isa::Index {
-		offX := self.sp
-		self.pushValue(x)
-		self.binaryByIndex(tok, op, offX, offY)
+		// X is a constant value.
+		// Since we will store the result on X's register, we have to push it to stack.
+		// But do not push it to stack directly, instead use the R0 register.
+		// Since R0 will not affects the SP, we can use it as a temporary register.
+		mut offX := isa::STCK_R0
+		self.movValue(isa::STCK_R0, x) // MOV R0, x
+		ok := self.binaryByIndex(tok, op, offX, offY)
+		if !ok {
+			offX = invalidIndex
+		}
 		ret offX
 	}
 
@@ -391,31 +403,40 @@ impl compiler {
 		}
 	}
 
-	fn compileBinaryExpr(mut *self, mut ast: &ast::BinaryExpr): (&vek::Value, isa::Index) {
+	fn compileBinaryExpr(mut *self, mut ast: &ast::BinaryExpr): (&vek::Value, offX: isa::Index) {
 		options := self.options
 		defer { self.options = options }
 		// Remove if mutableMem is passed.
 		// If the returned value of operand X is constant, we will mutate it.
 		self.options &= ^mutableMem
 
-		op := ast.Op.ID
-		mut x, mut offX := self.compileExpr(ast.X)
-		if x == nil && offX == invalidIndex { // error
-			ret nil, invalidIndex
-		}
-
-		// Operand Y may be a function call.
-		// If the result index is RV register, move it to the stack.
-		if x == nil && offX == isa::STCK_RV {
-			self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
-			offX = self.sp
-			self.sp++ // Adjust SP.
-		}
-
 		// Clear temporary stack memory for operand Y.
 		// We always use operand X for result.
 		mut sp := self.sp
 		defer { self.restoreSP(sp) }
+
+		op := ast.Op.ID
+		mut x, offX := self.compileExpr(ast.X)
+		if x == nil && offX == invalidIndex { // error
+			ret nil, invalidIndex
+		}
+
+		// Operand X is not a constant value.
+		if x == nil {
+			// Operand Y may be a function call.
+			// If the result index is RV register, move it to the R0.
+			// Since we will store the result on X's register, we have to push it to stack.
+			// But do not push it to stack directly, instead use the R0 register.
+			// Since R0 will not affects the SP, we can use it as a temporary register.
+			if offX == isa::STCK_RV {
+				self.bin = MOV(self.bin, isa::STCK_RV, isa::STCK_R0) // MOV RV, R0
+				offX = isa::STCK_R0
+			} else if offX != isa::STCK_R0 {
+				// Save the SP as the current to capture offX.
+				// Since operand X stored on a register, use it.
+				sp = self.sp
+			}
+		}
 
 		// For operand Y, use mutableMem to
 		// obtain mutable constant variables when possible.
@@ -500,11 +521,13 @@ impl compiler {
 		options := self.options
 		defer { self.options = options }
 		// Use mutableMem to obtain mutable constant variables when possible.
-		// We will not mutate it, so avoid from clonning as much as possible.
+		// We will not mutate them, so avoid from clonning as much as possible.
 		self.options |= mutableMem
 
+		// Force SP to the old value to make sure
+		// function variables will be cleared.
 		sp := self.sp
-		defer { self.restoreSP(sp) }
+		defer { self.restoreSP0(sp) }
 
 		for (_, mut arg) in args {
 			v, off := self.compileExpr(arg)
@@ -513,11 +536,16 @@ impl compiler {
 			}
 			if v != nil {
 				self.pushValue(v)
-			} else if off == isa::STCK_RV {
-				// If the value is in RV register, move it to the stack.
-				// The function will read from stack, not from the RV register.
-				self.bin = AMOV(self.bin, isa::STCK_RV) // AMOV RV
-				self.sp++                               // Adjust SP.
+			} else if off == isa::STCK_RV || off == isa::STCK_R0 {
+				// If the value is in RV/R0 register, move it to the stack.
+				// The function will read from stack, not from the RV/R0 register.
+				self.bin = AMOV(self.bin, off) // AMOV off
+				self.sp++                      // Adjust SP.
+			} else if off < sp+isa::Index(len(args)) {
+				// If the value offset is belongs to a parameter, copy it to the stack.
+				// Otherwise, following ASF instruction may capture the wrong values.
+				self.bin = AMOV(self.bin, off) // AMOV off
+				self.sp++                      // Adjust SP.
 			}
 		}
 		self.bin = ASF(self.bin, isa::Index(len(args))) // ASF len(args)

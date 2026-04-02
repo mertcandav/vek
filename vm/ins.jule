@@ -84,7 +84,7 @@ fn _ASF(mut &vm: *VM): (err: str) {
 	// ASF
 	mut sf := newStackFrame()
 	sf.prev = vm.sf
-	sf.stckoff = isa::Index(len(vm.stack) - isa::STCK_OFF - int(off))
+	sf.stckoff = isa::Index(len(vm.stack)) - isa::STCK_OFF - off
 	vm.sf = sf
 
 	ret _NoError

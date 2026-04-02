@@ -72,17 +72,17 @@ const (
 // Stack constants.
 const (
 	// Reserved stack variables (registers).
-	STCK_RV = iota // The index of the return value on the stack.
-	STCK_R0        // The index of the register 0 on the stack.
-	STCK_R1        // The index of the register 1 on the stack.
-	STCK_R2        // The index of the register 2 on the stack.
-	STCK_R3        // The index of the register 3 on the stack.
-	STCK_R4        // The index of the register 4 on the stack.
-	STCK_R5        // The index of the register 5 on the stack.
-	STCK_R6        // The index of the register 6 on the stack.
-	STCK_R7        // The index of the register 7 on the stack.
-	STCK_R8        // The index of the register 8 on the stack.
-	STCK_R9        // The index of the register 9 on the stack.
+	STCK_RV: Index = iota // The index of the return value on the stack.
+	STCK_R0               // The index of the register 0 on the stack.
+	STCK_R1               // The index of the register 1 on the stack.
+	STCK_R2               // The index of the register 2 on the stack.
+	STCK_R3               // The index of the register 3 on the stack.
+	STCK_R4               // The index of the register 4 on the stack.
+	STCK_R5               // The index of the register 5 on the stack.
+	STCK_R6               // The index of the register 6 on the stack.
+	STCK_R7               // The index of the register 7 on the stack.
+	STCK_R8               // The index of the register 8 on the stack.
+	STCK_R9               // The index of the register 9 on the stack.
 
 	STCK_OFF // The offset of the stack pointer where zero-index should point to.
 )
