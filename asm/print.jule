@@ -581,13 +581,16 @@ fn appendRawIndex(mut buf: []byte, idx: isa::Index): []byte {
 	ret conv::AppendUint(buf, idx, 10)
 }
 
+let ecallmap: [...]str = [
+	"_EXTERN_PRINT",
+	"_EXTERN_BITLEN",
+]
+
 fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
-	match idx {
-	| _EXTERN_PRINT:
-		ret append(buf, "_EXTERN_PRINT"...)
-	|:
+	if idx >= isa::Index(len(ecallmap)) {
 		ret appendRawIndex(buf, idx)
 	}
+	ret append(buf, ecallmap[idx]...)
 }
 
 // Decompiles and translates the binary-encoded vek bytecode

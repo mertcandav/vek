@@ -25,6 +25,7 @@ use "std/math"
 // Initialized by init.
 let mut externmap: [...]insfunc = [
 	_EXTERN_PRINT,
+	_EXTERN_BITLEN,
 ]
 
 const (
@@ -129,13 +130,29 @@ let mut constmap = mem::ConstantMap{
 
 // A registry of pre-defined external functions provided by the VM.
 // All functions must be called with ECALL instruction.
-let mut funcmap = mem::FuncMap{}
+let mut funcmap = mem::FuncMap{
+	"bitlen": &mem::Func{PC: 1, Params: [{Kind: "x"}]},
+}
 
-// Outputs the top value of the stack to the standard output (stdout) stream.
-// This function retrieves the most recently pushed element and displays its
-// string representation in the console.
 fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
 	vm.stackRead(isa::STCK_OFF).Print()
+	_RET(vm) // RET
+
+	ret _NoError
+}
+
+fn _EXTERN_BITLEN(mut &vm: *VM): (err: str) {
+	v := vm.stackRead(isa::STCK_OFF)
+	mut RV := vm.stackRead(isa::STCK_RV)
+
+	match type v.Data {
+	| isa::Float:
+		RV.SetInt(8) // MOVIN RV, 8
+	| &isa::Int:
+		n := v.Data.(&isa::Int).BitLen()
+		RV.SetInt(i64(n)) // MOVIN RV, n
+	}
+
 	_RET(vm) // RET
 
 	ret _NoError

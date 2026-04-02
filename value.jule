@@ -93,7 +93,7 @@ impl Value {
 
 	// Sets value to float fl.
 	// Heap allocation must be exist already and Value must be TypeFL.
-	fn SetFloat(mut *self, fl: isa::Float) {
+	fn SetFloatInplace(mut *self, fl: isa::Float) {
 		unsafe {
 			mut dt := (*mem::DynamicType)(&self.Data)
 			*(*isa::Float)(dt.Data.Ptr) = fl
@@ -106,15 +106,27 @@ impl Value {
 		mut _in, ok := self.Data.(&isa::Int)
 		if !ok {
 			_in = new(isa::Int)
+			self.Data = _in
 		}
 		_in.SetI64(x)
+	}
+
+	// Sets value to integer fl.
+	fn SetFloat(mut *self, fl: isa::Float) {
+		self.Type = TypeFL
+		_, ok := self.Data.(isa::Float)
+		if ok {
+			self.SetFloatInplace(fl)
+		} else {
+			self.Data = fl
+		}
 	}
 
 	// self = -self
 	fn NEG(mut *self) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(-self.Data.(isa::Float))
+			self.SetFloatInplace(-self.Data.(isa::Float))
 		| &isa::Int:
 			mut _in := self.Data.(&isa::Int)
 			_in.Neg(&*_in)
@@ -136,7 +148,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(self.Data.(isa::Float) + fl)
+			self.SetFloatInplace(self.Data.(isa::Float) + fl)
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Add(&*a, &*v)
@@ -147,7 +159,7 @@ impl Value {
 	fn ADDFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(self.Data.(isa::Float) + v)
+			self.SetFloatInplace(self.Data.(isa::Float) + v)
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
@@ -170,7 +182,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(self.Data.(isa::Float) - fl)
+			self.SetFloatInplace(self.Data.(isa::Float) - fl)
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Sub(&*a, &*v)
@@ -181,7 +193,7 @@ impl Value {
 	fn SUBFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(self.Data.(isa::Float) - v)
+			self.SetFloatInplace(self.Data.(isa::Float) - v)
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
@@ -204,7 +216,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(self.Data.(isa::Float) * fl)
+			self.SetFloatInplace(self.Data.(isa::Float) * fl)
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Mul(&*a, &*v)
@@ -215,7 +227,7 @@ impl Value {
 	fn MULFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(self.Data.(isa::Float) * v)
+			self.SetFloatInplace(self.Data.(isa::Float) * v)
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
@@ -238,7 +250,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(self.Data.(isa::Float) / fl)
+			self.SetFloatInplace(self.Data.(isa::Float) / fl)
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Quo(&*a, &*v)
@@ -249,7 +261,7 @@ impl Value {
 	fn QUOFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(self.Data.(isa::Float) / v)
+			self.SetFloatInplace(self.Data.(isa::Float) / v)
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
@@ -272,7 +284,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(math::Mod(self.Data.(isa::Float), fl))
+			self.SetFloatInplace(math::Mod(self.Data.(isa::Float), fl))
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Rem(&*a, &*v)
@@ -283,7 +295,7 @@ impl Value {
 	fn REMFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(math::Mod(self.Data.(isa::Float), v))
+			self.SetFloatInplace(math::Mod(self.Data.(isa::Float), v))
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL
@@ -298,7 +310,7 @@ impl Value {
 			fl := self.Data.(isa::Float)
 			mut bits := math::F64bits(fl)
 			bits <<= n
-			self.SetFloat(math::F64frombits(bits))
+			self.SetFloatInplace(math::F64frombits(bits))
 		| &isa::Int:
 			mut _in := self.Data.(&isa::Int)
 			_in.Lsh(&*_in, uint(n))
@@ -312,7 +324,7 @@ impl Value {
 			fl := self.Data.(isa::Float)
 			mut bits := math::F64bits(fl)
 			bits >>= n
-			self.SetFloat(math::F64frombits(bits))
+			self.SetFloatInplace(math::F64frombits(bits))
 		| &isa::Int:
 			mut _in := self.Data.(&isa::Int)
 			_in.Rsh(&*_in, uint(n))
@@ -334,7 +346,7 @@ impl Value {
 		match type self.Data {
 		| isa::Float:
 			fl, _ := v.F64()
-			self.SetFloat(math::Pow(self.Data.(isa::Float), fl))
+			self.SetFloatInplace(math::Pow(self.Data.(isa::Float), fl))
 		| &isa::Int:
 			mut a := self.Data.(&isa::Int)
 			a.Exp(&*a, &*v, nil)
@@ -345,7 +357,7 @@ impl Value {
 	fn POWFL(mut *self, v: isa::Float) {
 		match type self.Data {
 		| isa::Float:
-			self.SetFloat(math::Pow(self.Data.(isa::Float), v))
+			self.SetFloatInplace(math::Pow(self.Data.(isa::Float), v))
 		| &isa::Int:
 			fl, _ := self.Data.(&isa::Int).F64()
 			self.Type = TypeFL

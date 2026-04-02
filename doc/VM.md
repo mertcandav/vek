@@ -98,4 +98,5 @@ External functions are defined within the reference vek VM and are accessible vi
 
 | Name | Index | Parameters | Description |
 |---|---|---|---|
-| `_EXTERN_PRINT` | 0 | 1 | Prints paramer `1` to stdout with new-line |
+| `_EXTERN_PRINT` | 0 | 1 | Outputs the top value of the stack to the standard output (stdout) stream. This function retrieves the most recently pushed element and displays its string representation in the console. |
+| `_EXTERN_BITLEN` | 1 | 1 | Returns the number of bits required to represent a given value. For integers, the function returns the minimum number of bits required to represent the absolute value of the integer, excluding the sign. For floating-point numbers, the function returns a fixed constant value of 8. |

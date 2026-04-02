@@ -1,6 +1,6 @@
 # vek Reference
 
-This document is the complete reference for the Reference vek language implementation.
+This document is the complete reference for the Reference vek language implementation for the reference vek VM.
 
 ## Table of Contents
 
@@ -10,6 +10,7 @@ This document is the complete reference for the Reference vek language implement
 4. [Keywords](#keywords)
 5. [Identifiers](#identifiers)
 6. [Functions](#functions)
+7. [Native Functions](#native-functions)
 
 ## Overview
 
@@ -122,3 +123,23 @@ let myConstant() = 1234
 ```
 let sum(a, b) = a + b
 ```
+
+### Calling Functions
+
+```
+myConstant
+```
+```
+myConstant()
+```
+```
+sum(123, 456)
+```
+
+## Native Functions
+
+Function names mapped to VM's external functions.
+
+| Name | ECALL |
+|---|---|
+| `bitlen` | `_EXTERN_BITLEN` |
