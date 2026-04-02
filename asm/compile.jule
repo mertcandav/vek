@@ -258,7 +258,7 @@ impl compiler {
 		// But do not push it to stack directly, instead use the R0 register.
 		// Since R0 will not affects the SP, we can use it as a temporary register.
 		mut offX := isa::R0
-		self.movValue(isa::R0, x) // MOV R0, x
+		self.movValue(isa::R0, x) // (MOVIN|MOVFL) R0, x
 		ok := self.binaryByIndex(tok, op, offX, offY)
 		if !ok {
 			offX = invalidIndex
@@ -429,7 +429,7 @@ impl compiler {
 			// But do not push it to stack directly, instead use the R0 register.
 			// Since R0 will not affects the SP, we can use it as a temporary register.
 			if offX == isa::RV {
-				self.bin = MOV(self.bin, isa::RV, isa::R0) // MOV RV, R0
+				self.bin = EMOV(self.bin, isa::RV, isa::R0) // EMOV RV, R0
 				offX = isa::R0
 			} else if offX != isa::R0 {
 				// Save the SP as the current to capture offX.
@@ -690,7 +690,7 @@ impl compiler {
 			self.movValue(isa::RV, v) // (MOVIN|MOVFL) RV, v
 		} else if off != isa::RV {
 			// Move value to the RV register for function return.
-			self.bin = MOV(self.bin, off, isa::RV) // MOV off, RV
+			self.bin = EMOV(self.bin, off, isa::RV) // EMOV off, RV
 		}
 		self.bin = RET(self.bin) // RET
 		self.mem.Funcs[ast.Name.Kind] = func
