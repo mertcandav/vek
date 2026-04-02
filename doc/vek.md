@@ -80,11 +80,13 @@ Arithmetic operators are used to perform common mathematical operations.
 | `%` | `REM`, `REMIN`, `RELFL` | Modulus | integers, floats |
 | `<<` | `SHL` | Shift left | integers, floats |
 | `>>` | `SHR` | Shift rifgt | integers, floats |
+| `^` | `POW`, `POWIN`, `POWFL` | Power | integers, floats |
 
 ### Precedences
 | Precedence (Descending) | Operator(s) |
 | ----------------------- | ----------- |
-| 2 |  `*` `%` `/` `<<`, `>>` |
+| 3 | `^` |
+| 2 | `*` `%` `/` `<<`, `>>` |
 | 1 | `+` `-` |
 
 ## Keywords

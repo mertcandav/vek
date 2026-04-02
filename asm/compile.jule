@@ -237,6 +237,9 @@ impl compiler {
 				ret false
 			}
 			ret true
+		| token::POW:
+			x.POW(y)
+			ret true
 		|:
 			panic("unreachable")
 		}
@@ -343,6 +346,16 @@ impl compiler {
 				ret false
 			}
 			ret true
+		| token::POW:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				self.bin = POWIN(self.bin, offX, _in)
+			| isa::Float:
+				fl := y.Data.(isa::Float)
+				self.bin = POWFL(self.bin, offX, fl)
+			}
+			ret true
 		|:
 			panic("unreachable")
 		}
@@ -370,6 +383,9 @@ impl compiler {
 		| token::SHL | token::SHR:
 			self.pushErr(*tok, "shit value must be constant unsigned integer")
 			ret false
+		| token::POW:
+			self.bin = POW(self.bin, offX, offY)
+			ret true
 		|:
 			panic("unreachable")
 		}

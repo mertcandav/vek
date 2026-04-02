@@ -21,6 +21,7 @@ const (
 	MUL // *
 	QUO // /
 	REM // %
+	POW // ^
 	SHL // <<
 	SHR // >>
 
@@ -55,6 +56,8 @@ fn Str(id: int): str {
 		ret "/"
 	| REM:
 		ret "%"
+	| POW:
+		ret "^"
 	| SHL:
 		ret "<<"
 	| SHR:
@@ -94,6 +97,8 @@ impl Token {
 	// It only reports for the binary operators, otherwise returns LowestPrec.
 	fn Precedence(*self): int {
 		match self.ID {
+		| POW:
+			ret 3
 		| MUL | REM | QUO | SHL | SHR:
 			ret 2
 		| ADD | SUB:

@@ -413,6 +413,22 @@ Calculates the remainder of `[DESTINATION;INDEX]` divided by `[VALUE;INDEX]` usi
 REM [DESTINATION;INDEX],[VALUE;INDEX]
 ```
 
+#### `POW`
+
+Calculates the power of `[DESTINATION]` with`[VALUE]` (`DESTINATION ^ VALUE`).
+Result is stored in the destination.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
+```
+POW [DESTINATION;INDEX],[VALUE;INDEX]
+```
+
 ### Arithmetic - Immediate Integer
 
 These instructions apply an arithmetic operation using a literal integer constant encoded directly in the instruction stream. They bypass register lookups for improved performance when working with known constants.
@@ -484,6 +500,20 @@ Calculates the remainder of the destination index divided by an immediate intege
 REMIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
 ```
 
+#### `POWIN`
+
+Calculates the power of `[DESTINATION]` with`[VALUE]` (`DESTINATION ^ VALUE`).
+Result is stored in the destination.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Integer | Integer | Integer | Direct operation |
+| Float | Integer | Float | Integer is promoted to float before operation |
+
+```
+POWIN [DESTINATION;INDEX],[BYTE-LEN;INDEX] [SIGN] [BYTES...]
+```
+
 ### Arithmetic - Immediate Float
 
 These instructions apply an arithmetic operation using a literal 64-bit IEEE 754 floating-point constant encoded directly in the instruction stream.
@@ -551,6 +581,20 @@ Calculates the remainder of the destination index divided by an immediate float 
 
 ```
 REMFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
+```
+
+#### `POWFL`
+
+Calculates the power of `[DESTINATION]` with`[VALUE]` (`DESTINATION ^ VALUE`).
+Result is stored in the destination.
+
+| Left Operand | Right Operand | Result Type | Behavior |
+|---|---|---|---|
+| Float | Float | Float | Direct operation |
+| Integer | Float | Float | Integer is promoted to float before operation |
+
+```
+POWFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 ```
 
 ### Arithmetic - Special
@@ -624,3 +668,6 @@ SHR [DESTINATION;INDEX],[SHIFT;INDEX]
 | `REMFL` | 28 | `[DST],[FLOAT]` | Remainder by immediate float (T-div) |
 | `SHL` | 29 | `[DST],[INT]` | Bitwise left shift |
 | `SHR` | 30 | `[DST],[INT]` | Bitwise right shift |
+| `POW` | 31 | `[DST],[SRC]` | Power register with register |
+| `POWIN` | 32 | `[DST],[INT]` | Power with immediate integer |
+| `POWFL` | 32 | `[DST],[FLOAT]` | Power with immediate float |

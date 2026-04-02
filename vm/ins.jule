@@ -55,6 +55,10 @@ let insmap: [...]insfunc = [
 	_REMIN,
 	_REMFL,
 	_SHL,
+	_SHR,
+	_POW,
+	_POWIN,
+	_POWFL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -406,13 +410,62 @@ fn _REMFL(mut &vm: *VM): (err: str) {
 }
 
 fn _SHL(mut &vm: *VM): (err: str) {
-	vm.pc++                // SHL
-	dst := decodeIndex(vm) // DESTINATION
-	n := decodeIndex(vm)   // N.
+	vm.pc++                  // SHL
+	dst := decodeIndex(vm)   // DESTINATION
+	shift := decodeIndex(vm) // SHIFT
 
-	// SHL dst,n
+	// SHL dst,shift
 	mut dstv := vm.stackRead(dst)
-	dstv.SHL(n)
+	dstv.SHL(shift)
+
+	ret _NoError
+}
+
+fn _SHR(mut &vm: *VM): (err: str) {
+	vm.pc++                  // SHR
+	dst := decodeIndex(vm)   // DESTINATION
+	shift := decodeIndex(vm) // SHIFT
+
+	// SHR dst,shift
+	mut dstv := vm.stackRead(dst)
+	dstv.SHR(shift)
+
+	ret _NoError
+}
+
+fn _POW(mut &vm: *VM): (err: str) {
+	vm.pc++                // POW
+	dst := decodeIndex(vm) // DESTINATION
+	val := decodeIndex(vm) // VALUE
+
+	// POW dst,val
+	mut dstv := vm.stackRead(dst)
+	valv := vm.stackRead(val)
+	dstv.POW(valv)
+
+	ret _NoError
+}
+
+fn _POWIN(mut &vm: *VM): (err: str) {
+	vm.pc++                  // POWIN
+	dst := decodeIndex(vm)   // DESTINATION
+	mut _in := decodeInt(vm) // Integer.
+
+	// POWIN dst,_in
+	mut dstv := vm.stackRead(dst)
+	dstv.POWIN(_in)
+
+	ret _NoError
+}
+
+fn _POWFL(mut &vm: *VM): (err: str) {
+	vm.pc++                // POWFL
+	dst := decodeIndex(vm) // DESTINATION
+	fl := decodeFloat(vm)  // Float.
+
+	// POWFL dst,fl
+	mut dstv := vm.stackRead(dst)
+	dstv.POWFL(fl)
 
 	ret _NoError
 }

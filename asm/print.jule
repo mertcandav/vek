@@ -537,6 +537,12 @@ impl printer {
 			ret self.printIndexRawIndex("SHL")
 		| isa::SHR:
 			ret self.printIndexRawIndex("SHR")
+		| isa::POW:
+			ret self.printIndexIndex("POW")
+		| isa::POWIN:
+			ret self.printIndexInt("POWIN")
+		| isa::POWFL:
+			ret self.printIndexFloat("POWFL")
 		|:
 			ret false
 		}
@@ -645,6 +651,9 @@ let opmap: [...]str = [
 	"REMFL",
 	"SHL",
 	"SHR",
+	"POW",
+	"POWIN",
+	"POWFL",
 ]
 
 // Returns opcode in string.

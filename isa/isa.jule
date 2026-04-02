@@ -61,6 +61,9 @@ const (
 	REMFL
 	SHL
 	SHR
+	POW
+	POWIN
+	POWFL
 
 	// Count of opcodes.
 	OPCOUNT

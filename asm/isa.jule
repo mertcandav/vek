@@ -212,3 +212,24 @@ fn SHR(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeIndex(buf, n)
 }
+
+// Appends POW instruction to buf.
+fn POW(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
+	buf = append(buf, isa::POW)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, v)
+}
+
+// Appends POWIN instruction to buf.
+fn POWIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
+	buf = append(buf, isa::POWIN)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeInt(buf, *_in)
+}
+
+// Appends POWFL instruction to buf.
+fn POWFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
+	buf = append(buf, isa::POWFL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeFloat(buf, fl)
+}

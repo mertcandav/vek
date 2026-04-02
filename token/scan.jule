@@ -344,6 +344,9 @@ impl Scanner {
 			| '%':
 				token.ID = REM
 				token.Kind = "%"
+			| '^':
+				token.ID = POW
+				token.Kind = "^"
 			|:
 				self.pushErr(col, "invalid token "+conv::QuoteRune(r))
 				self.next()

@@ -318,4 +318,38 @@ impl Value {
 			_in.Rsh(&*_in, uint(n))
 		}
 	}
+
+	// self = self ^ v
+	fn POW(mut *self, v: &Value) {
+		match type v.Data {
+		| isa::Float:
+			self.POWFL(v.Data.(isa::Float))
+		| &isa::Int:
+			self.POWIN(v.Data.(&isa::Int))
+		}
+	}
+
+	// self = self ^ v
+	fn POWIN(mut *self, v: &isa::Int) {
+		match type self.Data {
+		| isa::Float:
+			fl, _ := v.F64()
+			self.SetFloat(math::Pow(self.Data.(isa::Float), fl))
+		| &isa::Int:
+			mut a := self.Data.(&isa::Int)
+			a.Exp(&*a, &*v, nil)
+		}
+	}
+
+	// self = self ^ v
+	fn POWFL(mut *self, v: isa::Float) {
+		match type self.Data {
+		| isa::Float:
+			self.SetFloat(math::Pow(self.Data.(isa::Float), v))
+		| &isa::Int:
+			fl, _ := self.Data.(&isa::Int).F64()
+			self.Type = TypeFL
+			self.Data = math::Pow(fl, v)
+		}
+	}
 }
