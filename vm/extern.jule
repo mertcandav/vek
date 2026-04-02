@@ -5,6 +5,7 @@
 use "vek"
 use "vek/isa"
 use "vek/vm/mem"
+use "std/math"
 
 // External Functions
 //
@@ -42,6 +43,9 @@ let mut _value_Euler = newFL(0.5772156649015328606065120900824024310421593359399
 // global data access throughout the
 // bytecode execution lifecycle.
 let mut constmap = mem::ConstantMap{
+	"NaN": newFL(math::NaN()),
+	"Inf": newFL(math::Inf(0)),
+
 	"E":   newFL(2.71828182845904523536028747135266249775724709369995957496696763), // https://oeis.org/A001113
 	"Pi":  _value_Pi,
 	"π":   _value_Pi,

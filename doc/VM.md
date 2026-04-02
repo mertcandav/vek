@@ -21,6 +21,8 @@ They are treated as literal static values during the compilation or evaluation p
 
 | Names | Type |
 |---|---|
+| `NaN` | Float |
+| `Inf` | Float |
 | `E` | Float |
 | `Pi`, `π` | Float |
 | `Pi2` | Float |
