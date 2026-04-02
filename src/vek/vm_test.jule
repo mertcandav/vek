@@ -1,0 +1,73 @@
+// Copyright 2026 mertcandav.
+// Use of this source code is governed by a BSD 3-Clause
+// license that can be found in the LICENSE file.
+
+use "vek/stdio"
+use "std/testing"
+use "std/unsafe"
+
+struct evalTest {
+	inputs: []str
+	result: str
+}
+
+let evalTests: []evalTest = [
+	{
+		inputs: ["2+2"],
+		result: "4\n",
+	},
+	{
+		inputs: ["2+2", "2*2"],
+		result: "4\n4\n",
+	},
+	{
+		inputs: [
+			"let FMA(a, b, c) = a*b + c",
+			"FMA(1, 2, 3)",
+		],
+		result: "5\n",
+	},
+	{
+		inputs: [
+			"let FFMA(a, b, c) = FMA(a, b, c) * FMA(a, b, c) * FMA(a, b, c)",
+		],
+		result: "",
+	},
+	{
+		inputs: [
+			"FFMA(1, 2, 3)",
+		],
+		result: "125\n",
+	},
+	{
+		inputs: [
+			"let FFMA2(a, b, c) = FMA(a, b, c) * FMA(a, b, c) * FMA(FMA(a, b, c), b, FMA(a, b, c))",
+			"FFMA(1, 2, 3)",
+			"FFMA2(1, 2, 3)",
+		],
+		result: "125\n375\n",
+	},
+	{
+		inputs: [
+			"let SUM(a, b) = a + b",
+			"let SUM2(a, b) = SUM(a+b, a+b)",
+			"SUM(1, 2)",
+			"SUM2(1, 2)",
+		],
+		result: "3\n6\n",
+	},
+]
+
+#test
+fn testEval(t: &testing::T) {
+	for i, test in evalTests {
+		for _, input in test.inputs {
+			eval(unsafe::StrBytes(input))
+		}
+		result := unsafe::BytesStr(stdio::Stdout.Buffer())
+		if test.result != result {
+			t.Errorf("#{} found {}, expected {}", i, result, test.result)
+		}
+		stdio::Stdout.Clear()
+	}
+}

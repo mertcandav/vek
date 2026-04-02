@@ -5,7 +5,8 @@
 use "vek/ioutil"
 use "std/os"
 
-let mut stdout = ioutil::Writer.New(os::Stdout())
+// Default Writer for stdout.
+let mut Stdout = ioutil::Writer.New(os::Stdout())
 
 let mut isPrint = true
 
@@ -15,7 +16,7 @@ fn IsPrint(): bool { ret isPrint }
 #disable nilptr
 fn Print(s: str) {
 	if isPrint {
-		stdout.WriteStr(s) else {}
+		Stdout.WriteStr(s) else {}
 	}
 }
 
@@ -23,13 +24,13 @@ fn Print(s: str) {
 fn Println(s: str) {
 	if isPrint {
 		Print(s)
-		stdout.WriteByte('\n') else {}
+		Stdout.WriteByte('\n') else {}
 	}
 }
 
 #disable nilptr
 fn Flush() {
 	if isPrint {
-		stdout.Flush() else {}
+		Stdout.Flush() else {}
 	}
 }

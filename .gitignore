@@ -28,3 +28,6 @@ __*
 
 # Vim swap files
 *.swp
+
+# Include
+!src/vek

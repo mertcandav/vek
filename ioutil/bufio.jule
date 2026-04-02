@@ -145,9 +145,20 @@ impl Writer {
 		ret self.buf[self.n:][:0]
 	}
 
+	// Returns mutable buffered data.
+	#disable nilptr
+	fn Buffer(mut *self): []byte {
+		ret self.buf[:self.n]
+	}
+
 	// Returns the number of bytes that have been written into the current buffer.
 	#disable nilptr
 	fn Buffered(*self): int { ret self.n }
+
+	// Clears the buffer.
+	fn Clear(mut *self) {
+		self.n = 0
+	}
 
 	// Writes the contents of p into the buffer.
 	// It returns the number of bytes written.
