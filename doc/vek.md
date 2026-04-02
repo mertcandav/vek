@@ -71,25 +71,19 @@ Hexadecimal literals are literals that begin with `0x`. Only the digits [0, 9] a
 ### Arithmetic Operators
 Arithmetic operators are used to perform common mathematical operations.
 
-| Operator | Description | Supported Type(s) |
-| -------- | ----------- | ----------------- |
-| `+` | Addition | integers, floats |
-| `-` | Subtraction | integers, floats |
-| `*` | Multiplication | integer, floats |
-| `/` | Division | integer, floats |
-| `%` | Modulus | integers, floats |
-
-| Left Operand | Right Operand | Result Type | Behavior |
-|---|---|---|---|
-| Integer | Integer | Integer | Direct operation |
-| Float | Float | Float | Direct operation |
-| Integer | Float | Float | Integer is promoted to float before operation |
-| Float | Integer | Float | Integer is promoted to float before operation |
+| Operator | ISA Instruction | Description | Supported Type(s) |
+| -------- | --------------- | ----------- | ----------------- |
+| `+` | `ADD`, `ADDIN`, `ADDFL` | Addition | integers, floats |
+| `-` | `SUB`, `SUBIN`, `SUBFL` | Subtraction | integers, floats |
+| `*` | `MUL`, `MULIN`, `MULFL` | Multiplication | integer, floats |
+| `/` | `QUO`, `QUOIN`, `QUFL` | Division | integer, floats |
+| `%` | `REM`, `REMIN`, `RELFL` | Modulus | integers, floats |
+| `<<` | `SHL` | Shift left | integers, floats |
 
 ### Precedences
 | Precedence (Descending) | Operator(s) |
 | ----------------------- | ----------- |
-| 2 |  `*` `%` `/` |
+| 2 |  `*` `%` `/` `<<` |
 | 1 | `+` `-` |
 
 ## Keywords

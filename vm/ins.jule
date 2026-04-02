@@ -54,6 +54,7 @@ let insmap: [...]insfunc = [
 	_REM,
 	_REMIN,
 	_REMFL,
+	_SHL,
 ]
 
 fn _NOP(mut &vm: *VM): (err: str) {
@@ -400,6 +401,18 @@ fn _REMFL(mut &vm: *VM): (err: str) {
 	// REMFL dst,fl
 	mut dstv := vm.stackRead(dst)
 	dstv.REMFL(fl)
+
+	ret _NoError
+}
+
+fn _SHL(mut &vm: *VM): (err: str) {
+	vm.pc++                // SHL
+	dst := decodeIndex(vm) // DESTINATION
+	n := decodeIndex(vm)   // N.
+
+	// SHL dst,n
+	mut dstv := vm.stackRead(dst)
+	dstv.SHL(n)
 
 	ret _NoError
 }

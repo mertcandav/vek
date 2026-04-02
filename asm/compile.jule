@@ -180,18 +180,61 @@ impl compiler {
 		ret v, off
 	}
 
+	// Evaluates operation op with operands x and y.
+	// Writes result to x.
+	fn binaryInplace(mut *self, &tok: *token::Token, op: int, mut x: &vek::Value, y: &vek::Value): bool {
+		match op {
+		| token::ADD:
+			x.ADD(y)
+			ret true
+		| token::SUB:
+			x.SUB(y)
+			ret true
+		| token::MUL:
+			x.MUL(y)
+			ret true
+		| token::QUO:
+			x.QUO(y)
+			ret true
+		| token::REM:
+			x.REM(y)
+			ret true
+		| token::SHL:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				if _in.Sign() == -1 {
+					self.pushErr(*tok, "shift value must be unsigned integer")
+					ret false
+				}
+				if !_in.IsU64() {
+					self.pushErr(*tok, "shift value is too large")
+					ret false
+				}
+				n := _in.U64()
+				x.SHL(n)
+			| isa::Float:
+				self.pushErr(*tok, "shift value must be unsigned integer")
+				ret false
+			}
+			ret true
+		|:
+			panic("unreachable")
+		}
+	}
+
 	// Evaluates operation op with operands x and y where x is a constant value.
 	// Writes result to a stack memory and returns the index.
-	fn binaryConstantX(mut *self, op: int, x: &vek::Value, offY: isa::Index): isa::Index {
+	fn binaryConstantX(mut *self, &tok: *token::Token, op: int, x: &vek::Value, offY: isa::Index): isa::Index {
 		offX := self.sp
 		self.pushValue(x)
-		self.binaryByIndex(op, offX, offY)
+		self.binaryByIndex(tok, op, offX, offY)
 		ret offX
 	}
 
 	// Evaluates operation op with operands x and y where y is a constant value.
 	// Writes result to x.
-	fn binaryConstantY(mut *self, op: int, offX: isa::Index, y: &vek::Value) {
+	fn binaryConstantY(mut *self, &tok: *token::Token, op: int, offX: isa::Index, y: &vek::Value): bool {
 		match op {
 		| token::ADD:
 			match type y.Data {
@@ -202,6 +245,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = ADDFL(self.bin, offX, fl)
 			}
+			ret true
 		| token::SUB:
 			match type y.Data {
 			| &isa::Int:
@@ -211,6 +255,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = SUBFL(self.bin, offX, fl)
 			}
+			ret true
 		| token::MUL:
 			match type y.Data {
 			| &isa::Int:
@@ -220,6 +265,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = MULFL(self.bin, offX, fl)
 			}
+			ret true
 		| token::QUO:
 			match type y.Data {
 			| &isa::Int:
@@ -229,6 +275,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = QUOFL(self.bin, offX, fl)
 			}
+			ret true
 		| token::REM:
 			match type y.Data {
 			| &isa::Int:
@@ -238,6 +285,26 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = REMFL(self.bin, offX, fl)
 			}
+			ret true
+		| token::SHL:
+			match type y.Data {
+			| &isa::Int:
+				_in := y.Data.(&isa::Int)
+				if _in.Sign() == -1 {
+					self.pushErr(*tok, "shift value must be unsigned integer")
+					ret false
+				}
+				if !_in.IsU64() {
+					self.pushErr(*tok, "shift value is too large")
+					ret false
+				}
+				n := _in.U64()
+				self.bin = SHL(self.bin, offX, n)
+			| isa::Float:
+				self.pushErr(*tok, "shift value must be unsigned integer")
+				ret false
+			}
+			ret true
 		|:
 			panic("unreachable")
 		}
@@ -245,18 +312,26 @@ impl compiler {
 
 	// Evaluates operation op with operands x and y.
 	// Writes result to x.
-	fn binaryByIndex(mut *self, op: int, offX: isa::Index, offY: isa::Index) {
+	fn binaryByIndex(mut *self, &tok: *token::Token, op: int, offX: isa::Index, offY: isa::Index): bool {
 		match op {
 		| token::ADD:
 			self.bin = ADD(self.bin, offX, offY)
+			ret true
 		| token::SUB:
 			self.bin = SUB(self.bin, offX, offY)
+			ret true
 		| token::MUL:
 			self.bin = MUL(self.bin, offX, offY)
+			ret true
 		| token::QUO:
 			self.bin = QUO(self.bin, offX, offY)
+			ret true
 		| token::REM:
 			self.bin = REM(self.bin, offX, offY)
+			ret true
+		| token::SHL:
+			self.pushErr(*tok, "shit value must be constant unsigned integer")
+			ret false
 		|:
 			panic("unreachable")
 		}
@@ -298,7 +373,10 @@ impl compiler {
 		}
 		match {
 		| x != nil && y != nil:
-			binaryInplace(op, x, y)
+			ok := self.binaryInplace(&ast.Op, op, x, y)
+			if !ok {
+				x = nil
+			}
 			ret x, invalidIndex
 		| x != nil:
 			// Increment the Stack Pointer (SP) to account for
@@ -309,13 +387,19 @@ impl compiler {
 			// truncate the stack and maintain frame
 			// integrity after the operation.
 			sp++
-			offX = self.binaryConstantX(op, x, offY)
+			offX = self.binaryConstantX(&ast.Op, op, x, offY)
 			ret nil, offX
 		| y != nil:
-			self.binaryConstantY(op, offX, y)
+			ok := self.binaryConstantY(&ast.Op, op, offX, y)
+			if !ok {
+				offX = invalidIndex
+			}
 			ret nil, offX
 		|:
-			self.binaryByIndex(op, offX, offY)
+			ok := self.binaryByIndex(&ast.Op, op, offX, offY)
+			if !ok {
+				offX = invalidIndex
+			}
 			ret nil, offX
 		}
 	}
@@ -548,25 +632,6 @@ impl compiler {
 		|:
 			panic("unreachable")
 		}
-	}
-}
-
-// Evaluates operation op with operands x and y.
-// Writes result to x.
-fn binaryInplace(op: int, mut x: &vek::Value, y: &vek::Value) {
-	match op {
-	| token::ADD:
-		x.ADD(y)
-	| token::SUB:
-		x.SUB(y)
-	| token::MUL:
-		x.MUL(y)
-	| token::QUO:
-		x.QUO(y)
-	| token::REM:
-		x.REM(y)
-	|:
-		panic("unreachable")
 	}
 }
 

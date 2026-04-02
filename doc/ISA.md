@@ -24,6 +24,7 @@ The ISA defines only the standard.
    - [Arithmetic - Register-to-Register](#arithmetic---register-to-register)
    - [Arithmetic - Immediate Integer](#arithmetic---immediate-integer)
    - [Arithmetic - Immediate Float](#arithmetic---immediate-float)
+   - [Arithmetic - Special](#arithmetic---special)
 9. [Notation Guide](#notation-guide)
 
 ## Overview
@@ -552,6 +553,23 @@ Calculates the remainder of the destination index divided by an immediate float 
 REMFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE]
 ```
 
+### Arithmetic - Special
+
+These instructions implement a specific process whose behavior can vary depending on various conditions.
+
+#### `SHL`
+
+Performs a bitwise shift on the value stored at the target index.
+The operation requires a constant index as an argument, which defines the specific shift count.
+
+If the target value is an integer, the operation shifts the bits of the integer representation accordingly.
+
+If the target value is a float, the operation shifts the underlying bit pattern of the float.
+
+```
+SHL [DESTINATION;INDEX],[SHIFT;INDEX]
+```
+
 ## Quick Reference - Instruction Summary
 
 | Instruction | Opcode | Operands | Description |
@@ -585,3 +603,4 @@ REMFL [DESTINATION;INDEX],[BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE] [BYTE
 | `REM` | 26 | `[DST],[VAL]` | Remainder of division (T-div) |
 | `REMIN` | 27 | `[DST],[INT]` | Remainder by immediate integer (T-div) |
 | `REMFL` | 28 | `[DST],[FLOAT]` | Remainder by immediate float (T-div) |
+| `SHL` | 28 | `[DST],[INT]` | Bitwise left shift |

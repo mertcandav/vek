@@ -198,3 +198,10 @@ fn REMFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = isa::EncodeIndex(buf, dst)
 	ret isa::EncodeFloat(buf, fl)
 }
+
+// Appends SHL instruction to buf.
+fn SHL(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
+	buf = append(buf, isa::SHL)
+	buf = isa::EncodeIndex(buf, dst)
+	ret isa::EncodeIndex(buf, n)
+}

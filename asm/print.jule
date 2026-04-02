@@ -405,6 +405,33 @@ impl printer {
 		ret true
 	}
 
+	fn printIndexRawIndex(*self, opcode: str): bool {
+		self.appendOP(opcode)
+		self.append("\t")
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		src, mut ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		if self.b == _EOF {
+			ret false
+		}
+		dst, ok := self.decodeIndex()
+		if !ok {
+			ret false
+		}
+		self.next()
+		self.appendIndex(src)
+		self.append(", ")
+		self.appendRawIndex(dst)
+		self.append("\n")
+		ret true
+	}
+
 	fn printOP(*self, opcode: str): bool {
 		self.appendOP(opcode)
 		self.append("\n")
@@ -506,6 +533,8 @@ impl printer {
 			ret self.printIndexInt("REMIN")
 		| isa::REMFL:
 			ret self.printIndexFloat("REMFL")
+		| isa::SHL:
+			ret self.printIndexRawIndex("SHL")
 		|:
 			ret false
 		}
@@ -644,6 +673,8 @@ fn PrintOP(op: isa::Opcode): str {
 		ret "REMIN"
 	| isa::REMFL:
 		ret "REMFL"
+	| isa::SHL:
+		ret "SHL"
 	|:
 		ret ""
 	}

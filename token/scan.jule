@@ -305,6 +305,12 @@ impl Scanner {
 			col := self.col
 			self.next()
 			match r {
+			| '<':
+				if self.r == '<' {
+					self.next()
+					token.ID = SHL
+					token.Kind = "<<"
+				}
 			| ',':
 				token.ID = COMMA
 				token.Kind = ","

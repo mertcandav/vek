@@ -2,5 +2,13 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
+use "std/math/bits"
+
+// Generates error when UintSize is 32.
+// This is mandatory to make sure uint is a 64-bit integer.
+// Because we cast it to isa::Index sometimes, or vice versa.
+// Bitsize must be same for correctness.
+const _ = 1 / (bits::UintSize - 32)
+
 // Version of vek.
 const Version = "vek0.0.1"
