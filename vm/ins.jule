@@ -35,6 +35,7 @@ let insmap: [...]insfunc = [
 	_AIN,
 	_AFL,
 	_AMOV,
+	_EMOV,
 	_MOV,
 	_MOVIN,
 	_MOVFL,
@@ -172,6 +173,19 @@ fn _AMOV(mut &vm: *VM): (err: str) {
 	mut v := new(vek::Value)
 	v.Copy(vm.stackRead(idx))
 	vm.stack = append(vm.stack, v)
+
+	ret _NoError
+}
+
+fn _EMOV(mut &vm: *VM): (err: str) {
+	vm.pc++                // EMOV
+	src := decodeIndex(vm) // SOURCE
+	dst := decodeIndex(vm) // DESTINATION
+
+	// EMOV src,dst
+	mut srcv := vm.stackRead(src)
+	*vm.stackRead(dst) = *srcv
+	srcv.Data = nil // Avoid reuse of internal allocation, if any.
 
 	ret _NoError
 }

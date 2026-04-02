@@ -67,6 +67,13 @@ fn AMOV(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	ret isa::EncodeIndex(buf, idx)
 }
 
+// Appends EMOV instruction to buf.
+fn EMOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
+	buf = append(buf, isa::EMOV)
+	buf = isa::EncodeIndex(buf, src)
+	ret isa::EncodeIndex(buf, dst)
+}
+
 // Appends MOV instruction to buf.
 fn MOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
 	buf = append(buf, isa::MOV)

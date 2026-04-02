@@ -76,19 +76,19 @@ The ISA defines a set of **reserved registers**, each mapped to a fixed index on
 
 Unless otherwise noted, all registers are **ready for use immediately** but hold an **uninitialized (indeterminate) value** until explicitly written. Always assign a value before reading.
 
-| Register | Description |
-|----------|-------------|
-| `RV` | **Return Value.** A multi-purpose register used to store the final result of a computation or intermediate values. Serves as the primary destination for return values and temporary data during instruction execution. |
-| `R0` | General purpose register |
-| `R1` | General purpose register |
-| `R2` | General purpose register |
-| `R3` | General purpose register |
-| `R4` | General purpose register |
-| `R5` | General purpose register |
-| `R6` | General purpose register |
-| `R7` | General purpose register |
-| `R8` | General purpose register |
-| `R9` | General purpose register |
+| Register | Stack Index | Description |
+|----------|-------------|-------------|
+| `RV` | 0 | **Return Value.** A multi-purpose register used to store the final result of a computation or intermediate values. Serves as the primary destination for return values and temporary data during instruction execution. |
+| `R0` | 1 | General purpose register |
+| `R1` | 2 | General purpose register |
+| `R2` | 3 | General purpose register |
+| `R3` | 4 | General purpose register |
+| `R4` | 5 | General purpose register |
+| `R5` | 6 | General purpose register |
+| `R6` | 7 | General purpose register |
+| `R7` | 8 | General purpose register |
+| `R8` | 9 | General purpose register |
+| `R9` | 10 | General purpose register |
 
 ## Data Types
 
@@ -290,6 +290,22 @@ AMOV [INDEX]
 | Operand | Description |
 |---------|-------------|
 | `[INDEX]` | Source index whose value is copied and pushed. |
+
+#### `EMOV`
+
+Moves the value from a source index to a destination index.
+This operation effectively transfers the value, rendering the source index's state invalid after the operation.
+Attempting to access or utilize the value at source index after the operation is complete results in undefined behavior.
+To safely reuse the source index, it must be explicitly overwritten with new data.
+
+```
+EMOV [SOURCE;INDEX],[DESTINATION;INDEX]
+```
+
+| Operand | Description |
+|---------|-------------|
+| `[SOURCE;INDEX]` | Index of the value to copy. |
+| `[DESTINATION;INDEX]` | Index where the value is written. |
 
 #### `MOV`
 

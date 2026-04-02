@@ -143,7 +143,7 @@ fn _EXTERN_PRINT(mut &vm: *VM): (err: str) {
 
 fn _EXTERN_BITLEN(mut &vm: *VM): (err: str) {
 	v := vm.stackRead(isa::STCK_OFF)
-	mut RV := vm.stackRead(isa::STCK_RV)
+	mut RV := vm.stackRead(isa::RV)
 
 	match type v.Data {
 	| isa::Float:

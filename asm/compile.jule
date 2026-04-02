@@ -149,7 +149,7 @@ impl compiler {
 				ret
 			}
 			self.pushValue(v)
-		} else if off == isa::STCK_RV || off == isa::STCK_R0 {
+		} else if off == isa::RV || off == isa::R0 {
 			// If the value is in RV/R0 register, move it to the stack.
 			// _EXTERN_PRINT will read from stack, not from the RV/R0 register.
 			self.bin = AMOV(self.bin, off) // AMOV off
@@ -257,8 +257,8 @@ impl compiler {
 		// Since we will store the result on X's register, we have to push it to stack.
 		// But do not push it to stack directly, instead use the R0 register.
 		// Since R0 will not affects the SP, we can use it as a temporary register.
-		mut offX := isa::STCK_R0
-		self.movValue(isa::STCK_R0, x) // MOV R0, x
+		mut offX := isa::R0
+		self.movValue(isa::R0, x) // MOV R0, x
 		ok := self.binaryByIndex(tok, op, offX, offY)
 		if !ok {
 			offX = invalidIndex
@@ -428,10 +428,10 @@ impl compiler {
 			// Since we will store the result on X's register, we have to push it to stack.
 			// But do not push it to stack directly, instead use the R0 register.
 			// Since R0 will not affects the SP, we can use it as a temporary register.
-			if offX == isa::STCK_RV {
-				self.bin = MOV(self.bin, isa::STCK_RV, isa::STCK_R0) // MOV RV, R0
-				offX = isa::STCK_R0
-			} else if offX != isa::STCK_R0 {
+			if offX == isa::RV {
+				self.bin = MOV(self.bin, isa::RV, isa::R0) // MOV RV, R0
+				offX = isa::R0
+			} else if offX != isa::R0 {
 				// Save the SP as the current to capture offX.
 				// Since operand X stored on a register, use it.
 				sp = self.sp
@@ -536,7 +536,7 @@ impl compiler {
 			}
 			if v != nil {
 				self.pushValue(v)
-			} else if off == isa::STCK_RV || off == isa::STCK_R0 {
+			} else if off == isa::RV || off == isa::R0 {
 				// If the value is in RV/R0 register, move it to the stack.
 				// The function will read from stack, not from the RV/R0 register.
 				self.bin = AMOV(self.bin, off) // AMOV off
@@ -555,7 +555,7 @@ impl compiler {
 			self.bin = CALL(self.bin, isa::Index(self.ifunc.PC)) // CALL ifunc
 		}
 
-		ret nil, isa::STCK_RV
+		ret nil, isa::RV
 	}
 
 	fn compileFuncCall(mut *self, mut ast: &ast::FuncCall): (&vek::Value, isa::Index) {
@@ -687,10 +687,10 @@ impl compiler {
 			ret
 		}
 		if v != nil {
-			self.movValue(isa::STCK_RV, v) // (MOVIN|MOVFL) RV, v
-		} else if off != isa::STCK_RV {
+			self.movValue(isa::RV, v) // (MOVIN|MOVFL) RV, v
+		} else if off != isa::RV {
 			// Move value to the RV register for function return.
-			self.bin = MOV(self.bin, off, isa::STCK_RV) // MOV off, RV
+			self.bin = MOV(self.bin, off, isa::RV) // MOV off, RV
 		}
 		self.bin = RET(self.bin) // RET
 		self.mem.Funcs[ast.Name.Kind] = func
