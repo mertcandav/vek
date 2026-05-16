@@ -17,7 +17,7 @@ use "std/math"
 // reached. This ensures a consistent execution state, where
 // the fetch-decode-execute cycle can either proceed to the
 // subsequent instruction or terminate the process gracefully.
-type insfunc: fn(mut &vm: *VM): (err: str)
+type insfunc: fn(mut &vm: *VM): (err: string)
 
 // The instruction map serves as a dispatch table where each
 // opcode acts as a direct index. This mechanism maps the
@@ -62,23 +62,23 @@ let insmap: [...]insfunc = [
 	_POWFL,
 ]
 
-fn _NOP(mut &vm: *VM): (err: str) {
+fn _NOP(mut &vm: *VM): (err: string) {
 	vm.pc++ // NOP
 
-	ret _NoError
+	return _NoError
 }
 
-fn _JMP(mut &vm: *VM): (err: str) {
+fn _JMP(mut &vm: *VM): (err: string) {
 	vm.pc++               // JMP
 	pc := decodeIndex(vm) // PC
 
 	// JMP pc
 	vm.pc = isa::PC(pc)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _ASF(mut &vm: *VM): (err: str) {
+fn _ASF(mut &vm: *VM): (err: string) {
 	vm.pc++                // ASF
 	off := decodeIndex(vm) // OFFSET
 
@@ -88,10 +88,10 @@ fn _ASF(mut &vm: *VM): (err: str) {
 	sf.stckoff = isa::Index(len(vm.stack)) - isa::STCK_OFF - off
 	vm.sf = sf
 
-	ret _NoError
+	return _NoError
 }
 
-fn _CALL(mut &vm: *VM): (err: str) {
+fn _CALL(mut &vm: *VM): (err: string) {
 	vm.pc++               // CALL
 	pc := decodeIndex(vm) // PC
 
@@ -99,10 +99,10 @@ fn _CALL(mut &vm: *VM): (err: str) {
 	vm.sf.retjmp = vm.pc
 	vm.pc = isa::PC(pc)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _ECALL(mut &vm: *VM): (err: str) {
+fn _ECALL(mut &vm: *VM): (err: string) {
 	vm.pc++                // ECALL
 	idx := decodeIndex(vm) // INDEX
 
@@ -113,10 +113,10 @@ fn _ECALL(mut &vm: *VM): (err: str) {
 	// Handling of RET instruction is belongs to the extern function.
 	// It must execute RET before return.
 
-	ret _NoError
+	return _NoError
 }
 
-fn _RET(mut &vm: *VM): (err: str) {
+fn _RET(mut &vm: *VM): (err: string) {
 	// Do not advance to skip RET opcode.
 	// Because we will update PC.
 
@@ -126,20 +126,20 @@ fn _RET(mut &vm: *VM): (err: str) {
 	freeStackFrame(sf)
 	vm.pc = sf.retjmp
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SETSP(mut &vm: *VM): (err: str) {
+fn _SETSP(mut &vm: *VM): (err: string) {
 	vm.pc++                // SETSP
 	idx := decodeIndex(vm) // INDEX
 
 	// SETP idx
 	vm.stack = vm.stack[:vm.sf.stckoff+idx]
 
-	ret _NoError
+	return _NoError
 }
 
-fn _AIN(mut &vm: *VM): (err: str) {
+fn _AIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // AIN
 	mut _in := decodeInt(vm) // Integer.
 
@@ -149,10 +149,10 @@ fn _AIN(mut &vm: *VM): (err: str) {
 		Data: _in,
 	})
 
-	ret _NoError
+	return _NoError
 }
 
-fn _AFL(mut &vm: *VM): (err: str) {
+fn _AFL(mut &vm: *VM): (err: string) {
 	vm.pc++               // AFL
 	fl := decodeFloat(vm) // Float.
 
@@ -162,10 +162,10 @@ fn _AFL(mut &vm: *VM): (err: str) {
 		Data: fl,
 	})
 
-	ret _NoError
+	return _NoError
 }
 
-fn _AMOV(mut &vm: *VM): (err: str) {
+fn _AMOV(mut &vm: *VM): (err: string) {
 	vm.pc++                // AMOV
 	idx := decodeIndex(vm) // INDEX
 
@@ -174,10 +174,10 @@ fn _AMOV(mut &vm: *VM): (err: str) {
 	v.Copy(vm.stackRead(idx))
 	vm.stack = append(vm.stack, v)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _EMOV(mut &vm: *VM): (err: str) {
+fn _EMOV(mut &vm: *VM): (err: string) {
 	vm.pc++                // EMOV
 	src := decodeIndex(vm) // SOURCE
 	dst := decodeIndex(vm) // DESTINATION
@@ -187,10 +187,10 @@ fn _EMOV(mut &vm: *VM): (err: str) {
 	*vm.stackRead(dst) = *srcv
 	srcv.Data = nil // Avoid reuse of internal allocation, if any.
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MOV(mut &vm: *VM): (err: str) {
+fn _MOV(mut &vm: *VM): (err: string) {
 	vm.pc++                // MOV
 	src := decodeIndex(vm) // SOURCE
 	dst := decodeIndex(vm) // DESTINATION
@@ -198,10 +198,10 @@ fn _MOV(mut &vm: *VM): (err: str) {
 	// MOV src,dst
 	vm.stackRead(dst).Copy(vm.stackRead(src))
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MOVIN(mut &vm: *VM): (err: str) {
+fn _MOVIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // MOVIN
 	idx := decodeIndex(vm)   // INDEX
 	mut _in := decodeInt(vm) // Integer.
@@ -211,10 +211,10 @@ fn _MOVIN(mut &vm: *VM): (err: str) {
 	v.Type = vek::TypeIN
 	v.Data = _in
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MOVFL(mut &vm: *VM): (err: str) {
+fn _MOVFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // MOVFL
 	idx := decodeIndex(vm) // INDEX
 	fl := decodeFloat(vm)  // Float.
@@ -224,10 +224,10 @@ fn _MOVFL(mut &vm: *VM): (err: str) {
 	v.Type = vek::TypeFL
 	v.Data = fl
 
-	ret _NoError
+	return _NoError
 }
 
-fn _NEG(mut &vm: *VM): (err: str) {
+fn _NEG(mut &vm: *VM): (err: string) {
 	vm.pc++                // NEG
 	idx := decodeIndex(vm) // INDEX
 
@@ -235,10 +235,10 @@ fn _NEG(mut &vm: *VM): (err: str) {
 	mut v := vm.stackRead(idx)
 	v.NEG()
 
-	ret _NoError
+	return _NoError
 }
 
-fn _ADD(mut &vm: *VM): (err: str) {
+fn _ADD(mut &vm: *VM): (err: string) {
 	vm.pc++                // ADD
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -248,10 +248,10 @@ fn _ADD(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.ADD(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _ADDIN(mut &vm: *VM): (err: str) {
+fn _ADDIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // ADDIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -260,10 +260,10 @@ fn _ADDIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.ADDIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _ADDFL(mut &vm: *VM): (err: str) {
+fn _ADDFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // ADDFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -272,10 +272,10 @@ fn _ADDFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.ADDFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SUB(mut &vm: *VM): (err: str) {
+fn _SUB(mut &vm: *VM): (err: string) {
 	vm.pc++                // SUB
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -285,10 +285,10 @@ fn _SUB(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.SUB(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SUBIN(mut &vm: *VM): (err: str) {
+fn _SUBIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // SUBIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -297,10 +297,10 @@ fn _SUBIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.SUBIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SUBFL(mut &vm: *VM): (err: str) {
+fn _SUBFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // SUBFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -309,10 +309,10 @@ fn _SUBFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.SUBFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MUL(mut &vm: *VM): (err: str) {
+fn _MUL(mut &vm: *VM): (err: string) {
 	vm.pc++                // MUL
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -322,10 +322,10 @@ fn _MUL(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.MUL(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MULIN(mut &vm: *VM): (err: str) {
+fn _MULIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // MULIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -334,10 +334,10 @@ fn _MULIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.MULIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _MULFL(mut &vm: *VM): (err: str) {
+fn _MULFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // MULFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -346,10 +346,10 @@ fn _MULFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.MULFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _QUO(mut &vm: *VM): (err: str) {
+fn _QUO(mut &vm: *VM): (err: string) {
 	vm.pc++                // QUO
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -359,10 +359,10 @@ fn _QUO(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.QUO(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _QUOIN(mut &vm: *VM): (err: str) {
+fn _QUOIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // QUOIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -371,10 +371,10 @@ fn _QUOIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.QUOIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _QUOFL(mut &vm: *VM): (err: str) {
+fn _QUOFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // QUOFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -383,10 +383,10 @@ fn _QUOFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.QUOFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _REM(mut &vm: *VM): (err: str) {
+fn _REM(mut &vm: *VM): (err: string) {
 	vm.pc++                // REM
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -396,10 +396,10 @@ fn _REM(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.REM(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _REMIN(mut &vm: *VM): (err: str) {
+fn _REMIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // REMIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -408,10 +408,10 @@ fn _REMIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.REMIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _REMFL(mut &vm: *VM): (err: str) {
+fn _REMFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // REMFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -420,10 +420,10 @@ fn _REMFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.REMFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SHL(mut &vm: *VM): (err: str) {
+fn _SHL(mut &vm: *VM): (err: string) {
 	vm.pc++                  // SHL
 	dst := decodeIndex(vm)   // DESTINATION
 	shift := decodeIndex(vm) // SHIFT
@@ -432,10 +432,10 @@ fn _SHL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.SHL(shift)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _SHR(mut &vm: *VM): (err: str) {
+fn _SHR(mut &vm: *VM): (err: string) {
 	vm.pc++                  // SHR
 	dst := decodeIndex(vm)   // DESTINATION
 	shift := decodeIndex(vm) // SHIFT
@@ -444,10 +444,10 @@ fn _SHR(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.SHR(shift)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _POW(mut &vm: *VM): (err: str) {
+fn _POW(mut &vm: *VM): (err: string) {
 	vm.pc++                // POW
 	dst := decodeIndex(vm) // DESTINATION
 	val := decodeIndex(vm) // VALUE
@@ -457,10 +457,10 @@ fn _POW(mut &vm: *VM): (err: str) {
 	valv := vm.stackRead(val)
 	dstv.POW(valv)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _POWIN(mut &vm: *VM): (err: str) {
+fn _POWIN(mut &vm: *VM): (err: string) {
 	vm.pc++                  // POWIN
 	dst := decodeIndex(vm)   // DESTINATION
 	mut _in := decodeInt(vm) // Integer.
@@ -469,10 +469,10 @@ fn _POWIN(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.POWIN(_in)
 
-	ret _NoError
+	return _NoError
 }
 
-fn _POWFL(mut &vm: *VM): (err: str) {
+fn _POWFL(mut &vm: *VM): (err: string) {
 	vm.pc++                // POWFL
 	dst := decodeIndex(vm) // DESTINATION
 	fl := decodeFloat(vm)  // Float.
@@ -481,7 +481,7 @@ fn _POWFL(mut &vm: *VM): (err: str) {
 	mut dstv := vm.stackRead(dst)
 	dstv.POWFL(fl)
 
-	ret _NoError
+	return _NoError
 }
 
 // Decodes integer.
@@ -496,7 +496,7 @@ fn decodeInt(mut &vm: *VM): &isa::Int {
 	if sign == 1 {
 		_in.Neg(&*_in)
 	}
-	ret _in
+	return _in
 }
 
 // Decodes floating-point.
@@ -518,7 +518,7 @@ fn decodeFloat(mut &vm: *VM): isa::Float {
 	vm.pc++
 	b |= u64(vm.bin[vm.pc])
 	vm.pc++
-	ret math::F64frombits(b)
+	return math::F64frombits(b)
 }
 
 // Decodes index.
@@ -539,5 +539,5 @@ fn decodeIndex(mut &vm: *VM): (idx: isa::Index) {
 	vm.pc++
 	idx |= isa::Index(vm.bin[vm.pc])
 	vm.pc++
-	ret
+	return
 }

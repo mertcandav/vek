@@ -11,8 +11,8 @@ const (
 // Compiler log.
 struct Log {
 	Kind:       int
-	Line:       str
+	Line:       string
 	Column:     int
-	Text:       str
-	Suggestion: str
+	Text:       string
+	Suggestion: string
 }

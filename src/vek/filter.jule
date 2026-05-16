@@ -28,10 +28,10 @@ let buildFilters: [...]buildfilter = [
 
 // Accepts only let statements.
 fn filterLet(code: str): bool {
-	ret strings::HasPrefix(code, "let ")
+	return strings::HasPrefix(code, "let ")
 }
 
 // Accepts any input type or value without restriction.
 fn filterAny(code: str): bool {
-	ret true
+	return true
 }

@@ -30,53 +30,53 @@ const (
 )
 
 // Returns string kind of token.
-fn Str(id: int): str {
+fn String(id: int): string {
 	match id {
 	| ILLEGAL:
-		ret "illegal"
+		return "illegal"
 	| EOF:
-		ret "EOF"
+		return "EOF"
 	| NAME:
-		ret "name"
+		return "name"
 	| FLOAT:
-		ret "float"
+		return "float"
 	| INT:
-		ret "int"
+		return "int"
 	| COMMA:
-		ret ","
+		return ","
 	| ASSIGN:
-		ret "="
+		return "="
 	| ADD:
-		ret "+"
+		return "+"
 	| SUB:
-		ret "-"
+		return "-"
 	| MUL:
-		ret "*"
+		return "*"
 	| QUO:
-		ret "/"
+		return "/"
 	| REM:
-		ret "%"
+		return "%"
 	| POW:
-		ret "^"
+		return "^"
 	| SHL:
-		ret "<<"
+		return "<<"
 	| SHR:
-		ret ">>"
+		return ">>"
 	| LPAREN:
-		ret "("
+		return "("
 	| RPAREN:
-		ret ")"
+		return ")"
 	|:
-		ret "illegal"
+		return "illegal"
 	}
 }
 
 // Token.
 struct Token {
-	ID:     int // Identity of token.
-	Column: int // Column position of token.
-	Kind:   str // Token kind as string.
-	Line:   str // Line of code where token found.
+	ID:     int    // Identity of token.
+	Column: int    // Column position of token.
+	Kind:   string // Token kind as string.
+	Line:   string // Line of code where token found.
 }
 
 // A set of constants for precedence-based expression parsing.
@@ -98,13 +98,13 @@ impl Token {
 	fn Precedence(*self): int {
 		match self.ID {
 		| POW:
-			ret 3
+			return 3
 		| MUL | REM | QUO | SHL | SHR:
-			ret 2
+			return 2
 		| ADD | SUB:
-			ret 1
+			return 1
 		|:
-			ret LowestPrec
+			return LowestPrec
 		}
 	}
 }

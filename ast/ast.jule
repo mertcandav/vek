@@ -17,7 +17,7 @@ enum Expr: type {
 // Name expression.
 struct NameExpr {
 	Token: token::Token
-	Name:  str
+	Name:  string
 }
 
 // Unary expression.
@@ -60,6 +60,6 @@ struct Node {
 impl Node {
 	// Reports whether the node is empty.
 	fn Empty(*self): bool {
-		ret self.Let == nil && self.X == nil
+		return self.Let == nil && self.X == nil
 	}
 }

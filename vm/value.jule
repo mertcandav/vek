@@ -7,7 +7,7 @@ use "vek/isa"
 
 // Returns new vek Value for float.
 fn newFL(fl: isa::Float): &vek::Value {
-	ret &vek::Value{
+	return &vek::Value{
 		Type: vek::TypeFL,
 		Data: fl,
 	}

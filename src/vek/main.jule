@@ -70,11 +70,11 @@ fn help(args: []str, pads: str, pad: int) {
 		s.WriteByte('\n')!
 		s.WriteStr(`Use "vek help <command>" to see information about a command.`)!
 		stdio::Println(s.Str())
-		ret
+		return
 	}
 	if len(args) > 3 { // vek help <command> [unknown]
 		printErrorMessage("invalid command: " + args[3])
-		ret
+		return
 	}
 	// vek help <command>
 	command := args[2]
@@ -145,7 +145,7 @@ write "vek help" to see commands`)
 fn version(args: []str) {
 	if len(args) > 2 {
 		printErrorMessage("invalid command: " + args[2])
-		ret
+		return
 	}
 	stdio::Println(vek::Version)
 }
@@ -185,16 +185,16 @@ fn compileContent(mut content: []str): (ok: bool) {
 			mut ast, mut logs := parser::Parse(scanner)
 			if len(logs) > 0 {
 				log::PrintAll(logs)
-				ret false
+				return false
 			}
 			// Ignore empty AST node.
 			if ast.Empty() {
-				ret false
+				return false
 			}
 			bin, logs = asm::Compile(bin, vm.Memory(), ast, 0)
 			if len(logs) > 0 {
 				log::PrintAll(logs)
-				ret false
+				return false
 			}
 		}
 	}
@@ -202,14 +202,14 @@ fn compileContent(mut content: []str): (ok: bool) {
 	// Encode the entry point jump instruction.
 	asm::JMP(bin[:0], isa::Index(vm.Memory().Main))
 
-	ret true
+	return true
 }
 
 // Command: vek build
 fn build(mut args: []str) {
 	if len(args) < 2 {
 		printErrorMessage("build: expression missing")
-		ret
+		return
 	}
 	args = args[2:] // Remove the program path and build command.
 
@@ -224,13 +224,13 @@ fn build(mut args: []str) {
 	}
 	if len(content) == 0 {
 		printErrorMessage("build: expression missing")
-		ret
+		return
 	}
 
 	// Compile the into "bin" with command-line arguments.
 	ok := compileContent(content)
 	if !ok {
-		ret
+		return
 	}
 
 	// Setup print options.
@@ -259,7 +259,7 @@ fn build(mut args: []str) {
 fn run(mut args: []str) {
 	if len(args) < 2 {
 		printErrorMessage("run: source missing")
-		ret
+		return
 	}
 	args = args[2:] // Remove the program path and run command.
 
@@ -299,7 +299,7 @@ fn processCommand(mut args: []str) {
 fn handlePipe(mut args: []str) {
 	if len(args) > 1 {
 		printErrorMessage("invalid command: " + args[1])
-		ret
+		return
 	}
 
 	const MaxTokenSize = 4096
@@ -382,13 +382,13 @@ fn main() {
 	// If stdin is not a terminal, then it is a pipe.
 	if !stdio::IsTTY(sys::STDIN) {
 		handlePipe(args)
-		ret
+		return
 	}
 
 	// Not started with arguments.
 	if len(args) < 2 {
 		repl()
-		ret
+		return
 	}
 
 	processCommand(args)

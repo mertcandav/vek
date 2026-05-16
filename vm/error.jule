@@ -17,18 +17,18 @@ const (
 struct Error {
 	Opcode: isa::Opcode // The opcode.
 	PC:     isa::PC     // The PC of the opcode.
-	Error:  str         // The problem.
+	Error:  string      // The problem.
 }
 
 impl Error {
-	fn Str(*self): str {
+	fn String(*self): string {
 		mut b := strings::Builder{}
-		b.WriteStr("instruction ")!
-		b.WriteStr(asm::PrintOP(self.Opcode))!
-		b.WriteStr("; PC ")!
-		b.WriteStr(conv::Itoa(self.PC))!
-		b.WriteStr(": ")!
-		b.WriteStr(self.Error)!
-		ret b.Str()
+		b.WriteString("instruction ")!
+		b.WriteString(asm::PrintOP(self.Opcode))!
+		b.WriteString("; PC ")!
+		b.WriteString(conv::Itoa(self.PC))!
+		b.WriteString(": ")!
+		b.WriteString(self.Error)!
+		return b.String()
 	}
 }

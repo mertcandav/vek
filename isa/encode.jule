@@ -37,13 +37,13 @@ fn EncodeInt(mut buf: []Byte, x: Int): []Byte {
 	// Encode the byte-len for reserved leading space.
 	EncodeIndex(buf[:n], bytelen)
 
-	ret buf
+	return buf
 }
 
 // Encodes floating-point and appends to buf.
 fn EncodeFloat(mut buf: []Byte, z: Float): []Byte {
 	b := math::F64bits(z)
-	ret append(buf,
+	return append(buf,
 		Byte(b>>56),
 		Byte(b>>48),
 		Byte(b>>40),
@@ -56,7 +56,7 @@ fn EncodeFloat(mut buf: []Byte, z: Float): []Byte {
 
 // Encodes index and appends to buf.
 fn EncodeIndex(mut buf: []Byte, idx: Index): []Byte {
-	ret append(buf,
+	return append(buf,
 		Byte(idx>>56),
 		Byte(idx>>48),
 		Byte(idx>>40),

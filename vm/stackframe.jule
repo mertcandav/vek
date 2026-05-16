@@ -30,7 +30,7 @@ impl sfpool {
 		sf.prev = nil
 		sf.stckoff = 0
 		sf.retjmp = 0
-		ret sf
+		return sf
 	}
 
 	// Puts stack frame back to the pool.
@@ -42,7 +42,7 @@ impl sfpool {
 
 // Returns new stack frame.
 fn newStackFrame(): &stackFrame {
-	ret sfcache.alloc()
+	return sfcache.alloc()
 }
 
 // Frees stack frame sf.

@@ -6,7 +6,7 @@ use "vek/stdio"
 
 // Print with ANSI sequence.
 // Resets after print.
-fn Print(escape: str, text: str) {
+fn Print(escape: string, text: string) {
 	stdio::Print(escape)
 	stdio::Print(text)
 	stdio::Print(Reset)

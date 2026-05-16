@@ -13,10 +13,10 @@ struct Func {
 }
 
 // Constant variable name:value map type.
-type ConstantMap: map[str]&vek::Value
+type ConstantMap: map[string]&vek::Value
 
 // Function name:value map type.
-type FuncMap: map[str]&Func
+type FuncMap: map[string]&Func
 
 // Defines the logical layout of the virtual machine's memory.
 struct Memory {

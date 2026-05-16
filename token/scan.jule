@@ -13,7 +13,7 @@ const (
 	eof = -1     // end of file
 )
 
-let keywords = map[str]int{
+let keywords = map[string]int{
 	"let": LET,
 }
 
@@ -43,11 +43,11 @@ impl Scanner {
 	}
 
 	// Pushes new error log to logs.
-	fn pushErr(mut *self, col: int, text: str, args: ...any) {
+	fn pushErr(mut *self, col: int, text: string, args: ...any) {
 		self.Logs = append(self.Logs, log::Log{
 			Kind:   log::Error,
 			Column: col,
-			Line:   unsafe::StrFromBytes(self.buf),
+			Line:   unsafe::StringFromBytes(self.buf),
 			Text:   text,
 		})
 	}
@@ -61,14 +61,14 @@ impl Scanner {
 	// Returns the next rune without advance scanning.
 	fn peek(mut *self): rune {
 		if self.rdOffset >= len(self.buf) {
-			ret eof
+			return eof
 		}
 		mut r := rune(self.buf[self.rdOffset])
 		// not ASCII
 		if r >= utf8::RuneSelf {
 			r, _ = utf8::DecodeRune(self.buf[self.rdOffset:])
 		}
-		ret r
+		return r
 	}
 
 	// Read the next Unicode char into self.r.
@@ -82,7 +82,7 @@ impl Scanner {
 			}
 			self.offset = len(self.buf)
 			self.r = eof
-			ret
+			return
 		}
 		if self.r == '\n' {
 			self.addLine()
@@ -162,8 +162,8 @@ impl Scanner {
 
 	exit:
 		token.ID = NAME
-		token.Kind = unsafe::StrFromBytes(self.buf[offs:self.offset])
-		ret true
+		token.Kind = unsafe::StringFromBytes(self.buf[offs:self.offset])
+		return true
 	}
 
 	// digits accepts the sequence { digit | '_' }.
@@ -195,7 +195,7 @@ impl Scanner {
 				self.next()
 			}
 		}
-		ret
+		return
 	}
 
 	fn scanNumber(mut *self, mut &token: *Token) {
@@ -266,7 +266,7 @@ impl Scanner {
 			self.pushErr(self.col, "hexadecimal mantissa requires a 'p' exponent")
 		}
 
-		lit := unsafe::StrFromBytes(self.buf[offs:self.offset])
+		lit := unsafe::StringFromBytes(self.buf[offs:self.offset])
 		if tok == INT && invalid >= 0 {
 			self.pushErr(invalid, "invalid digit {} in {}", lit[invalid-offs], litname(prefix))
 		}
@@ -286,10 +286,10 @@ impl Scanner {
 		self.skipWhitespace()
 		token.ID = ILLEGAL
 		token.Column = self.col
-		token.Line = unsafe::StrFromBytes(self.buf)
+		token.Line = unsafe::StringFromBytes(self.buf)
 		if self.r == eof {
 			token.ID = EOF
-			ret
+			return
 		}
 		match {
 		| isLetter(self.r) && self.scanName(&token):
@@ -355,24 +355,24 @@ impl Scanner {
 		if len(self.Logs) > 0 {
 			token.ID = ILLEGAL
 		}
-		ret
+		return
 	}
 }
 
-fn lower(ch: rune): rune { ret ('a' - 'A') | ch }
-fn isDecimal(ch: rune): bool { ret '0' <= ch && ch <= '9' }
-fn isHex(ch: rune): bool { ret '0' <= ch && ch <= '9' || 'a' <= lower(ch) && lower(ch) <= 'f' }
+fn lower(ch: rune): rune { return ('a' - 'A') | ch }
+fn isDecimal(ch: rune): bool { return '0' <= ch && ch <= '9' }
+fn isHex(ch: rune): bool { return '0' <= ch && ch <= '9' || 'a' <= lower(ch) && lower(ch) <= 'f' }
 
 fn isLetter(ch: rune): bool {
-	ret 'a' <= lower(ch) && lower(ch) <= 'z' || ch == '_' || ch >= utf8::RuneSelf && unicode::IsLetter(ch)
+	return 'a' <= lower(ch) && lower(ch) <= 'z' || ch == '_' || ch >= utf8::RuneSelf && unicode::IsLetter(ch)
 }
 
 fn isDigit(ch: rune): bool {
-	ret isDecimal(ch) || ch >= utf8::RuneSelf && unicode::IsDigit(ch)
+	return isDecimal(ch) || ch >= utf8::RuneSelf && unicode::IsDigit(ch)
 }
 
 // Returns the index of the first invalid separator in x, or -1.
-fn invalidSep(x: str): int {
+fn invalidSep(x: string): int {
 	mut x1 := rune(' ') // prefix char, we only care if it's 'x'
 	mut d := rune('.')  // digit, one of '_', '0' (a digit), or '.' (anything else)
 	mut i := 0
@@ -393,33 +393,33 @@ fn invalidSep(x: str): int {
 		match {
 		| d == '_':
 			if p != '0' {
-				ret i
+				return i
 			}
 		| isDecimal(d) || x1 == 'x' && isHex(d):
 			d = '0'
 		|:
 			if p == '_' {
-				ret i - 1
+				return i - 1
 			}
 			d = '.'
 		}
 	}
 	if d == '_' {
-		ret len(x) - 1
+		return len(x) - 1
 	}
 
-	ret -1
+	return -1
 }
 
-fn litname(prefix: rune): str {
+fn litname(prefix: rune): string {
 	match prefix {
 	| 'x':
-		ret "hexadecimal literal"
+		return "hexadecimal literal"
 	| 'o' | '0':
-		ret "octal literal"
+		return "octal literal"
 	| 'b':
-		ret "binary literal"
+		return "binary literal"
 	|:
-		ret "decimal literal"
+		return "decimal literal"
 	}
 }

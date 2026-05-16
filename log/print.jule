@@ -10,18 +10,18 @@ use "std/unsafe"
 // File instance for the standard error (stderr).
 let mut stderr = os::Stderr()
 
-fn _print(s: str) {
-	stderr.WriteSync(unsafe::StrBytes(s))!
+fn _print(s: string) {
+	stderr.WriteSync(unsafe::StringBytes(s))!
 }
 
-fn _println(s: str) {
+fn _println(s: string) {
 	_print(s)
 	_print("\n")
 }
 
 // Print with ANSI sequence.
 // Resets after print.
-fn ansiPrint(escape: str, text: str) {
+fn ansiPrint(escape: string, text: string) {
 	_print(escape)
 	_print(text)
 	_print(ansi::Reset)

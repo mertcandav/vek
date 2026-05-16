@@ -50,11 +50,11 @@ impl Replxx {
 				continue
 			}
 			if result == nil {
-				ret nil
+				return nil
 			}
 			n := extern.strlen(result)
 			mut bytes := unsafe { unsafe::Slice((*byte)(result), n, n) }
-			ret bytes
+			return bytes
 		}
 	}
 
@@ -74,5 +74,5 @@ impl Replxx {
 fn New(): Replxx {
 	mut p := extern.replxx_init()
 	extern.replxx_install_window_change_handler(p)
-	ret Replxx{p: p}
+	return Replxx{p: p}
 }

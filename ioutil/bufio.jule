@@ -73,7 +73,7 @@ impl Writer {
 		if size <= 0 {
 			size = defaultBufSize
 		}
-		ret &Writer{
+		return &Writer{
 			buf: make([]byte, size),
 			wr:  w,
 		}
@@ -84,12 +84,12 @@ impl Writer {
 	// it returns the underlying [Writer].
 	#disable nilptr
 	fn New(mut w: &os::File): &Writer {
-		ret Writer.NewSize(w, defaultBufSize)
+		return Writer.NewSize(w, defaultBufSize)
 	}
 
 	// Returns the size of the underlying buffer in bytes.
 	#disable nilptr
-	fn Size(*self): int { ret len(self.buf) }
+	fn Size(*self): int { return len(self.buf) }
 
 	// Discards any unflushed buffered data, clears any error, and
 	// resets writer to write its output to w.
@@ -102,7 +102,7 @@ impl Writer {
 		// Different layers of code may do that, and then later pass w
 		// to Reset. Avoid infinite recursion in that case.
 		if self.wr == w {
-			ret
+			return
 		}
 		if self.buf == nil {
 			self.buf = make([]byte, defaultBufSize)
@@ -116,25 +116,25 @@ impl Writer {
 	#disable nilptr boundary
 	fn Flush(mut *self)! {
 		if self.err != nil {
-			throw self.err
+			unsafe throw self.err
 		}
 		if self.n == 0 {
-			ret
+			return
 		}
 		n := self.wr.WriteSync(self.buf[0:self.n]) else {
 			self.err = error
-			throw self.err
+			unsafe throw self.err
 		}
 		if n < self.n {
 			self.err = io::ErrShortWrite
-			throw self.err
+			unsafe throw self.err
 		}
 		self.n = 0
 	}
 
 	// Returns how many bytes are unused in the buffer.
 	#disable nilptr
-	fn Available(*self): int { ret len(self.buf) - self.n }
+	fn Available(*self): int { return len(self.buf) - self.n }
 
 	// Returns an empty buffer with Reader.Available() capacity.
 	// This buffer is intended to be appended to and
@@ -142,18 +142,18 @@ impl Writer {
 	// The buffer is mutable and it si only valid until the next write operation.
 	#disable nilptr boundary
 	fn AvailableBuffer(mut *self): []byte {
-		ret self.buf[self.n:][:0]
+		return self.buf[self.n:][:0]
 	}
 
 	// Returns mutable buffered data.
 	#disable nilptr
 	fn Buffer(mut *self): []byte {
-		ret self.buf[:self.n]
+		return self.buf[:self.n]
 	}
 
 	// Returns the number of bytes that have been written into the current buffer.
 	#disable nilptr
-	fn Buffered(*self): int { ret self.n }
+	fn Buffered(*self): int { return self.n }
 
 	// Clears the buffer.
 	fn Clear(mut *self) {
@@ -183,19 +183,19 @@ impl Writer {
 			unsafe { *(&p) = (*(&p))[n:] }
 		}
 		if self.err != nil {
-			throw self.err
+			unsafe throw self.err
 		}
 		n := copy(self.buf[self.n:], p)
 		self.n += n
 		nn += n
-		ret nn
+		return nn
 	}
 
 	// Writes a single byte.
 	#disable nilptr boundary
 	fn WriteByte(mut *self, c: byte)! {
 		if self.err != nil {
-			throw self.err
+			unsafe throw self.err
 		}
 		if self.Available() <= 0 {
 			self.Flush()?
@@ -209,7 +209,7 @@ impl Writer {
 	// If the count is less than len(s), it throws an error explaining
 	// why the write is short.
 	#disable nilptr boundary
-	fn WriteStr(mut *self, mut s: str)!: int {
+	fn WriteStr(mut *self, mut s: string)!: int {
 		mut nn := 0
 		for len(s) > self.Available() && self.err == nil {
 			let mut n: int
@@ -220,18 +220,18 @@ impl Writer {
 			s = s[n:]
 		}
 		if self.err != nil {
-			throw self.err
+			unsafe throw self.err
 		}
 		n := copy(self.buf[self.n:], s)
 		self.n += n
 		nn += n
-		ret nn
+		return nn
 	}
 }
 
 fn max(a: int, b: int): int {
 	if a > b {
-		ret a
+		return a
 	}
-	ret b
+	return b
 }

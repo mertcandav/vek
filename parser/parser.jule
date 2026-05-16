@@ -29,10 +29,10 @@ impl parser {
 	}
 
 	fn tokPrec(*self): (int, int) {
-		ret self.tok.ID, self.tok.Precedence()
+		return self.tok.ID, self.tok.Precedence()
 	}
 
-	fn pushErr(mut *self, tok: token::Token, text: str) {
+	fn pushErr(mut *self, tok: token::Token, text: string) {
 		self.logs = append(self.logs, log::Log{
 			Kind:   log::Error,
 			Column: tok.Column,
@@ -41,14 +41,14 @@ impl parser {
 		})
 	}
 
-	fn errorExpected(mut *self, tok: token::Token, mut msg: str) {
+	fn errorExpected(mut *self, tok: token::Token, mut msg: string) {
 		msg = "expected " + msg
 		self.pushErr(tok, msg)
 	}
 
 	fn expect(mut *self, op: int) {
 		if self.tok.ID != op {
-			self.errorExpected(self.tok, "'"+token::Str(op)+"'")
+			self.errorExpected(self.tok, "'"+token::String(op)+"'")
 		}
 		self.next() // make progress
 	}
@@ -58,29 +58,29 @@ impl parser {
 		name := self.tok
 		self.expect(token::NAME) // function name
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		self.expect(token::LPAREN) // (
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		mut list := self.parseParamList() // parameters
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		self.expect(token::RPAREN) // )
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		self.expect(token::ASSIGN)
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		mut x := self.parseExpr()
 		if x == nil {
-			ret nil
+			return nil
 		}
-		ret &ast::Func{
+		return &ast::Func{
 			Name:   name,
 			Params: list,
 			X:      x,
@@ -90,17 +90,17 @@ impl parser {
 	fn parseFuncCall(mut *self, name: token::Token): &ast::FuncCall {
 		self.expect(token::LPAREN) // (
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		mut args := self.parseArgList() // arguments
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
 		self.expect(token::RPAREN) // )
 		if len(self.logs) > 0 {
-			ret nil
+			return nil
 		}
-		ret &ast::FuncCall{
+		return &ast::FuncCall{
 			Name: name,
 			Args: args,
 		}
@@ -110,26 +110,26 @@ impl parser {
 		match self.tok.ID {
 		| token::ILLEGAL:
 			// Errors are derived from the scanner.
-			ret nil
+			return nil
 		| token::NAME:
 			tok := self.tok
 			self.next()
 			if self.tok.ID == token::LPAREN {
 				mut func := self.parseFuncCall(tok)
 				if func == nil {
-					ret nil
+					return nil
 				}
-				ret func
+				return func
 			}
-			ret &ast::NameExpr{Token: tok, Name: tok.Kind}
+			return &ast::NameExpr{Token: tok, Name: tok.Kind}
 		| token::INT:
 			mut x := new(vek::Value)
 			x.Type = vek::TypeIN
 			mut _in := new(isa::Int)
-			_ = _in.SetStr(self.tok.Kind, 0)
+			_ = _in.SetString(self.tok.Kind, 0)
 			x.Data = _in
 			self.next()
-			ret x
+			return x
 		| token::FLOAT:
 			mut x := new(vek::Value)
 			x.Type = vek::TypeFL
@@ -137,18 +137,18 @@ impl parser {
 			fl = conv::ParseFloat(self.tok.Kind, 64) else { use 0 }
 			x.Data = fl
 			self.next()
-			ret x
+			return x
 		| token::LPAREN:
 			self.next()
 			mut x := self.parseExpr()
 			if x == nil {
-				ret nil
+				return nil
 			}
 			self.expect(token::RPAREN)
-			ret x
+			return x
 		|:
 			self.errorExpected(self.tok, "operand")
-			ret nil
+			return nil
 		}
 	}
 
@@ -159,11 +159,11 @@ impl parser {
 			self.next()
 			mut x := self.parseUnaryExpr()
 			if x == nil {
-				ret nil
+				return nil
 			}
-			ret &ast::UnaryExpr{Op: tok, X: x}
+			return &ast::UnaryExpr{Op: tok, X: x}
 		|:
-			ret self.parseOperand()
+			return self.parseOperand()
 		}
 	}
 
@@ -173,31 +173,31 @@ impl parser {
 		if x == nil {
 			x = self.parseUnaryExpr()
 			if x == nil {
-				ret nil
+				return nil
 			}
 		}
 		for {
 			op, oprec := self.tokPrec()
 			if oprec < prec1 {
-				ret x
+				return x
 			}
 			tok := self.tok
 			self.expect(op)
 			mut y := self.parseBinaryExpr(nil, oprec+1)
 			if y == nil {
-				ret nil
+				return nil
 			}
 			x = &ast::BinaryExpr{X: x, Op: tok, Y: y}
 		}
 	}
 
 	fn parseExpr(mut *self): ast::Expr {
-		ret self.parseBinaryExpr(nil, token::LowestPrec+1)
+		return self.parseBinaryExpr(nil, token::LowestPrec+1)
 	}
 
 	fn parseArgList(mut *self): (list: []ast::Expr) {
 		if self.tok.ID == token::RPAREN {
-			ret
+			return
 		}
 		list = append(list, self.parseExpr())
 		for self.tok.ID == token::COMMA && len(self.logs) == 0 {
@@ -205,12 +205,12 @@ impl parser {
 			list = append(list, self.parseExpr())
 		}
 
-		ret
+		return
 	}
 
 	fn parseParamList(mut *self): (list: []token::Token) {
 		if self.tok.ID == token::RPAREN {
-			ret
+			return
 		}
 		list = append(list, self.tok)
 		self.expect(token::NAME)
@@ -220,7 +220,7 @@ impl parser {
 			self.expect(token::NAME)
 		}
 
-		ret
+		return
 	}
 
 	fn parse(mut *self): (ast: ast::Node) {
@@ -230,7 +230,7 @@ impl parser {
 		|:
 			ast.X = self.parseExpr()
 		}
-		ret
+		return
 	}
 }
 
@@ -246,17 +246,17 @@ fn Parse(mut scanner: &token::Scanner): (ast::Node, []log::Log) {
 	}
 	p.next() // Advance to the first token.
 	if p.tok.ID == token::EOF {
-		ret ast::Node{}, nil
+		return ast::Node{}, nil
 	}
 	mut ast := p.parse()
 	// Early return for error cases.
 	if len(p.logs) > 0 {
-		ret ast, p.logs
+		return ast, p.logs
 	}
 	// Check for EOF.
 	// All expression must be consumed.
 	if p.tok.ID != token::EOF {
 		p.pushErr(p.tok, "invalid syntax")
 	}
-	ret ast, p.logs
+	return ast, p.logs
 }

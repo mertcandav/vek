@@ -11,232 +11,232 @@ const invalidIndex = isa::Index.Max
 
 // Appends NOP instruction to buf.
 fn NOP(mut buf: []isa::Byte): []isa::Byte {
-	ret append(buf, isa::NOP)
+	return append(buf, isa::NOP)
 }
 
 // Appends JMP instruction to buf.
 fn JMP(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::JMP)
-	ret isa::EncodeIndex(buf, idx)
+	return isa::EncodeIndex(buf, idx)
 }
 
 // Appends ASF instruction to buf.
 fn ASF(mut buf: []isa::Byte, offset: isa::Index): []isa::Byte {
 	buf = append(buf, isa::ASF)
-	ret isa::EncodeIndex(buf, offset)
+	return isa::EncodeIndex(buf, offset)
 }
 
 // Appends CALL instruction to buf.
 fn CALL(mut buf: []isa::Byte, pc: isa::Index): []isa::Byte {
 	buf = append(buf, isa::CALL)
-	ret isa::EncodeIndex(buf, pc)
+	return isa::EncodeIndex(buf, pc)
 }
 
 // Appends ECALL instruction to buf.
 fn ECALL(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::ECALL)
-	ret isa::EncodeIndex(buf, idx)
+	return isa::EncodeIndex(buf, idx)
 }
 
 // Appends RET instruction to buf.
 fn RET(mut buf: []isa::Byte): []isa::Byte {
-	ret append(buf, isa::RET)
+	return append(buf, isa::RET)
 }
 
 // Appends SETSP instruction to buf.
 fn SETSP(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::SETSP)
-	ret isa::EncodeIndex(buf, idx)
+	return isa::EncodeIndex(buf, idx)
 }
 
 // Appends AIN instruction to buf.
 fn AIN(mut buf: []isa::Byte, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::AIN)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends AFL instruction to buf.
 fn AFL(mut buf: []isa::Byte, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::AFL)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends AMOV instruction to buf.
 fn AMOV(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::AMOV)
-	ret isa::EncodeIndex(buf, idx)
+	return isa::EncodeIndex(buf, idx)
 }
 
 // Appends EMOV instruction to buf.
 fn EMOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
 	buf = append(buf, isa::EMOV)
 	buf = isa::EncodeIndex(buf, src)
-	ret isa::EncodeIndex(buf, dst)
+	return isa::EncodeIndex(buf, dst)
 }
 
 // Appends MOV instruction to buf.
 fn MOV(mut buf: []isa::Byte, src: isa::Index, dst: isa::Index): []isa::Byte {
 	buf = append(buf, isa::MOV)
 	buf = isa::EncodeIndex(buf, src)
-	ret isa::EncodeIndex(buf, dst)
+	return isa::EncodeIndex(buf, dst)
 }
 
 // Appends MOVIN instruction to buf.
 fn MOVIN(mut buf: []isa::Byte, idx: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::MOVIN)
 	buf = isa::EncodeIndex(buf, idx)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends MOVFL instruction to buf.
 fn MOVFL(mut buf: []isa::Byte, idx: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::MOVFL)
 	buf = isa::EncodeIndex(buf, idx)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends NEG instruction to buf.
 fn NEG(mut buf: []isa::Byte, idx: isa::Index): []isa::Byte {
 	buf = append(buf, isa::NEG)
-	ret isa::EncodeIndex(buf, idx)
+	return isa::EncodeIndex(buf, idx)
 }
 
 // Appends ADD instruction to buf.
 fn ADD(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::ADD)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends ADDIN instruction to buf.
 fn ADDIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::ADDIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends ADDFL instruction to buf.
 fn ADDFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::ADDFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends SUB instruction to buf.
 fn SUB(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::SUB)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends SUBIN instruction to buf.
 fn SUBIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::SUBIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends SUBFL instruction to buf.
 fn SUBFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::SUBFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends MUL instruction to buf.
 fn MUL(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::MUL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends MULIN instruction to buf.
 fn MULIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::MULIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends MULFL instruction to buf.
 fn MULFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::MULFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends QUO instruction to buf.
 fn QUO(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::QUO)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends QUOIN instruction to buf.
 fn QUOIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::QUOIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends QUOFL instruction to buf.
 fn QUOFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::QUOFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends REM instruction to buf.
 fn REM(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::REM)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends REMIN instruction to buf.
 fn REMIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::REMIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends REMFL instruction to buf.
 fn REMFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::REMFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }
 
 // Appends SHL instruction to buf.
 fn SHL(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
 	buf = append(buf, isa::SHL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, n)
+	return isa::EncodeIndex(buf, n)
 }
 
 // Appends SHR instruction to buf.
 fn SHR(mut buf: []isa::Byte, dst: isa::Index, n: isa::Index): []isa::Byte {
 	buf = append(buf, isa::SHR)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, n)
+	return isa::EncodeIndex(buf, n)
 }
 
 // Appends POW instruction to buf.
 fn POW(mut buf: []isa::Byte, dst: isa::Index, v: isa::Index): []isa::Byte {
 	buf = append(buf, isa::POW)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeIndex(buf, v)
+	return isa::EncodeIndex(buf, v)
 }
 
 // Appends POWIN instruction to buf.
 fn POWIN(mut buf: []isa::Byte, dst: isa::Index, _in: &isa::Int): []isa::Byte {
 	buf = append(buf, isa::POWIN)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeInt(buf, *_in)
+	return isa::EncodeInt(buf, *_in)
 }
 
 // Appends POWFL instruction to buf.
 fn POWFL(mut buf: []isa::Byte, dst: isa::Index, fl: isa::Float): []isa::Byte {
 	buf = append(buf, isa::POWFL)
 	buf = isa::EncodeIndex(buf, dst)
-	ret isa::EncodeFloat(buf, fl)
+	return isa::EncodeFloat(buf, fl)
 }

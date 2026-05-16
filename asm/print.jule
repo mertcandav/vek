@@ -27,7 +27,7 @@ struct printer {
 	mut pc:     int
 	options:    int
 	mut b:      isa::Byte
-	mut indent: str
+	mut indent: string
 	mem:        &mem::Memory
 }
 
@@ -43,7 +43,7 @@ impl printer {
 		}
 	}
 
-	fn append(*self, txt: str) {
+	fn append(*self, txt: string) {
 		self.buf = append(self.buf, txt...)
 	}
 
@@ -90,19 +90,19 @@ impl printer {
 
 	// Lookups for memory to find a special name for PC.
 	// Returns empty string if PC is unknown.
-	fn findPC(*self, pc: isa::PC): str {
+	fn findPC(*self, pc: isa::PC): string {
 		if self.mem == nil {
-			ret ""
+			return ""
 		}
 		if self.mem.Main == pc {
-			ret "main"
+			return "main"
 		}
 		for name, func in self.mem.Funcs {
 			if func.PC == pc {
-				ret "_" + name
+				return "_" + name
 			}
 		}
-		ret ""
+		return ""
 	}
 
 	fn appendPC(*self, idx: isa::Index) {
@@ -110,7 +110,7 @@ impl printer {
 		pcname := self.findPC(isa::PC(idx))
 		if pcname != "" {
 			self.append(pcname)
-			ret
+			return
 		}
 
 		// Unknown PC.
@@ -133,7 +133,7 @@ impl printer {
 		}
 	}
 
-	fn appendOP(*self, opcode: str) {
+	fn appendOP(*self, opcode: string) {
 		self.buf = append(self.buf, self.indent...)
 		if self.options&PRI_HL != 0 {
 			self.append(fgOP)
@@ -147,23 +147,23 @@ impl printer {
 	fn decodeInt(*self): (&isa::Int, bool) {
 		bytelen, ok := self.decodeIndex()
 		if !ok {
-			ret nil, false
+			return nil, false
 		}
 		self.next()
 		if self.b == _EOF {
-			ret nil, false
+			return nil, false
 		}
 		sign := self.b
 		self.next()
 		if self.b == _EOF {
-			ret nil, false
+			return nil, false
 		}
 		start := self.pc
 		mut i := isa::Index(0)
 		for i < bytelen-1; i++ {
 			self.next()
 			if self.b == _EOF {
-				ret nil, false
+				return nil, false
 			}
 		}
 		enc := self.bin[start : self.pc+1]
@@ -172,7 +172,7 @@ impl printer {
 		if sign == 1 {
 			_in.Neg(&*_in)
 		}
-		ret _in, true
+		return _in, true
 	}
 
 	fn decodeFloat(*self): (isa::Float, bool) {
@@ -180,131 +180,131 @@ impl printer {
 		b |= u64(self.b) << 56
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 48
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 40
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 32
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 24
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 16
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b) << 8
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		b |= u64(self.b)
-		ret math::F64frombits(b), true
+		return math::F64frombits(b), true
 	}
 
 	fn decodeIndex(*self): (idx: isa::Index, bool) {
 		idx |= isa::Index(self.b) << 56
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 48
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 40
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 32
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 24
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 16
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b) << 8
 		self.next()
 		if self.b == _EOF {
-			ret 0, false
+			return 0, false
 		}
 		idx |= isa::Index(self.b)
-		ret idx, true
+		return idx, true
 	}
 
-	fn printIndex(*self, opcode: str): bool {
+	fn printIndex(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		idx, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndex(idx)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printRawIndex(*self, opcode: str): bool {
+	fn printRawIndex(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		idx, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendRawIndex(idx)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printPC(*self, opcode: str): bool {
+	fn printPC(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		idx, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendPC(idx)
 		self.append("\n")
-		ret true
+		return true
 	}
 
 	fn printIndexECALL(*self): bool {
@@ -312,131 +312,131 @@ impl printer {
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		idx, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndexECALL(idx)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printIndexFloat(*self, opcode: str): bool {
+	fn printIndexFloat(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		src, mut ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		fl, ok := self.decodeFloat()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndex(src)
 		self.append(", ")
 		self.appendFloat(fl)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printIndexInt(*self, opcode: str): bool {
+	fn printIndexInt(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		src, mut ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		_in, ok := self.decodeInt()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndex(src)
 		self.append(", ")
 		self.appendInt(_in)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printIndexIndex(*self, opcode: str): bool {
+	fn printIndexIndex(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		src, mut ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		dst, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndex(src)
 		self.append(", ")
 		self.appendIndex(dst)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printIndexRawIndex(*self, opcode: str): bool {
+	fn printIndexRawIndex(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		src, mut ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		dst, ok := self.decodeIndex()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendIndex(src)
 		self.append(", ")
 		self.appendRawIndex(dst)
 		self.append("\n")
-		ret true
+		return true
 	}
 
-	fn printOP(*self, opcode: str): bool {
+	fn printOP(*self, opcode: string): bool {
 		self.appendOP(opcode)
 		self.append("\n")
 		self.next()
-		ret true
+		return true
 	}
 
 	fn printAIN(*self): bool {
@@ -444,16 +444,16 @@ impl printer {
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		_in, ok := self.decodeInt()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendInt(_in)
 		self.append("\n")
-		ret true
+		return true
 	}
 
 	fn printAFL(*self): bool {
@@ -461,92 +461,92 @@ impl printer {
 		self.append("\t")
 		self.next()
 		if self.b == _EOF {
-			ret false
+			return false
 		}
 		fl, ok := self.decodeFloat()
 		if !ok {
-			ret false
+			return false
 		}
 		self.next()
 		self.appendFloat(fl)
 		self.append("\n")
-		ret true
+		return true
 	}
 
 	fn print(*self): bool {
 		match self.b {
 		| isa::NOP:
-			ret self.printOP("NOP")
+			return self.printOP("NOP")
 		| isa::JMP:
-			ret self.printPC("JMP")
+			return self.printPC("JMP")
 		| isa::ASF:
-			ret self.printRawIndex("ASF")
+			return self.printRawIndex("ASF")
 		| isa::CALL:
-			ret self.printPC("CALL")
+			return self.printPC("CALL")
 		| isa::ECALL:
-			ret self.printIndexECALL()
+			return self.printIndexECALL()
 		| isa::RET:
-			ret self.printOP("RET")
+			return self.printOP("RET")
 		| isa::SETSP:
-			ret self.printRawIndex("SETSP")
+			return self.printRawIndex("SETSP")
 		| isa::AIN:
-			ret self.printAIN()
+			return self.printAIN()
 		| isa::AFL:
-			ret self.printAFL()
+			return self.printAFL()
 		| isa::AMOV:
-			ret self.printIndex("AMOV")
+			return self.printIndex("AMOV")
 		| isa::EMOV:
-			ret self.printIndexIndex("EMOV")
+			return self.printIndexIndex("EMOV")
 		| isa::MOV:
-			ret self.printIndexIndex("MOV")
+			return self.printIndexIndex("MOV")
 		| isa::MOVIN:
-			ret self.printIndexInt("MOVIN")
+			return self.printIndexInt("MOVIN")
 		| isa::MOVFL:
-			ret self.printIndexFloat("MOVFL")
+			return self.printIndexFloat("MOVFL")
 		| isa::NEG:
-			ret self.printIndex("NEG")
+			return self.printIndex("NEG")
 		| isa::ADD:
-			ret self.printIndexIndex("ADD")
+			return self.printIndexIndex("ADD")
 		| isa::ADDIN:
-			ret self.printIndexInt("ADDIN")
+			return self.printIndexInt("ADDIN")
 		| isa::ADDFL:
-			ret self.printIndexFloat("ADDFL")
+			return self.printIndexFloat("ADDFL")
 		| isa::SUB:
-			ret self.printIndexIndex("SUB")
+			return self.printIndexIndex("SUB")
 		| isa::SUBIN:
-			ret self.printIndexInt("SUBIN")
+			return self.printIndexInt("SUBIN")
 		| isa::SUBFL:
-			ret self.printIndexFloat("SUBFL")
+			return self.printIndexFloat("SUBFL")
 		| isa::MUL:
-			ret self.printIndexIndex("MUL")
+			return self.printIndexIndex("MUL")
 		| isa::MULIN:
-			ret self.printIndexInt("MULIN")
+			return self.printIndexInt("MULIN")
 		| isa::MULFL:
-			ret self.printIndexFloat("MULFL")
+			return self.printIndexFloat("MULFL")
 		| isa::QUO:
-			ret self.printIndexIndex("QUO")
+			return self.printIndexIndex("QUO")
 		| isa::QUOIN:
-			ret self.printIndexInt("QUOIN")
+			return self.printIndexInt("QUOIN")
 		| isa::QUOFL:
-			ret self.printIndexFloat("QUOFL")
+			return self.printIndexFloat("QUOFL")
 		| isa::REM:
-			ret self.printIndexIndex("REM")
+			return self.printIndexIndex("REM")
 		| isa::REMIN:
-			ret self.printIndexInt("REMIN")
+			return self.printIndexInt("REMIN")
 		| isa::REMFL:
-			ret self.printIndexFloat("REMFL")
+			return self.printIndexFloat("REMFL")
 		| isa::SHL:
-			ret self.printIndexRawIndex("SHL")
+			return self.printIndexRawIndex("SHL")
 		| isa::SHR:
-			ret self.printIndexRawIndex("SHR")
+			return self.printIndexRawIndex("SHR")
 		| isa::POW:
-			ret self.printIndexIndex("POW")
+			return self.printIndexIndex("POW")
 		| isa::POWIN:
-			ret self.printIndexInt("POWIN")
+			return self.printIndexInt("POWIN")
 		| isa::POWFL:
-			ret self.printIndexFloat("POWFL")
+			return self.printIndexFloat("POWFL")
 		|:
-			ret false
+			return false
 		}
 	}
 
@@ -563,14 +563,14 @@ impl printer {
 
 			ok := self.print()
 			if !ok {
-				ret nil
+				return nil
 			}
 		}
-		ret self.buf
+		return self.buf
 	}
 }
 
-let registermap: [...]str = [
+let registermap: [...]string = [
 	"RV",
 	"R0",
 	"R1",
@@ -586,25 +586,25 @@ let registermap: [...]str = [
 
 fn appendIndex(mut buf: []byte, idx: isa::Index): []byte {
 	if idx >= isa::Index(len(registermap)) {
-		ret appendRawIndex(buf, idx)
+		return appendRawIndex(buf, idx)
 	}
-	ret append(buf, registermap[idx]...)
+	return append(buf, registermap[idx]...)
 }
 
 fn appendRawIndex(mut buf: []byte, idx: isa::Index): []byte {
-	ret conv::AppendUint(buf, idx, 10)
+	return conv::AppendUint(buf, idx, 10)
 }
 
-let ecallmap: [...]str = [
+let ecallmap: [...]string = [
 	"_EXTERN_PRINT",
 	"_EXTERN_BITLEN",
 ]
 
 fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
 	if idx >= isa::Index(len(ecallmap)) {
-		ret appendRawIndex(buf, idx)
+		return appendRawIndex(buf, idx)
 	}
-	ret append(buf, ecallmap[idx]...)
+	return append(buf, ecallmap[idx]...)
 }
 
 // Decompiles and translates the binary-encoded vek bytecode
@@ -617,14 +617,14 @@ fn appendIndexECALL(mut buf: []byte, idx: isa::Index): []byte {
 // Returns nil if the binary input is malformed or improperly
 // formatted.
 fn Print(bin: []isa::Byte, options: int): []byte {
-	ret PrintVM(bin, nil, options)
+	return PrintVM(bin, nil, options)
 }
 
 // Same as Print, but prints functions and entry point, other contents
 // with identifier by VM's memory when possible.
 fn PrintVM(bin: []isa::Byte, mem: &mem::Memory, options: int): []byte {
 	if len(bin) == 0 {
-		ret nil
+		return nil
 	}
 	p := printer{
 		buf:     make([]byte, 0, len(bin)),
@@ -633,10 +633,10 @@ fn PrintVM(bin: []isa::Byte, mem: &mem::Memory, options: int): []byte {
 		options: options,
 		mem:     mem,
 	}
-	ret p.printAll()
+	return p.printAll()
 }
 
-let opmap: [...]str = [
+let opmap: [...]string = [
 	"NOP",
 	"JMP",
 	"ASF",
@@ -676,9 +676,9 @@ let opmap: [...]str = [
 
 // Returns opcode in string.
 // Returns empty string if opcode is invalid.
-fn PrintOP(op: isa::Opcode): str {
+fn PrintOP(op: isa::Opcode): string {
 	if op >= isa::Opcode(len(opmap)) {
-		ret ""
+		return ""
 	}
-	ret opmap[op]
+	return opmap[op]
 }

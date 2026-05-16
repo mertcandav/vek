@@ -34,10 +34,10 @@ impl VM {
 	}
 
 	// Returns PC.
-	fn PC(*self): int { ret self.pc }
+	fn PC(*self): int { return self.pc }
 
 	// Returns the VM's mutable memory.
-	fn Memory(mut *self): &mem::Memory { ret self.mem }
+	fn Memory(mut *self): &mem::Memory { return self.mem }
 
 	// Sets PC.
 	// This is unsafe operation.
@@ -58,7 +58,7 @@ impl VM {
 		if idx >= isa::STCK_OFF {
 			idx += self.sf.stckoff
 		}
-		ret self.stack[idx]
+		return self.stack[idx]
 	}
 
 	// Runs the binary's next instruction by PC.
@@ -68,13 +68,13 @@ impl VM {
 		opcode := self.bin[self.pc]
 		err := insmap[opcode](self)
 		if err != "" {
-			ret &Error{
+			return &Error{
 				Opcode: opcode,
 				PC:     pc,
 				Error:  err,
 			}
 		}
-		ret nil
+		return nil
 	}
 
 	// Runs the whole binary on the virtual machine.
@@ -82,10 +82,10 @@ impl VM {
 		for self.pc < len(self.bin) {
 			mut err := self.Next()
 			if err != nil {
-				ret err
+				return err
 			}
 		}
-		ret nil
+		return nil
 	}
 }
 
@@ -111,5 +111,5 @@ fn New(): (vm: VM) {
 	vm.mem.Funcs = make(mem::FuncMap, 16)
 	vm.mem.EFuncs = funcmap
 
-	ret
+	return
 }

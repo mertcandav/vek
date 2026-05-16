@@ -31,7 +31,7 @@ struct compiler {
 }
 
 impl compiler {
-	fn pushErr(mut *self, tok: token::Token, text: str) {
+	fn pushErr(mut *self, tok: token::Token, text: string) {
 		self.logs = append(self.logs, log::Log{
 			Kind:   log::Error,
 			Column: tok.Column,
@@ -40,16 +40,16 @@ impl compiler {
 		})
 	}
 
-	fn lookupParam(*self, name: str): isa::Index {
+	fn lookupParam(*self, name: string): isa::Index {
 		if self.cfunc == nil {
-			ret invalidIndex
+			return invalidIndex
 		}
 		for i, p in self.cfunc.Params {
 			if p.Kind == name {
-				ret isa::STCK_OFF + isa::Index(i)
+				return isa::STCK_OFF + isa::Index(i)
 			}
 		}
-		ret invalidIndex
+		return invalidIndex
 	}
 
 	// Checks for name and logs error if it is duplicated.
@@ -65,7 +65,7 @@ impl compiler {
 		if exist {
 			self.pushErr(name, "duplicated name: "+conv::Quote(name.Kind))
 		}
-		ret
+		return
 	}
 
 	// Checks for parameters and logs error if one of them is duplicated.
@@ -86,7 +86,7 @@ impl compiler {
 				}
 			}
 		}
-		ret
+		return
 	}
 
 	fn restoreSP0(mut *self, sp: isa::Index) {
@@ -99,7 +99,7 @@ impl compiler {
 		// If the current and requested SP adjustment is same,
 		// avoid adding unnecessary SETSP instruction.
 		if self.sp == sp {
-			ret
+			return
 		}
 		self.sp = sp
 		self.bin = SETSP(self.bin, sp) // SETSP sp
@@ -141,12 +141,12 @@ impl compiler {
 
 		v, off := self.compileExpr(ast)
 		if v == nil && off == invalidIndex { // error
-			ret
+			return
 		}
 		if v != nil {
 			if self.options&ExecPrint != 0 {
 				v.Print()
-				ret
+				return
 			}
 			self.pushValue(v)
 		} else if off == isa::RV || off == isa::R0 {
@@ -168,7 +168,7 @@ impl compiler {
 
 		mut v, off := self.compileExpr(ast.X)
 		if v == nil && off == invalidIndex { // error
-			ret nil, invalidIndex
+			return nil, invalidIndex
 		}
 		match ast.Op.ID {
 		| token::ADD:
@@ -182,7 +182,7 @@ impl compiler {
 		|:
 			panic("unreachable")
 		}
-		ret v, off
+		return v, off
 	}
 
 	// Evaluates operation op with operands x and y.
@@ -191,60 +191,60 @@ impl compiler {
 		match op {
 		| token::ADD:
 			x.ADD(y)
-			ret true
+			return true
 		| token::SUB:
 			x.SUB(y)
-			ret true
+			return true
 		| token::MUL:
 			x.MUL(y)
-			ret true
+			return true
 		| token::QUO:
 			x.QUO(y)
-			ret true
+			return true
 		| token::REM:
 			x.REM(y)
-			ret true
+			return true
 		| token::SHL:
 			match type y.Data {
 			| &isa::Int:
 				_in := y.Data.(&isa::Int)
 				if _in.Sign() == -1 {
 					self.pushErr(*tok, "shift value must be unsigned integer")
-					ret false
+					return false
 				}
 				if !_in.IsU64() {
 					self.pushErr(*tok, "shift value is too large")
-					ret false
+					return false
 				}
 				n := _in.U64()
 				x.SHL(n)
 			| isa::Float:
 				self.pushErr(*tok, "shift value must be unsigned integer")
-				ret false
+				return false
 			}
-			ret true
+			return true
 		| token::SHR:
 			match type y.Data {
 			| &isa::Int:
 				_in := y.Data.(&isa::Int)
 				if _in.Sign() == -1 {
 					self.pushErr(*tok, "shift value must be unsigned integer")
-					ret false
+					return false
 				}
 				if !_in.IsU64() {
 					self.pushErr(*tok, "shift value is too large")
-					ret false
+					return false
 				}
 				n := _in.U64()
 				x.SHR(n)
 			| isa::Float:
 				self.pushErr(*tok, "shift value must be unsigned integer")
-				ret false
+				return false
 			}
-			ret true
+			return true
 		| token::POW:
 			x.POW(y)
-			ret true
+			return true
 		|:
 			panic("unreachable")
 		}
@@ -263,7 +263,7 @@ impl compiler {
 		if !ok {
 			offX = invalidIndex
 		}
-		ret offX
+		return offX
 	}
 
 	// Evaluates operation op with operands x and y where y is a constant value.
@@ -279,7 +279,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = ADDFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		| token::SUB:
 			match type y.Data {
 			| &isa::Int:
@@ -289,7 +289,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = SUBFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		| token::MUL:
 			match type y.Data {
 			| &isa::Int:
@@ -299,7 +299,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = MULFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		| token::QUO:
 			match type y.Data {
 			| &isa::Int:
@@ -309,7 +309,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = QUOFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		| token::REM:
 			match type y.Data {
 			| &isa::Int:
@@ -319,45 +319,45 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = REMFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		| token::SHL:
 			match type y.Data {
 			| &isa::Int:
 				_in := y.Data.(&isa::Int)
 				if _in.Sign() == -1 {
 					self.pushErr(*tok, "shift value must be unsigned integer")
-					ret false
+					return false
 				}
 				if !_in.IsU64() {
 					self.pushErr(*tok, "shift value is too large")
-					ret false
+					return false
 				}
 				n := _in.U64()
 				self.bin = SHL(self.bin, offX, n)
 			| isa::Float:
 				self.pushErr(*tok, "shift value must be unsigned integer")
-				ret false
+				return false
 			}
-			ret true
+			return true
 		| token::SHR:
 			match type y.Data {
 			| &isa::Int:
 				_in := y.Data.(&isa::Int)
 				if _in.Sign() == -1 {
 					self.pushErr(*tok, "shift value must be unsigned integer")
-					ret false
+					return false
 				}
 				if !_in.IsU64() {
 					self.pushErr(*tok, "shift value is too large")
-					ret false
+					return false
 				}
 				n := _in.U64()
 				self.bin = SHR(self.bin, offX, n)
 			| isa::Float:
 				self.pushErr(*tok, "shift value must be unsigned integer")
-				ret false
+				return false
 			}
-			ret true
+			return true
 		| token::POW:
 			match type y.Data {
 			| &isa::Int:
@@ -367,7 +367,7 @@ impl compiler {
 				fl := y.Data.(isa::Float)
 				self.bin = POWFL(self.bin, offX, fl)
 			}
-			ret true
+			return true
 		|:
 			panic("unreachable")
 		}
@@ -379,25 +379,25 @@ impl compiler {
 		match op {
 		| token::ADD:
 			self.bin = ADD(self.bin, offX, offY)
-			ret true
+			return true
 		| token::SUB:
 			self.bin = SUB(self.bin, offX, offY)
-			ret true
+			return true
 		| token::MUL:
 			self.bin = MUL(self.bin, offX, offY)
-			ret true
+			return true
 		| token::QUO:
 			self.bin = QUO(self.bin, offX, offY)
-			ret true
+			return true
 		| token::REM:
 			self.bin = REM(self.bin, offX, offY)
-			ret true
+			return true
 		| token::SHL | token::SHR:
 			self.pushErr(*tok, "shit value must be constant unsigned integer")
-			ret false
+			return false
 		| token::POW:
 			self.bin = POW(self.bin, offX, offY)
-			ret true
+			return true
 		|:
 			panic("unreachable")
 		}
@@ -418,7 +418,7 @@ impl compiler {
 		op := ast.Op.ID
 		mut x, offX := self.compileExpr(ast.X)
 		if x == nil && offX == invalidIndex { // error
-			ret nil, invalidIndex
+			return nil, invalidIndex
 		}
 
 		// Operand X is not a constant value.
@@ -444,7 +444,7 @@ impl compiler {
 		self.options |= mutableMem
 		mut y, offY := self.compileExpr(ast.Y)
 		if y == nil && offY == invalidIndex { // error
-			ret nil, invalidIndex
+			return nil, invalidIndex
 		}
 		match {
 		| x != nil && y != nil:
@@ -452,7 +452,7 @@ impl compiler {
 			if !ok {
 				x = nil
 			}
-			ret x, invalidIndex
+			return x, invalidIndex
 		| x != nil:
 			// Increment the Stack Pointer (SP) to account for
 			// the constant operand X. Since constant operands are not
@@ -463,19 +463,19 @@ impl compiler {
 			// integrity after the operation.
 			sp++
 			offX = self.binaryConstantX(&ast.Op, op, x, offY)
-			ret nil, offX
+			return nil, offX
 		| y != nil:
 			ok := self.binaryConstantY(&ast.Op, op, offX, y)
 			if !ok {
 				offX = invalidIndex
 			}
-			ret nil, offX
+			return nil, offX
 		|:
 			ok := self.binaryByIndex(&ast.Op, op, offX, offY)
 			if !ok {
 				offX = invalidIndex
 			}
-			ret nil, offX
+			return nil, offX
 		}
 	}
 
@@ -486,36 +486,36 @@ impl compiler {
 		}
 		mut diff := n - args
 		if diff == 0 {
-			ret true
+			return true
 		}
 		mut err := strings::Builder{}
 		match {
 		| diff < 0:
 			fall
 		| diff > n:
-			err.WriteStr("passed more argument than expected to call ")!
+			err.WriteString("passed more argument than expected to call ")!
 		|:
-			err.WriteStr("missing arguments to call ")!
+			err.WriteString("missing arguments to call ")!
 		}
-		err.WriteStr(conv::Quote(tok.Kind))!
-		err.WriteStr("\n       want (")!
+		err.WriteString(conv::Quote(tok.Kind))!
+		err.WriteString("\n       want (")!
 		if self.ifunc != nil {
 			for i, p in self.ifunc.Params {
-				err.WriteStr(p.Kind)!
+				err.WriteString(p.Kind)!
 				if len(self.ifunc.Params)-i > 1 {
-					err.WriteStr(", ")!
+					err.WriteString(", ")!
 				}
 			}
 		}
 		err.WriteByte(')')!
-		self.pushErr(tok, err.Str())
-		ret false
+		self.pushErr(tok, err.String())
+		return false
 	}
 
 	fn compileFuncCall0(mut *self, tok: token::Token, mut args: []ast::Expr, _ECALL: bool): (&vek::Value, isa::Index) {
 		ok := self.checkFuncCallCounts(tok, len(args))
 		if !ok {
-			ret nil, invalidIndex
+			return nil, invalidIndex
 		}
 
 		options := self.options
@@ -532,7 +532,7 @@ impl compiler {
 		for (_, mut arg) in args {
 			v, off := self.compileExpr(arg)
 			if v == nil && off == invalidIndex { // error
-				ret nil, invalidIndex
+				return nil, invalidIndex
 			}
 			if v != nil {
 				self.pushValue(v)
@@ -555,7 +555,7 @@ impl compiler {
 			self.bin = CALL(self.bin, isa::Index(self.ifunc.PC)) // CALL ifunc
 		}
 
-		ret nil, isa::RV
+		return nil, isa::RV
 	}
 
 	fn compileFuncCall(mut *self, mut ast: &ast::FuncCall): (&vek::Value, isa::Index) {
@@ -564,9 +564,9 @@ impl compiler {
 		if paramIdx != invalidIndex {
 			if len(ast.Args) > 0 {
 				self.pushErr(ast.Name, "calling stack memory like a function: "+conv::Quote(ast.Name.Kind))
-				ret nil, invalidIndex
+				return nil, invalidIndex
 			}
-			ret nil, paramIdx
+			return nil, paramIdx
 		}
 
 		// Call to VM's constant memory.
@@ -574,9 +574,9 @@ impl compiler {
 		if ok {
 			ok = self.checkFuncCallCounts(ast.Name, len(ast.Args))
 			if !ok {
-				ret nil, invalidIndex
+				return nil, invalidIndex
 			}
-			ret self.callConstant(constv)
+			return self.callConstant(constv)
 		}
 
 		// Call to a function.
@@ -590,20 +590,20 @@ impl compiler {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Name, ast.Args, _ECALL)
+			return self.compileFuncCall0(ast.Name, ast.Args, _ECALL)
 		}
 
 		self.pushErr(ast.Name, "undefined identifier: "+conv::Quote(ast.Name.Kind))
-		ret nil, invalidIndex
+		return nil, invalidIndex
 	}
 
 	fn callConstant(mut *self, mut v: &vek::Value): (&vek::Value, isa::Index) {
 		if self.options&mutableMem != 0 {
-			ret v, invalidIndex
+			return v, invalidIndex
 		}
 		mut vc := new(vek::Value)
 		vc.Copy(v)
-		ret vc, invalidIndex
+		return vc, invalidIndex
 	}
 
 	fn compileNameExpr(mut *self, mut ast: &ast::NameExpr): (&vek::Value, isa::Index) {
@@ -616,13 +616,13 @@ impl compiler {
 				paramIdx = self.sp
 				self.sp++ // Adjust SP.
 			}
-			ret nil, paramIdx
+			return nil, paramIdx
 		}
 
 		// Call to VM's constant memory.
 		mut constv, mut ok := self.mem.Constants[ast.Name]
 		if ok {
-			ret self.callConstant(constv)
+			return self.callConstant(constv)
 		}
 
 		// Call to a function.
@@ -636,25 +636,25 @@ impl compiler {
 			mut ifunc := self.ifunc
 			defer { self.ifunc = ifunc }
 			self.ifunc = func
-			ret self.compileFuncCall0(ast.Token, nil, _ECALL)
+			return self.compileFuncCall0(ast.Token, nil, _ECALL)
 		}
 
 		self.pushErr(ast.Token, "undefined identifier: "+conv::Quote(ast.Name))
-		ret nil, invalidIndex
+		return nil, invalidIndex
 	}
 
 	fn compileExpr(mut *self, mut ast: ast::Expr): (&vek::Value, isa::Index) {
 		match type ast {
 		| &vek::Value:
-			ret ast.(&vek::Value), 0
+			return ast.(&vek::Value), 0
 		| &ast::UnaryExpr:
-			ret self.compileUnaryExpr(ast.(&ast::UnaryExpr))
+			return self.compileUnaryExpr(ast.(&ast::UnaryExpr))
 		| &ast::BinaryExpr:
-			ret self.compileBinaryExpr(ast.(&ast::BinaryExpr))
+			return self.compileBinaryExpr(ast.(&ast::BinaryExpr))
 		| &ast::NameExpr:
-			ret self.compileNameExpr(ast.(&ast::NameExpr))
+			return self.compileNameExpr(ast.(&ast::NameExpr))
 		| &ast::FuncCall:
-			ret self.compileFuncCall(ast.(&ast::FuncCall))
+			return self.compileFuncCall(ast.(&ast::FuncCall))
 		}
 		panic("unreachable")
 	}
@@ -662,11 +662,11 @@ impl compiler {
 	fn compileFunc(mut *self, mut ast: &ast::Func) {
 		mut exist := self.checkDuplicateName(ast.Name)
 		if exist {
-			ret
+			return
 		}
 		exist = self.checkDuplicateParam(ast)
 		if exist {
-			ret
+			return
 		}
 
 		// Adjust SP by parameters.
@@ -684,7 +684,7 @@ impl compiler {
 
 		v, mut off := self.compileExpr(ast.X)
 		if v == nil && off == invalidIndex { // error
-			ret
+			return
 		}
 		if v != nil {
 			self.movValue(isa::RV, v) // (MOVIN|MOVFL) RV, v
@@ -721,10 +721,10 @@ fn encodeValue(mut buf: []isa::Byte, v: &vek::Value): []isa::Byte {
 	match type v.Data {
 	| &isa::Int:
 		_in := v.Data.(&isa::Int)
-		ret isa::EncodeInt(buf, *_in)
+		return isa::EncodeInt(buf, *_in)
 	| isa::Float:
 		fl := v.Data.(isa::Float)
-		ret isa::EncodeFloat(buf, fl)
+		return isa::EncodeFloat(buf, fl)
 	}
 	panic("unreachable")
 }
@@ -755,5 +755,5 @@ fn Compile(mut bin: []isa::Byte, mut mem: &mem::Memory, mut ast: ast::Node, opti
 		options: options,
 	}
 	c.compile(ast)
-	ret c.bin, c.logs
+	return c.bin, c.logs
 }

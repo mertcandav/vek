@@ -11,17 +11,17 @@ let mut Stdout = ioutil::Writer.New(os::Stdout())
 let mut isPrint = true
 
 // Reports whether the output will be printed to stdout.
-fn IsPrint(): bool { ret isPrint }
+fn IsPrint(): bool { return isPrint }
 
 #disable nilptr
-fn Print(s: str) {
+fn Print(s: string) {
 	if isPrint {
 		Stdout.WriteStr(s) else {}
 	}
 }
 
 #disable nilptr
-fn Println(s: str) {
+fn Println(s: string) {
 	if isPrint {
 		Print(s)
 		Stdout.WriteByte('\n') else {}

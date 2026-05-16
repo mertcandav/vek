@@ -61,14 +61,14 @@ fn ReadAll(mut f: &os::File)!: []byte {
 	let mut finalSize: int
 	for {
 		n := f.ReadSync(b[len(b):cap(b)]) else {
+			if error == io::EOF {
+				break
+			}
 			// If any data was read, ignore the error and return the data.
 			if len(chunks) > 0 || len(b) > 0 {
 				break
 			}
 			throw error
-		}
-		if n == io::EOF {
-			break
 		}
 		b = b[:len(b)+n]
 		if cap(b)-len(b) < cap(b)/16 {
@@ -82,7 +82,7 @@ fn ReadAll(mut f: &os::File)!: []byte {
 	// On error this condition must be true: len(chunks) > 0 || len(b) > 0
 	// On EOF, len(chunks) and len(b) may be zero.
 	if len(chunks) == 0 {
-		ret b
+		return b
 	}
 	// Build our final right-sized slice.
 	finalSize += len(b)
@@ -91,5 +91,5 @@ fn ReadAll(mut f: &os::File)!: []byte {
 		final = append(final, chunk...)
 	}
 	final = append(final, b...)
-	ret final
+	return final
 }
