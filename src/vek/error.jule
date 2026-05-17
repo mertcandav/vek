@@ -8,14 +8,14 @@ use "std/os"
 
 const errorExitCode = 1
 
-fn printErrorMessage(msg: str) {
+fn printErrorMessage(msg: string) {
 	stdio::Print(ansi::Red)
 	stdio::Print("error: ")
 	stdio::Println(msg)
 	stdio::Print(ansi::Reset)
 }
 
-fn throwError(msg: str) {
+fn throwError(msg: string) {
 	printErrorMessage(msg)
 	stdio::Flush()
 	os::Exit(errorExitCode)

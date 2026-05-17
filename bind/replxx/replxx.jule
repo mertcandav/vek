@@ -43,7 +43,7 @@ impl Replxx {
 	// prompt must be NUL terminated.
 	// Returns nil slice for error or EOF.
 	// The returned byte-slice is a mask for the internal buffer of Replxx.
-	fn Input(*self, prompt: str): []byte {
+	fn Input(*self, prompt: string): []byte {
 		for {
 			mut result := unsafe { extern.replxx_input(self.p, (*c::ConstChar)(&prompt[0])) }
 			if result == nil && extern.errno == int(sys::EAGAIN) {

@@ -6,7 +6,7 @@ use "std/strings"
 
 // Filter for the code.
 // Reports true if code can pass the filter.
-type buildfilter: fn(code: str): bool
+type buildfilter: fn(code: string): bool
 
 // A sequence of filters designed to correctly
 // order and process build arguments arriving in arbitrary
@@ -27,11 +27,11 @@ let buildFilters: [...]buildfilter = [
 ]
 
 // Accepts only let statements.
-fn filterLet(code: str): bool {
+fn filterLet(code: string): bool {
 	return strings::HasPrefix(code, "let ")
 }
 
 // Accepts any input type or value without restriction.
-fn filterAny(code: str): bool {
+fn filterAny(code: string): bool {
 	return true
 }

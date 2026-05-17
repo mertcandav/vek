@@ -27,14 +27,14 @@ const (
 )
 
 // Map for "vek help" command.
-let HelpMap: [...][2]str = [
+let HelpMap: [...][2]string = [
 	[CmdHelp, "Show the list of available commands"],
 	[CmdVersion, "Show version"],
 	[CmdBuild, "Builds vek bytecode from source"],
 	[CmdRun, "Runs vek bytecode from source"],
 ]
 
-fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
+fn writeCommandsList(mut &s: *strings::Builder, pads: string, pad: int) {
 	mut max := len(HelpMap[0][0])
 	for _, k in HelpMap {
 		n := len(k[0])
@@ -45,16 +45,16 @@ fn writeCommandsList(mut &s: *strings::Builder, pads: str, pad: int) {
 
 	const Space = 3 // Space of between command name and description.
 	for _, part in HelpMap {
-		s.WriteStr(strings::Repeat(pads, pad))!
-		s.WriteStr(part[0])!
-		s.WriteStr(strings::Repeat(" ", (max-len(part[0]))+Space))!
-		s.WriteStr(part[1])!
+		s.WriteString(strings::Repeat(pads, pad))!
+		s.WriteString(part[0])!
+		s.WriteString(strings::Repeat(" ", (max-len(part[0]))+Space))!
+		s.WriteString(part[1])!
 		s.WriteByte('\n')!
 	}
 }
 
 // Command: vek help
-fn help(args: []str, pads: str, pad: int) {
+fn help(args: []string, pads: string, pad: int) {
 	if len(args) == 2 { // vek help
 		mut max := len(HelpMap[0][0])
 		for _, k in HelpMap {
@@ -65,11 +65,11 @@ fn help(args: []str, pads: str, pad: int) {
 		}
 
 		mut s := strings::Builder{}
-		s.WriteStr("The help command shows information about vek and commands.\n\nThe commands are:\n")!
+		s.WriteString("The help command shows information about vek and commands.\n\nThe commands are:\n")!
 		writeCommandsList(&s, pads, pad)
 		s.WriteByte('\n')!
-		s.WriteStr(`Use "vek help <command>" to see information about a command.`)!
-		stdio::Println(s.Str())
+		s.WriteString(`Use "vek help <command>" to see information about a command.`)!
+		stdio::Println(s.String())
 		return
 	}
 	if len(args) > 3 { // vek help <command> [unknown]
@@ -142,7 +142,7 @@ write "vek help" to see commands`)
 }
 
 // Command: vek version
-fn version(args: []str) {
+fn version(args: []string) {
 	if len(args) > 2 {
 		printErrorMessage("invalid command: " + args[2])
 		return
@@ -156,7 +156,7 @@ fn version(args: []str) {
 // Constraints:
 // The binary buffer "bin" will not be used again since this program
 // works in build argument or pipe mode.
-fn compileContent(mut content: []str): (ok: bool) {
+fn compileContent(mut content: []string): (ok: bool) {
 	// Ignore previous binary, if any.
 	bin = bin[:0]
 
@@ -181,7 +181,7 @@ fn compileContent(mut content: []str): (ok: bool) {
 			// Set index-i to empty string to ingore it later.
 			content[i] = ""
 
-			scanner.Reset(unsafe::BytesFromStr(code))
+			scanner.Reset(unsafe::BytesFromString(code))
 			mut ast, mut logs := parser::Parse(scanner)
 			if len(logs) > 0 {
 				log::PrintAll(logs)
@@ -206,14 +206,14 @@ fn compileContent(mut content: []str): (ok: bool) {
 }
 
 // Command: vek build
-fn build(mut args: []str) {
+fn build(mut args: []string) {
 	if len(args) < 2 {
 		printErrorMessage("build: expression missing")
 		return
 	}
 	args = args[2:] // Remove the program path and build command.
 
-	let mut fs = flag::FlagSet.New()
+	let mut fs = flag::Set.New()
 	let mut out = fs.Add("out", 'o', "", "Output identifier")
 	let mut _S = fs.Add("S", 'S', false, "Builds human-readable vek Assembly")
 	let mut _H = fs.Add("H", 'H', false, "Enables syntax highlighting for stdout output when used with -S")
@@ -247,7 +247,7 @@ fn build(mut args: []str) {
 		buf = bin
 	}
 	if *out == "" {
-		stdio::Println(unsafe::StrFromBytes(buf))
+		stdio::Println(unsafe::StringFromBytes(buf))
 	} else {
 		os::WriteFileSync(*out, buf, 0660) else {
 			throwError(fmt::Sprint(error))
@@ -256,7 +256,7 @@ fn build(mut args: []str) {
 }
 
 // Command: vek run
-fn run(mut args: []str) {
+fn run(mut args: []string) {
 	if len(args) < 2 {
 		printErrorMessage("run: source missing")
 		return
@@ -277,7 +277,7 @@ fn run(mut args: []str) {
 
 // Try to process compiler commands.
 // Reports whether "ARGS" is command and processed.
-fn processCommand(mut args: []str) {
+fn processCommand(mut args: []string) {
 	match args[1] {
 	| CmdHelp:
 		help(args, "\t", 1)
@@ -289,14 +289,14 @@ fn processCommand(mut args: []str) {
 		run(args)
 	|:
 		for _, code in args[1:] {
-			eval(unsafe::BytesFromStr(code))
+			eval(unsafe::BytesFromString(code))
 		}
 	}
 }
 
 // Pipe mode.
 // Read all incoming data line-by-line from stdin and eval.
-fn handlePipe(mut args: []str) {
+fn handlePipe(mut args: []string) {
 	if len(args) > 1 {
 		printErrorMessage("invalid command: " + args[1])
 		return
@@ -345,7 +345,7 @@ REPL:
 			break
 		}
 
-		input := unsafe::BytesStr(rawinput)
+		input := unsafe::BytesString(rawinput)
 		match input {
 		| ":help":
 			stdio::Println(`You are currently using vek in REPL (Read-Eval-Print Loop) mode.

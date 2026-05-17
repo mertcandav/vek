@@ -7,8 +7,8 @@ use "std/testing"
 use "std/unsafe"
 
 struct evalTest {
-	inputs: []str
-	result: str
+	inputs: []string
+	result: string
 }
 
 let evalTests: []evalTest = [

@@ -56,7 +56,7 @@ fn eval(mut buf: []byte): (nonempty: bool) {
 
 		// Log error, if any.
 		if err != nil {
-			printErrorMessage(err.Str())
+			printErrorMessage(err.String())
 		}
 	}
 	return true
