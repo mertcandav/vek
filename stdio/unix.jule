@@ -15,10 +15,10 @@ fn IsTTY(fd: uintptr): bool { return extern.isatty(fd) != 0 }
 
 fn stdoutIsNull(): bool {
 	let mut statStdout: sys::SysStat
-	sys::Fstat(int(sys::STDOUT), &statStdout) else { return false }
+	sys::Fstat(int(sys::STDOUT), &statStdout) catch { return false }
 
 	let mut statDevNull: sys::SysStat
-	sys::Stat(os::DevNull, &statDevNull) else { return false }
+	sys::Stat(os::DevNull, &statDevNull) catch { return false }
 
 	return statStdout.Dev == statDevNull.Dev &&
 		statStdout.Ino == statDevNull.Ino

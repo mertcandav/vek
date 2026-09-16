@@ -134,7 +134,7 @@ impl parser {
 			mut x := new(vek::Value)
 			x.Type = vek::TypeFL
 			let mut fl: isa::Float
-			fl = conv::ParseFloat(self.tok.Kind, 64) else { use 0 }
+			fl = conv::ParseFloat(self.tok.Kind, 64) catch { use 0 }
 			x.Data = fl
 			self.next()
 			return x

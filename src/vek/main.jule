@@ -5,11 +5,11 @@
 use "vek"
 use "vek/asm"
 use "vek/bind/replxx"
-use "vek/ioutil"
 use "vek/isa"
 use "vek/log"
 use "vek/parser"
 use "vek/stdio"
+use "std/bufio"
 use "std/flag"
 use "std/fmt"
 use "std/os"
@@ -218,7 +218,7 @@ fn build(mut args: []string) {
 	let mut _S = fs.Add("S", 'S', false, "Builds human-readable vek Assembly")
 	let mut _H = fs.Add("H", 'H', false, "Enables syntax highlighting for stdout output when used with -S")
 
-	mut content := fs.Parse(args) else {
+	mut content := fs.Parse(args) catch {
 		throwError(fmt::Sprint(error))
 		use nil // Avoid error.
 	}
@@ -249,7 +249,7 @@ fn build(mut args: []string) {
 	if *out == "" {
 		stdio::Println(unsafe::StringFromBytes(buf))
 	} else {
-		os::WriteFileSync(*out, buf, 0660) else {
+		os::WriteFile(*out, buf, 0660) catch {
 			throwError(fmt::Sprint(error))
 		}
 	}
@@ -264,7 +264,7 @@ fn run(mut args: []string) {
 	args = args[2:] // Remove the program path and run command.
 
 	for _, file in args {
-		mut data := os::ReadFileSync(file) else {
+		mut data := os::ReadFile(file) catch {
 			printErrorMessage(file + ": " + fmt::Sprint(error))
 			continue
 		}
@@ -303,15 +303,15 @@ fn handlePipe(mut args: []string) {
 	}
 
 	const MaxTokenSize = 4096
-	const MaxTokenSizeStr = "4096"
+	const MaxTokenSizeString = "4096"
 
-	mut scan := ioutil::Scanner.New(os::Stdin())
+	mut scan := bufio::Scanner.New(os::Stdin())
 	scan.Buffer(make([]byte, 0, MaxTokenSize), MaxTokenSize)
 	for {
-		ok := scan.Scan() else {
+		ok := scan.Scan() catch {
 			match error {
-			| ioutil::ErrTooLong:
-				printErrorMessage("maximum input length " + MaxTokenSizeStr + " exceeded")
+			| bufio::ErrTooLong:
+				printErrorMessage("maximum input length " + MaxTokenSizeString + " exceeded")
 				continue
 			|:
 				printErrorMessage("when reading from stdin: " + fmt::Sprint(error))
@@ -328,9 +328,6 @@ fn handlePipe(mut args: []string) {
 
 // REPL mode.
 fn repl() {
-	const MaxTokenSize = 4096
-	const MaxTokenSizeStr = "4096"
-
 	repl := replxx::New()
 	defer { repl.End() }
 

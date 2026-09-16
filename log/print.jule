@@ -11,7 +11,7 @@ use "std/unsafe"
 let mut stderr = os::Stderr()
 
 fn _print(s: string) {
-	stderr.WriteSync(unsafe::StringBytes(s))!
+	stderr.Write(unsafe::StringBytes(s))!
 }
 
 fn _println(s: string) {

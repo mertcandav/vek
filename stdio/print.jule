@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD 3-Clause
 // license that can be found in the LICENSE file.
 
-use "vek/ioutil"
+use "std/bufio"
 use "std/os"
 
 // Default Writer for stdout.
-let mut Stdout = ioutil::Writer.New(os::Stdout())
+let mut Stdout = bufio::Writer.New(os::Stdout())
 
 let mut isPrint = true
 
@@ -16,7 +16,7 @@ fn IsPrint(): bool { return isPrint }
 #disable nilptr
 fn Print(s: string) {
 	if isPrint {
-		Stdout.WriteStr(s) else {}
+		Stdout.WriteString(s) catch {}
 	}
 }
 
@@ -24,13 +24,13 @@ fn Print(s: string) {
 fn Println(s: string) {
 	if isPrint {
 		Print(s)
-		Stdout.WriteByte('\n') else {}
+		Stdout.WriteByte('\n') catch {}
 	}
 }
 
 #disable nilptr
 fn Flush() {
 	if isPrint {
-		Stdout.Flush() else {}
+		Stdout.Flush() catch {}
 	}
 }
