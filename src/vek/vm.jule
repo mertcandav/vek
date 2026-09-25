@@ -24,7 +24,7 @@ let mut scanner = new(token::Scanner)
 // instructions on the Virtual Machine (VM). This end-to-end
 // pipeline transforms high-level representations into a
 // runnable binary format within the VM's environment.
-#disable nilptr boundary
+#disable boundary nilptr
 fn eval(mut buf: []byte): (nonempty: bool) {
 	scanner.Reset(buf)
 	mut ast, mut logs := parser::Parse(scanner)
