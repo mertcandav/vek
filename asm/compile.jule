@@ -393,7 +393,7 @@ impl compiler {
 			self.bin = REM(self.bin, offX, offY)
 			return true
 		| token::SHL | token::SHR:
-			self.pushErr(*tok, "shit value must be constant unsigned integer")
+			self.pushErr(*tok, "shift value must be constant unsigned integer")
 			return false
 		| token::POW:
 			self.bin = POW(self.bin, offX, offY)
